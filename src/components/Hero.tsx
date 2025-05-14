@@ -22,7 +22,7 @@ const Hero = () => {
                 </Button>
               </Link>
               <Link to="/demo">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:bg-opacity-10 w-full sm:w-auto">
+                <Button size="lg" variant="ghost" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-atlas-purple w-full sm:w-auto">
                   See Demo
                 </Button>
               </Link>
