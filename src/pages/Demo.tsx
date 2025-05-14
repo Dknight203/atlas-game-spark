@@ -5,10 +5,139 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Filter, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 const Demo = () => {
   const [activeTab, setActiveTab] = useState("signal-profile");
+  const [gameData, setGameData] = useState({
+    title: "",
+    pitch: "",
+    platforms: ["Steam"],
+    genres: ["Roguelike"],
+  });
+
+  // Match engine states
+  const [matchResults, setMatchResults] = useState([
+    { 
+      name: 'Outer Wilds', 
+      overlap: '85%', 
+      tags: ['Exploration', 'Sci-Fi', 'Adventure'],
+      devSize: 'Small',
+      releaseDate: '2019-05-28',
+      estSales: '1.5M+' 
+    },
+    { 
+      name: 'No Man\'s Sky', 
+      overlap: '76%', 
+      tags: ['Exploration', 'Sci-Fi', 'Adventure'],
+      devSize: 'Medium',
+      releaseDate: '2016-08-09',
+      estSales: '10M+' 
+    },
+    { 
+      name: 'FTL: Faster Than Light', 
+      overlap: '72%', 
+      tags: ['Roguelike', 'Space', 'Strategy'],
+      devSize: 'Small',
+      releaseDate: '2012-09-14',
+      estSales: '3M+' 
+    },
+    { 
+      name: 'Stardew Valley', 
+      overlap: '65%', 
+      tags: ['Simulation', 'Farming', 'Adventure'],
+      devSize: 'Solo',
+      releaseDate: '2016-02-26',
+      estSales: '20M+' 
+    },
+    { 
+      name: 'Hades', 
+      overlap: '60%', 
+      tags: ['Roguelike', 'Action', 'Mythology'],
+      devSize: 'Small',
+      releaseDate: '2020-09-17',
+      estSales: '5M+' 
+    }
+  ]);
+  
+  const [filteredResults, setFilteredResults] = useState(matchResults);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDevSizes, setSelectedDevSizes] = useState<string[]>([]);
+  const [selectedSalesRange, setSelectedSalesRange] = useState<string>("");
+
+  const form = useForm({
+    defaultValues: {
+      title: "Starlight Wanderer",
+      pitch: "A narrative roguelike about exploring a procedurally generated galaxy...",
+      platforms: ["Steam", "itch.io", "Xbox", "Switch", "PlayStation"],
+      genres: ["Roguelike", "Adventure", "Narrative", "Sci-Fi", "Exploration"]
+    }
+  });
+
+  const handleGenerateMatches = () => {
+    // In a real app, this would call an API to get matches
+    // For the demo we'll just simulate by showing the existing results
+    applyFilters();
+  };
+
+  const applyFilters = () => {
+    let results = [...matchResults];
+    
+    // Apply search filter
+    if (searchQuery) {
+      results = results.filter(game => 
+        game.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        game.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    // Apply developer size filter
+    if (selectedDevSizes.length > 0) {
+      results = results.filter(game => selectedDevSizes.includes(game.devSize));
+    }
+    
+    // Apply estimated sales filter
+    if (selectedSalesRange) {
+      switch (selectedSalesRange) {
+        case "under1m":
+          results = results.filter(game => game.estSales.includes("M+") && parseInt(game.estSales) < 1);
+          break;
+        case "1mTo5m":
+          results = results.filter(game => game.estSales.includes("M+") && 
+            parseInt(game.estSales) >= 1 && parseInt(game.estSales) <= 5);
+          break;
+        case "over5m":
+          results = results.filter(game => game.estSales.includes("M+") && parseInt(game.estSales) > 5);
+          break;
+      }
+    }
+    
+    setFilteredResults(results);
+  };
+
+  const handleSelectChange = (value: string, currentSelected: string[]) => {
+    return currentSelected.includes(value)
+      ? currentSelected.filter(item => item !== value)
+      : [...currentSelected, value];
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,43 +176,85 @@ const Demo = () => {
                     <CardDescription>Create a structured profile of your game to find the perfect audience match</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-gray-100 rounded-lg p-6 border border-gray-200">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Game Title</label>
-                          <input type="text" placeholder="Starlight Wanderer" className="w-full p-2 border rounded-md" disabled />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Short Pitch</label>
-                          <textarea placeholder="A narrative roguelike about exploring a procedurally generated galaxy..." className="w-full p-2 border rounded-md" rows={2} disabled></textarea>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Platforms</label>
-                            <div className="flex flex-wrap gap-2">
-                              {['Steam', 'itch.io', 'Xbox', 'Switch', 'PlayStation'].map(platform => (
-                                <span key={platform} className="bg-atlas-purple bg-opacity-10 text-atlas-purple px-3 py-1 rounded-full text-sm">
-                                  {platform}
-                                </span>
-                              ))}
+                    <Form {...form}>
+                      <form className="bg-gray-100 rounded-lg p-6 border border-gray-200">
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Game Title</FormLabel>
+                                <FormControl>
+                                  <Input {...field} className="w-full p-2 border rounded-md" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="pitch"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Short Pitch</FormLabel>
+                                <FormControl>
+                                  <textarea 
+                                    {...field} 
+                                    className="w-full p-2 border rounded-md" 
+                                    rows={2}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Platforms</label>
+                              <div className="flex flex-wrap gap-2">
+                                {['Steam', 'itch.io', 'Xbox', 'Switch', 'PlayStation'].map(platform => (
+                                  <div key={platform} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                      id={`platform-${platform}`} 
+                                      checked={form.getValues("platforms").includes(platform)}
+                                      onCheckedChange={() => {
+                                        const current = form.getValues("platforms");
+                                        form.setValue("platforms", handleSelectChange(platform, current));
+                                      }}
+                                    />
+                                    <label htmlFor={`platform-${platform}`} className="text-sm">
+                                      {platform}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Genre Tags</label>
+                              <div className="flex flex-wrap gap-2">
+                                {['Roguelike', 'Adventure', 'Narrative', 'Sci-Fi', 'Exploration'].map(tag => (
+                                  <div key={tag} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                      id={`genre-${tag}`} 
+                                      checked={form.getValues("genres").includes(tag)}
+                                      onCheckedChange={() => {
+                                        const current = form.getValues("genres");
+                                        form.setValue("genres", handleSelectChange(tag, current));
+                                      }}
+                                    />
+                                    <label htmlFor={`genre-${tag}`} className="text-sm">
+                                      {tag}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Genre Tags</label>
-                            <div className="flex flex-wrap gap-2">
-                              {['Roguelike', 'Adventure', 'Narrative', 'Sci-Fi', 'Exploration'].map(tag => (
-                                <span key={tag} className="bg-atlas-teal bg-opacity-10 text-atlas-teal px-3 py-1 rounded-full text-sm">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
                         </div>
-                      </div>
-                    </div>
+                      </form>
+                    </Form>
                   </CardContent>
                   <CardFooter>
-                    <Button className="bg-atlas-purple ml-auto" disabled>Save Profile</Button>
+                    <Button className="bg-atlas-purple ml-auto">Save Profile</Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -95,29 +266,130 @@ const Demo = () => {
                     <CardDescription>Discover games with similar audiences based on community data and tag similarities</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {['Outer Wilds', 'No Man\'s Sky', 'FTL: Faster Than Light'].map((game, index) => (
-                        <div key={index} className="flex items-start p-4 border rounded-lg gap-4">
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
-                          <div className="flex-1">
-                            <h3 className="font-medium">{game}</h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {index === 0 ? '85% audience overlap' : index === 1 ? '76% audience overlap' : '72% audience overlap'}
-                            </p>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {['Exploration', 'Sci-Fi', 'Adventure'].map((tag, i) => (
-                                <span key={i} className="bg-atlas-teal bg-opacity-10 text-atlas-teal px-2 py-0.5 rounded-full text-xs">
-                                  {tag}
-                                </span>
-                              ))}
+                    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <div className="relative w-full sm:w-96">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input 
+                          type="text" 
+                          placeholder="Search games or tags..." 
+                          className="pl-10"
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="flex items-center gap-2">
+                              <Filter className="h-4 w-4" />
+                              <span>Filters</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56 bg-white p-4" align="start">
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-medium mb-2">Developer Size</h4>
+                                <div className="space-y-2">
+                                  {["Solo", "Small", "Medium", "Large"].map(size => (
+                                    <div key={size} className="flex items-center space-x-2">
+                                      <Checkbox 
+                                        id={`dev-${size}`}
+                                        checked={selectedDevSizes.includes(size)}
+                                        onCheckedChange={() => {
+                                          setSelectedDevSizes(
+                                            handleSelectChange(size, selectedDevSizes)
+                                          );
+                                        }}
+                                      />
+                                      <label htmlFor={`dev-${size}`} className="text-sm">
+                                        {size}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="font-medium mb-2">Estimated Sales</h4>
+                                <RadioGroup 
+                                  value={selectedSalesRange}
+                                  onValueChange={setSelectedSalesRange}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="under1m" id="under1m" />
+                                    <label htmlFor="under1m" className="text-sm">Under 1M</label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="1mTo5m" id="1mTo5m" />
+                                    <label htmlFor="1mTo5m" className="text-sm">1M - 5M</label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="over5m" id="over5m" />
+                                    <label htmlFor="over5m" className="text-sm">Over 5M</label>
+                                  </div>
+                                </RadioGroup>
+                              </div>
                             </div>
+                            <Button 
+                              className="w-full mt-4 bg-atlas-purple" 
+                              onClick={() => {
+                                applyFilters();
+                                setFilterOpen(false);
+                              }}
+                            >
+                              Apply Filters
+                            </Button>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button 
+                          className="bg-atlas-purple"
+                          onClick={handleGenerateMatches}
+                        >
+                          Find Matches
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {filteredResults.length > 0 ? (
+                        filteredResults.map((game, index) => (
+                          <div key={index} className="flex items-start p-4 border rounded-lg gap-4">
+                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                            <div className="flex-1">
+                              <h3 className="font-medium">{game.name}</h3>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {game.overlap} audience overlap
+                                </p>
+                                <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
+                                  {game.devSize}
+                                </span>
+                                <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
+                                  {game.estSales}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {game.tags.map((tag, i) => (
+                                  <span key={i} className="bg-atlas-teal bg-opacity-10 text-atlas-teal px-2 py-0.5 rounded-full text-xs">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1 flex-shrink-0">
+                              <span>Details</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center p-8 border border-dashed rounded-lg">
+                          <p className="text-gray-500">No matching games found. Try adjusting your filters.</p>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button className="bg-atlas-purple ml-auto" disabled>View Full Report</Button>
+                    <Button className="bg-atlas-purple ml-auto">View Full Report</Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -143,7 +415,7 @@ const Demo = () => {
                             </div>
                             <div className="text-sm text-gray-500 mt-1">{item.type} • {item.age}</div>
                           </div>
-                          <Button variant="outline" size="sm" className="flex items-center gap-1" disabled>
+                          <Button variant="outline" size="sm" className="flex items-center gap-1">
                             <span>View</span>
                             <ChevronRight className="w-4 h-4" />
                           </Button>
@@ -152,7 +424,7 @@ const Demo = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button className="bg-atlas-purple ml-auto" disabled>View All Communities</Button>
+                    <Button className="bg-atlas-purple ml-auto">View All Communities</Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -183,7 +455,7 @@ const Demo = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button className="bg-atlas-purple ml-auto" disabled>View All Creators</Button>
+                    <Button className="bg-atlas-purple ml-auto">View All Creators</Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
