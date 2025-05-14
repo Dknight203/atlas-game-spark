@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -23,6 +22,12 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 
 const Demo = () => {
   const [activeTab, setActiveTab] = useState("signal-profile");
@@ -82,6 +87,26 @@ const Demo = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDevSizes, setSelectedDevSizes] = useState<string[]>([]);
   const [selectedSalesRange, setSelectedSalesRange] = useState<string>("");
+
+  // Define developer size categories with descriptions
+  const developerSizes = [
+    { 
+      name: "Solo", 
+      description: "1 person development team" 
+    },
+    { 
+      name: "Small", 
+      description: "2-10 person development team" 
+    },
+    { 
+      name: "Medium", 
+      description: "11-50 person development team" 
+    },
+    { 
+      name: "Large", 
+      description: "51+ person development team" 
+    }
+  ];
 
   const form = useForm({
     defaultValues: {
@@ -285,27 +310,38 @@ const Demo = () => {
                               <span>Filters</span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className="w-56 bg-white p-4" align="start">
+                          <DropdownMenuContent className="w-64 bg-white p-4" align="start">
                             <div className="space-y-4">
                               <div>
                                 <h4 className="font-medium mb-2">Developer Size</h4>
                                 <div className="space-y-2">
-                                  {["Solo", "Small", "Medium", "Large"].map(size => (
-                                    <div key={size} className="flex items-center space-x-2">
-                                      <Checkbox 
-                                        id={`dev-${size}`}
-                                        checked={selectedDevSizes.includes(size)}
-                                        onCheckedChange={() => {
-                                          setSelectedDevSizes(
-                                            handleSelectChange(size, selectedDevSizes)
-                                          );
-                                        }}
-                                      />
-                                      <label htmlFor={`dev-${size}`} className="text-sm">
-                                        {size}
-                                      </label>
-                                    </div>
-                                  ))}
+                                  <TooltipProvider>
+                                    {developerSizes.map(size => (
+                                      <div key={size.name} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                          id={`dev-${size.name}`}
+                                          checked={selectedDevSizes.includes(size.name)}
+                                          onCheckedChange={() => {
+                                            setSelectedDevSizes(
+                                              handleSelectChange(size.name, selectedDevSizes)
+                                            );
+                                          }}
+                                        />
+                                        <label htmlFor={`dev-${size.name}`} className="text-sm flex items-center">
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="cursor-help border-b border-dotted border-gray-400">
+                                                {size.name}
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p className="text-sm">{size.description}</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </TooltipProvider>
                                 </div>
                               </div>
                               <div>
@@ -360,9 +396,18 @@ const Demo = () => {
                                 <p className="text-sm text-gray-600 mt-1">
                                   {game.overlap} audience overlap
                                 </p>
-                                <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                                  {game.devSize}
-                                </span>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="text-xs bg-gray-200 px-2 py-0.5 rounded cursor-help">
+                                      {game.devSize}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-sm">
+                                      {developerSizes.find(size => size.name === game.devSize)?.description || game.devSize}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
                                   {game.estSales}
                                 </span>
