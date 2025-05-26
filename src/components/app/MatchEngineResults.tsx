@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, RefreshCw, Filter, TrendingUp, Calendar, Users } from "lucide-react";
+import { ExternalLink, RefreshCw, Filter, TrendingUp, Calendar, Users, Wifi, WifiOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,6 +38,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
   const [showMarketData, setShowMarketData] = useState(false);
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [teamSizeFilter, setTeamSizeFilter] = useState<string>("all");
+  const [isLiveData, setIsLiveData] = useState(false);
   const { toast } = useToast();
 
   // Helper function to safely convert Json to string array
@@ -48,7 +49,39 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     return [];
   };
 
-  // Expanded game database with market performance data and team sizes
+  // Fetch live game data from external APIs
+  const fetchLiveGameData = async (themes: string[], mechanics: string[], tone: string, genre?: string) => {
+    try {
+      console.log('Fetching live game data...');
+      
+      const { data, error } = await supabase.functions.invoke('fetch-game-data', {
+        body: {
+          genre: genre || '',
+          themes: themes,
+          mechanics: mechanics,
+          tone: tone
+        }
+      });
+
+      if (error) {
+        console.error('Error calling fetch-game-data function:', error);
+        throw error;
+      }
+
+      console.log('Live game data received:', data);
+      return data.games || [];
+    } catch (error) {
+      console.error('Error fetching live game data:', error);
+      toast({
+        title: "Live Data Unavailable",
+        description: "Falling back to sample data. Check your internet connection.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Fallback sample data (existing generateMatches function)
   const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string) => {
     const gameDatabase = {
       "Life Sim": [
@@ -71,164 +104,38 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           }
         },
         {
-          id: 2,
-          name: "Animal Crossing: New Horizons",
+          id: 11,
+          name: "Life by You",
           similarity: 88,
-          sharedTags: ["Life Simulation", "Customization", "Social", "Collecting"],
-          platform: "Nintendo Switch",
-          communitySize: "Large",
-          recentActivity: "High",
-          description: "Build your island paradise in this charming social simulation",
-          releaseYear: 2020,
+          sharedTags: ["Life Simulation", "Character Customization", "Building", "Modding"],
+          platform: "PC",
+          communitySize: "Medium",
+          recentActivity: "Very High",
+          description: "Next-generation life simulation with unprecedented customization",
+          steamUrl: "https://store.steampowered.com/app/1521190/Life_by_You/",
+          releaseYear: 2025,
           teamSize: "Medium (20-50 developers)",
           marketPerformance: {
-            revenue: "$654M in 2020",
-            playerBase: "42M+ players",
-            growthRate: "+8% YoY"
+            revenue: "$15M pre-launch",
+            playerBase: "500K+ wishlist",
+            growthRate: "+200% YoY"
           }
         },
         {
-          id: 3,
-          name: "Stardew Valley",
+          id: 12,
+          name: "Paralives",
           similarity: 85,
-          sharedTags: ["Life Simulation", "Farming", "Relationships", "Crafting"],
-          platform: "Multiple",
+          sharedTags: ["Life Simulation", "Architecture", "Creativity", "Community"],
+          platform: "PC",
           communitySize: "Large",
-          recentActivity: "High",
-          description: "Farm, mine, fight, and build relationships in this pixel art life sim",
-          steamUrl: "https://store.steampowered.com/app/413150/Stardew_Valley/",
-          releaseYear: 2016,
-          teamSize: "Solo Developer",
-          marketPerformance: {
-            revenue: "$300M+ lifetime",
-            playerBase: "20M+ players",
-            growthRate: "+12% YoY"
-          }
-        },
-        {
-          id: 4,
-          name: "My Time at Portia",
-          similarity: 78,
-          sharedTags: ["Life Simulation", "Crafting", "Building", "RPG Elements"],
-          platform: "Multiple",
-          communitySize: "Medium",
-          recentActivity: "Medium",
-          description: "Restore your father's workshop in this charming post-apocalyptic life sim",
-          steamUrl: "https://store.steampowered.com/app/666140/My_Time_At_Portia/",
-          releaseYear: 2019,
+          recentActivity: "Very High",
+          description: "Innovative life simulation focusing on creativity and player freedom",
+          releaseYear: 2025,
           teamSize: "Small (5-20 developers)",
           marketPerformance: {
-            revenue: "$45M lifetime",
-            playerBase: "4M+ players",
-            growthRate: "+5% YoY"
-          }
-        },
-        {
-          id: 5,
-          name: "Two Point Hospital",
-          similarity: 82,
-          sharedTags: ["Management", "Simulation", "Building", "Strategy"],
-          platform: "Multiple",
-          communitySize: "Medium",
-          recentActivity: "Medium",
-          description: "Build and manage hospitals in this quirky management simulation",
-          steamUrl: "https://store.steampowered.com/app/535930/Two_Point_Hospital/",
-          releaseYear: 2018,
-          teamSize: "Medium (20-50 developers)",
-          marketPerformance: {
-            revenue: "$35M lifetime",
-            playerBase: "3M+ players",
-            growthRate: "+3% YoY"
-          }
-        },
-        {
-          id: 6,
-          name: "Planet Coaster",
-          similarity: 75,
-          sharedTags: ["Building", "Management", "Creativity", "Simulation"],
-          platform: "Multiple",
-          communitySize: "Large",
-          recentActivity: "Medium",
-          description: "Design and build amazing theme parks with detailed customization",
-          steamUrl: "https://store.steampowered.com/app/493340/Planet_Coaster/",
-          releaseYear: 2016,
-          teamSize: "Medium (20-50 developers)",
-          marketPerformance: {
-            revenue: "$120M lifetime",
-            playerBase: "8M+ players",
-            growthRate: "+7% YoY"
-          }
-        },
-        {
-          id: 7,
-          name: "Spiritfarer",
-          similarity: 80,
-          sharedTags: ["Life Simulation", "Emotional", "Crafting", "Adventure"],
-          platform: "Multiple",
-          communitySize: "Medium",
-          recentActivity: "Medium",
-          description: "A cozy management game about caring for spirits before releasing them",
-          steamUrl: "https://store.steampowered.com/app/972660/Spiritfarer/",
-          releaseYear: 2020,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$25M lifetime",
-            playerBase: "2M+ players",
-            growthRate: "+8% YoY"
-          }
-        },
-        {
-          id: 8,
-          name: "PowerWash Simulator",
-          similarity: 73,
-          sharedTags: ["Simulation", "Relaxing", "Satisfying", "Cleaning"],
-          platform: "Multiple",
-          communitySize: "Large",
-          recentActivity: "High",
-          description: "Satisfying cleaning simulation that became unexpectedly popular",
-          steamUrl: "https://store.steampowered.com/app/1290000/PowerWash_Simulator/",
-          releaseYear: 2022,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$50M lifetime",
-            playerBase: "5M+ players",
-            growthRate: "+40% YoY"
-          }
-        },
-        {
-          id: 9,
-          name: "House Flipper",
-          similarity: 77,
-          sharedTags: ["Simulation", "Building", "Renovation", "Business"],
-          platform: "Multiple",
-          communitySize: "Medium",
-          recentActivity: "Medium",
-          description: "Buy, renovate and sell houses in this detailed house flipping simulator",
-          steamUrl: "https://store.steampowered.com/app/613100/House_Flipper/",
-          releaseYear: 2018,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$40M lifetime",
-            playerBase: "6M+ players",
-            growthRate: "+6% YoY"
-          }
-        },
-        {
-          id: 10,
-          name: "Unpacking",
-          similarity: 71,
-          sharedTags: ["Life Simulation", "Emotional", "Zen", "Storytelling"],
-          platform: "Multiple",
-          communitySize: "Medium",
-          recentActivity: "Medium",
-          description: "Unpack belongings and piece together stories in this meditative game",
-          steamUrl: "https://store.steampowered.com/app/1135690/Unpacking/",
-          releaseYear: 2021,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$15M lifetime",
-            playerBase: "1.5M+ players",
-            growthRate: "+12% YoY"
+            revenue: "$8M crowdfunded",
+            playerBase: "1M+ followers",
+            growthRate: "+150% YoY"
           }
         }
       ],
@@ -412,7 +319,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('genre')
-        .eq('id', projectId)
+        .eq('project_id', projectId)
         .maybeSingle();
 
       if (projectError && projectError.code !== 'PGRST116') {
@@ -425,7 +332,23 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       const tone = signalProfile?.tone || "";
       const genre = project?.genre || "";
 
-      const generatedMatches = generateMatches(themes, mechanics, tone, genre);
+      // Try to fetch live data first, fall back to sample data
+      let generatedMatches: GameMatch[] = [];
+      
+      try {
+        console.log('Attempting to fetch live game data...');
+        generatedMatches = await fetchLiveGameData(themes, mechanics, tone, genre);
+        setIsLiveData(true);
+        toast({
+          title: "Live Data Connected",
+          description: "Showing current games from Steam and other databases",
+        });
+      } catch (error) {
+        console.log('Live data fetch failed, using sample data');
+        generatedMatches = generateMatches(themes, mechanics, tone, genre);
+        setIsLiveData(false);
+      }
+
       setMatches(generatedMatches);
       setFilteredMatches(generatedMatches);
 
@@ -524,9 +447,19 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>Cross-Game Match Engine</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Cross-Game Match Engine
+                {isLiveData ? (
+                  <Wifi className="w-5 h-5 text-green-600" title="Live data connected" />
+                ) : (
+                  <WifiOff className="w-5 h-5 text-gray-400" title="Using sample data" />
+                )}
+              </CardTitle>
               <CardDescription>
-                Games with similar audiences and mechanics to help you identify potential communities and marketing opportunities.
+                {isLiveData 
+                  ? "Live games from Steam and other databases with similar audiences and mechanics."
+                  : "Sample games with similar audiences and mechanics. Live data temporarily unavailable."
+                }
                 {filteredMatches.length !== matches.length && (
                   <span className="block mt-1 text-sm font-medium">
                     Showing {filteredMatches.length} of {matches.length} matches
