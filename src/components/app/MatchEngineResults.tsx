@@ -36,8 +36,16 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showMarketData, setShowMarketData] = useState(false);
+  
+  // Enhanced filtering options
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [teamSizeFilter, setTeamSizeFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [genreFilter, setGenreFilter] = useState<string>("all");
+  const [similarityFilter, setSimilarityFilter] = useState<string>("all");
+  const [revenueFilter, setRevenueFilter] = useState<string>("all");
+  const [playerBaseFilter, setPlayerBaseFilter] = useState<string>("all");
+  
   const [isLiveData, setIsLiveData] = useState(false);
   const { toast } = useToast();
 
@@ -81,7 +89,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     }
   };
 
-  // Fallback sample data (existing generateMatches function)
+  // Enhanced sample data with better categorization
   const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string) => {
     const gameDatabase = {
       "Life Sim": [
@@ -90,7 +98,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           name: "The Sims 4",
           similarity: 92,
           sharedTags: ["Life Simulation", "Character Customization", "Building", "Relationships"],
-          platform: "Multiple",
+          platform: "PC, Console",
           communitySize: "Very Large",
           recentActivity: "High",
           description: "Create and control virtual people in a detailed life simulation game",
@@ -105,195 +113,67 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
         },
         {
           id: 11,
-          name: "Life by You",
+          name: "Stardew Valley",
           similarity: 88,
-          sharedTags: ["Life Simulation", "Character Customization", "Building", "Modding"],
-          platform: "PC",
-          communitySize: "Medium",
-          recentActivity: "Very High",
-          description: "Next-generation life simulation with unprecedented customization",
-          steamUrl: "https://store.steampowered.com/app/1521190/Life_by_You/",
-          releaseYear: 2025,
-          teamSize: "Medium (20-50 developers)",
-          marketPerformance: {
-            revenue: "$15M pre-launch",
-            playerBase: "500K+ wishlist",
-            growthRate: "+200% YoY"
-          }
-        },
-        {
-          id: 12,
-          name: "Paralives",
-          similarity: 85,
-          sharedTags: ["Life Simulation", "Architecture", "Creativity", "Community"],
-          platform: "PC",
+          sharedTags: ["Life Simulation", "Farming", "Relationships", "Pixel Art"],
+          platform: "PC, Switch, Mobile",
           communitySize: "Large",
           recentActivity: "Very High",
-          description: "Innovative life simulation focusing on creativity and player freedom",
-          releaseYear: 2025,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$8M crowdfunded",
-            playerBase: "1M+ followers",
-            growthRate: "+150% YoY"
-          }
-        }
-      ],
-      "RPG": [
-        {
-          id: 1,
-          name: "The Elder Scrolls V: Skyrim",
-          similarity: 89,
-          sharedTags: ["Open World", "Character Progression", "Fantasy", "Exploration"],
-          platform: "Multiple",
-          communitySize: "Very Large",
-          recentActivity: "High",
-          description: "Epic fantasy RPG with massive open world and endless possibilities",
-          steamUrl: "https://store.steampowered.com/app/489830/The_Elder_Scrolls_V_Skyrim_Special_Edition/",
-          releaseYear: 2011,
-          teamSize: "Large (100+ developers)",
-          marketPerformance: {
-            revenue: "$1.9B+ lifetime",
-            playerBase: "60M+ players",
-            growthRate: "+4% YoY"
-          }
-        },
-        {
-          id: 2,
-          name: "The Witcher 3",
-          similarity: 86,
-          sharedTags: ["Story-Rich", "Fantasy", "Character Development", "Open World"],
-          platform: "Multiple",
-          communitySize: "Very Large",
-          recentActivity: "High",
-          description: "Hunt monsters and navigate political intrigue in this acclaimed RPG",
-          steamUrl: "https://store.steampowered.com/app/292030/The_Witcher_3_Wild_Hunt/",
-          releaseYear: 2015,
-          teamSize: "Large (100+ developers)",
-          marketPerformance: {
-            revenue: "$688M lifetime",
-            playerBase: "50M+ players",
-            growthRate: "+6% YoY"
-          }
-        },
-        {
-          id: 3,
-          name: "Divinity: Original Sin 2",
-          similarity: 83,
-          sharedTags: ["Turn-Based", "Co-op", "Fantasy", "Strategic Combat"],
-          platform: "Multiple",
-          communitySize: "Large",
-          recentActivity: "Medium",
-          description: "Tactical RPG with deep character customization and cooperative gameplay",
-          steamUrl: "https://store.steampowered.com/app/435150/Divinity_Original_Sin_2__Definitive_Edition/",
-          releaseYear: 2017,
-          teamSize: "Medium (20-50 developers)",
-          marketPerformance: {
-            revenue: "$85M lifetime",
-            playerBase: "7M+ players",
-            growthRate: "+10% YoY"
-          }
-        },
-        {
-          id: 4,
-          name: "Baldur's Gate 3",
-          similarity: 91,
-          sharedTags: ["Turn-Based", "Story-Rich", "Character Development", "Fantasy"],
-          platform: "Multiple",
-          communitySize: "Very Large",
-          recentActivity: "Very High",
-          description: "Epic D&D adventure with unprecedented choice and consequence",
-          steamUrl: "https://store.steampowered.com/app/1086940/Baldurs_Gate_3/",
-          releaseYear: 2023,
-          teamSize: "Large (100+ developers)",
-          marketPerformance: {
-            revenue: "$650M in 2023",
-            playerBase: "22M+ players",
-            growthRate: "+180% YoY"
-          }
-        }
-      ],
-      "Space": [
-        {
-          id: 1,
-          name: "Starbound",
-          similarity: 87,
-          sharedTags: ["Space", "Exploration", "Crafting", "2D"],
-          platform: "Steam",
-          communitySize: "Large",
-          recentActivity: "High",
-          description: "2D space exploration game with building and crafting mechanics",
-          steamUrl: "https://store.steampowered.com/app/211820/Starbound/",
+          description: "A farming simulation game with life sim elements and cozy gameplay",
+          steamUrl: "https://store.steampowered.com/app/413150/Stardew_Valley/",
           releaseYear: 2016,
-          teamSize: "Small (5-20 developers)",
+          teamSize: "Solo Developer",
           marketPerformance: {
-            revenue: "$45M lifetime",
-            playerBase: "5M+ players",
-            growthRate: "+2% YoY"
-          }
-        },
-        {
-          id: 2,
-          name: "No Man's Sky",
-          similarity: 82,
-          sharedTags: ["Space", "Exploration", "Crafting", "Procedural"],
-          platform: "Steam",
-          communitySize: "Very Large",
-          recentActivity: "High",
-          description: "Infinite procedural space exploration and survival game",
-          steamUrl: "https://store.steampowered.com/app/275850/No_Mans_Sky/",
-          releaseYear: 2016,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$200M+ lifetime",
-            playerBase: "15M+ players",
+            revenue: "$300M+ lifetime",
+            playerBase: "20M+ players",
             growthRate: "+25% YoY"
           }
         },
         {
-          id: 3,
-          name: "Kerbal Space Program",
-          similarity: 79,
-          sharedTags: ["Space", "Physics", "Building", "Educational"],
-          platform: "Multiple",
-          communitySize: "Large",
-          recentActivity: "Medium",
-          description: "Build and fly spacecraft in this realistic space simulation",
-          steamUrl: "https://store.steampowered.com/app/220200/Kerbal_Space_Program/",
-          releaseYear: 2015,
-          teamSize: "Medium (20-50 developers)",
+          id: 12,
+          name: "Animal Crossing: New Horizons",
+          similarity: 85,
+          sharedTags: ["Life Simulation", "Social", "Customization", "Relaxing"],
+          platform: "Switch",
+          communitySize: "Very Large",
+          recentActivity: "High",
+          description: "Create your own island paradise and live a peaceful life",
+          releaseYear: 2020,
+          teamSize: "Large (100+ developers)",
           marketPerformance: {
-            revenue: "$100M+ lifetime",
-            playerBase: "8M+ players",
-            growthRate: "+1% YoY"
+            revenue: "$2B+ lifetime",
+            playerBase: "39M+ players",
+            growthRate: "+10% YoY"
+          }
+        },
+        {
+          id: 13,
+          name: "My Time at Portia",
+          similarity: 82,
+          sharedTags: ["Life Simulation", "Crafting", "Adventure", "Relationships"],
+          platform: "PC, Switch, Console",
+          communitySize: "Medium",
+          recentActivity: "Medium",
+          description: "Restore your Pa's neglected workshop to its former glory",
+          steamUrl: "https://store.steampowered.com/app/666140/My_Time_at_Portia/",
+          releaseYear: 2019,
+          teamSize: "Small (5-20 developers)",
+          marketPerformance: {
+            revenue: "$50M+ lifetime",
+            playerBase: "3M+ players",
+            growthRate: "+5% YoY"
           }
         }
       ]
     };
 
-    // Determine game category based on themes, mechanics, and genre
-    let category = "Life Sim"; // default for life simulation projects
-    
-    if (genre) {
-      if (genre.toLowerCase().includes("rpg")) {
-        category = "RPG";
-      } else if (genre.toLowerCase().includes("strategy")) {
-        category = "RPG"; // Use RPG as fallback for strategy
-      }
+    // For life sim projects, return life sim games
+    if (genre?.toLowerCase().includes("life") || genre?.toLowerCase().includes("sim")) {
+      return gameDatabase["Life Sim"];
     }
 
-    // Check themes for space-related content
-    const spaceThemes = themes.some(theme => 
-      theme.toLowerCase().includes("space") || 
-      theme.toLowerCase().includes("sci-fi") || 
-      theme.toLowerCase().includes("futuristic")
-    );
-    
-    if (spaceThemes) {
-      category = "Space";
-    }
-
-    return gameDatabase[category as keyof typeof gameDatabase] || gameDatabase["Life Sim"];
+    // Default fallback
+    return gameDatabase["Life Sim"];
   };
 
   const loadMatches = async () => {
@@ -315,7 +195,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
         return;
       }
 
-      // Also fetch project details for genre - fix the column name
+      // Also fetch project details for genre
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('genre')
@@ -364,10 +244,11 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     }
   };
 
-  // Filter matches based on selected criteria
+  // Enhanced filter matches with more criteria
   useEffect(() => {
     let filtered = [...matches];
 
+    // Year filter
     if (yearFilter !== "all") {
       const currentYear = new Date().getFullYear();
       
@@ -382,6 +263,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       }
     }
 
+    // Team size filter
     if (teamSizeFilter !== "all") {
       filtered = filtered.filter(match => {
         const teamSize = match.teamSize.toLowerCase();
@@ -393,8 +275,61 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       });
     }
 
+    // Platform filter
+    if (platformFilter !== "all") {
+      filtered = filtered.filter(match => {
+        const platform = match.platform.toLowerCase();
+        if (platformFilter === "pc") return platform.includes("pc") || platform.includes("steam");
+        if (platformFilter === "switch") return platform.includes("switch");
+        if (platformFilter === "console") return platform.includes("console");
+        if (platformFilter === "mobile") return platform.includes("mobile");
+        if (platformFilter === "cross-platform") return platform.includes(",") || platform.includes("multiple");
+        return true;
+      });
+    }
+
+    // Genre/Tag filter
+    if (genreFilter !== "all") {
+      filtered = filtered.filter(match => {
+        const tags = match.sharedTags.join(" ").toLowerCase();
+        return tags.includes(genreFilter.toLowerCase());
+      });
+    }
+
+    // Similarity filter
+    if (similarityFilter !== "all") {
+      filtered = filtered.filter(match => {
+        if (similarityFilter === "high") return match.similarity >= 85;
+        if (similarityFilter === "medium") return match.similarity >= 70 && match.similarity < 85;
+        if (similarityFilter === "low") return match.similarity < 70;
+        return true;
+      });
+    }
+
+    // Revenue filter
+    if (revenueFilter !== "all") {
+      filtered = filtered.filter(match => {
+        const revenue = match.marketPerformance.revenue.toLowerCase();
+        if (revenueFilter === "indie") return revenue.includes("m") && !revenue.includes("b");
+        if (revenueFilter === "aa") return revenue.includes("100m") || revenue.includes("200m") || revenue.includes("300m");
+        if (revenueFilter === "aaa") return revenue.includes("b") || revenue.includes("1.") || revenue.includes("2.");
+        return true;
+      });
+    }
+
+    // Player base filter
+    if (playerBaseFilter !== "all") {
+      filtered = filtered.filter(match => {
+        const playerBase = match.marketPerformance.playerBase.toLowerCase();
+        if (playerBaseFilter === "niche") return playerBase.includes("k") || (playerBase.includes("m") && parseInt(playerBase) < 5);
+        if (playerBaseFilter === "popular") return playerBase.includes("m") && parseInt(playerBase) >= 5 && parseInt(playerBase) < 20;
+        if (playerBaseFilter === "mainstream") return playerBase.includes("m") && parseInt(playerBase) >= 20;
+        return true;
+      });
+    }
+
     setFilteredMatches(filtered);
-  }, [matches, yearFilter, teamSizeFilter]);
+  }, [matches, yearFilter, teamSizeFilter, platformFilter, genreFilter, similarityFilter, revenueFilter, playerBaseFilter]);
 
   useEffect(() => {
     loadMatches();
@@ -406,6 +341,16 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     setTimeout(() => {
       setIsRefreshing(false);
     }, 1000);
+  };
+
+  const clearAllFilters = () => {
+    setYearFilter("all");
+    setTeamSizeFilter("all");
+    setPlatformFilter("all");
+    setGenreFilter("all");
+    setSimilarityFilter("all");
+    setRevenueFilter("all");
+    setPlayerBaseFilter("all");
   };
 
   const handleViewDetails = (match: GameMatch) => {
@@ -488,39 +433,114 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex gap-4 mt-4">
+          {/* Enhanced Filters */}
+          <div className="space-y-4 mt-4">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium">Filters:</span>
+              <span className="text-sm font-medium">Match Criteria:</span>
+              <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                Clear All
+              </Button>
             </div>
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Release Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                <SelectItem value="current">Current Year (2025)</SelectItem>
-                <SelectItem value="recent">Recent (2022-2025)</SelectItem>
-                <SelectItem value="2020s">2020s</SelectItem>
-                <SelectItem value="2010s">2010s</SelectItem>
-              </SelectContent>
-            </Select>
             
-            <Select value={teamSizeFilter} onValueChange={setTeamSizeFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Team Size" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Team Sizes</SelectItem>
-                <SelectItem value="solo">Solo Developer</SelectItem>
-                <SelectItem value="small">Small (5-20)</SelectItem>
-                <SelectItem value="medium">Medium (20-50)</SelectItem>
-                <SelectItem value="large">Large (100+)</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* First row of filters */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Release Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  <SelectItem value="current">Current Year (2025)</SelectItem>
+                  <SelectItem value="recent">Recent (2022-2025)</SelectItem>
+                  <SelectItem value="2020s">2020s</SelectItem>
+                  <SelectItem value="2010s">2010s</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={teamSizeFilter} onValueChange={setTeamSizeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Team Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Team Sizes</SelectItem>
+                  <SelectItem value="solo">Solo Developer</SelectItem>
+                  <SelectItem value="small">Small (5-20)</SelectItem>
+                  <SelectItem value="medium">Medium (20-50)</SelectItem>
+                  <SelectItem value="large">Large (100+)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Platforms</SelectItem>
+                  <SelectItem value="pc">PC/Steam</SelectItem>
+                  <SelectItem value="switch">Nintendo Switch</SelectItem>
+                  <SelectItem value="console">Console</SelectItem>
+                  <SelectItem value="mobile">Mobile</SelectItem>
+                  <SelectItem value="cross-platform">Cross-Platform</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={genreFilter} onValueChange={setGenreFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Genre/Theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genres</SelectItem>
+                  <SelectItem value="simulation">Simulation</SelectItem>
+                  <SelectItem value="farming">Farming</SelectItem>
+                  <SelectItem value="relationships">Social/Relationships</SelectItem>
+                  <SelectItem value="customization">Customization</SelectItem>
+                  <SelectItem value="relaxing">Relaxing/Cozy</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Second row of filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Select value={similarityFilter} onValueChange={setSimilarityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Similarity Score" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Similarities</SelectItem>
+                  <SelectItem value="high">High Match (85%+)</SelectItem>
+                  <SelectItem value="medium">Medium Match (70-84%)</SelectItem>
+                  <SelectItem value="low">Low Match (&lt;70%)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={revenueFilter} onValueChange={setRevenueFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Revenue Scale" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Revenue Levels</SelectItem>
+                  <SelectItem value="indie">Indie (&lt;$100M)</SelectItem>
+                  <SelectItem value="aa">AA ($100M-$1B)</SelectItem>
+                  <SelectItem value="aaa">AAA ($1B+)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={playerBaseFilter} onValueChange={setPlayerBaseFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Player Base Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Player Bases</SelectItem>
+                  <SelectItem value="niche">Niche (&lt;5M players)</SelectItem>
+                  <SelectItem value="popular">Popular (5-20M players)</SelectItem>
+                  <SelectItem value="mainstream">Mainstream (20M+ players)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
+        
         <CardContent>
           <div className="space-y-4">
             {filteredMatches.map((match) => (
@@ -603,16 +623,13 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
             
             {filteredMatches.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No matches found for the selected filters.</p>
+                <p className="text-gray-500">No matches found for the selected criteria.</p>
                 <Button 
                   variant="outline" 
                   className="mt-2"
-                  onClick={() => {
-                    setYearFilter("all");
-                    setTeamSizeFilter("all");
-                  }}
+                  onClick={clearAllFilters}
                 >
-                  Clear Filters
+                  Clear All Filters
                 </Button>
               </div>
             )}
