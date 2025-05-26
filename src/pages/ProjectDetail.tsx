@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -10,21 +10,119 @@ import SignalProfileBuilder from "@/components/app/SignalProfileBuilder";
 import MatchEngineResults from "@/components/app/MatchEngineResults";
 import CommunityFinderResults from "@/components/app/CommunityFinderResults";
 import CreatorMatchResults from "@/components/app/CreatorMatchResults";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  genre: string;
+  platform: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const ProjectDetail = () => {
   const { id } = useParams();
-  const [project] = useState({
-    id: 1,
-    name: "Space Explorer RPG",
-    description: "A retro-style space exploration RPG with crafting and trading mechanics",
-    genre: "RPG",
-    platform: "PC",
-    status: "Active",
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Mock stats for now - these could be calculated from related data in the future
+  const mockStats = {
     matches: 24,
     communities: 8,
     creators: 12,
     lastUpdated: "2 days ago"
-  });
+  };
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching project:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load project details",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!data) {
+          toast({
+            title: "Project not found",
+            description: "The requested project could not be found",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setProject(data);
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [id, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="pt-20 pb-12">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-atlas-purple"></div>
+              <p className="ml-4 text-gray-600">Loading project...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="pt-20 pb-12">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-4 mb-6">
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Project not found</h1>
+              <p className="text-gray-600">The requested project could not be found.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,12 +145,16 @@ const ProjectDetail = () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{project.name}</h1>
               <p className="text-gray-600 max-w-2xl">{project.description}</p>
               <div className="flex gap-4 mt-4">
-                <span className="text-sm bg-atlas-purple bg-opacity-10 text-atlas-purple px-3 py-1 rounded-full">
-                  {project.genre}
-                </span>
-                <span className="text-sm bg-atlas-teal bg-opacity-10 text-atlas-teal px-3 py-1 rounded-full">
-                  {project.platform}
-                </span>
+                {project.genre && (
+                  <span className="text-sm bg-atlas-purple bg-opacity-10 text-atlas-purple px-3 py-1 rounded-full">
+                    {project.genre}
+                  </span>
+                )}
+                {project.platform && (
+                  <span className="text-sm bg-atlas-teal bg-opacity-10 text-atlas-teal px-3 py-1 rounded-full">
+                    {project.platform}
+                  </span>
+                )}
                 <span className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
                   {project.status}
                 </span>
@@ -72,7 +174,7 @@ const ProjectDetail = () => {
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-atlas-purple">{project.matches}</div>
+                <div className="text-2xl font-bold text-atlas-purple">{mockStats.matches}</div>
                 <p className="text-xs text-muted-foreground">Similar games found</p>
               </CardContent>
             </Card>
@@ -83,7 +185,7 @@ const ProjectDetail = () => {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-atlas-teal">{project.communities}</div>
+                <div className="text-2xl font-bold text-atlas-teal">{mockStats.communities}</div>
                 <p className="text-xs text-muted-foreground">Active communities</p>
               </CardContent>
             </Card>
@@ -94,7 +196,7 @@ const ProjectDetail = () => {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-atlas-orange">{project.creators}</div>
+                <div className="text-2xl font-bold text-atlas-orange">{mockStats.creators}</div>
                 <p className="text-xs text-muted-foreground">Potential creators</p>
               </CardContent>
             </Card>
@@ -110,19 +212,19 @@ const ProjectDetail = () => {
             </TabsList>
             
             <TabsContent value="signal-profile">
-              <SignalProfileBuilder projectId={id || "1"} />
+              <SignalProfileBuilder projectId={id || ""} />
             </TabsContent>
             
             <TabsContent value="matches">
-              <MatchEngineResults projectId={id || "1"} />
+              <MatchEngineResults projectId={id || ""} />
             </TabsContent>
             
             <TabsContent value="communities">
-              <CommunityFinderResults projectId={id || "1"} />
+              <CommunityFinderResults projectId={id || ""} />
             </TabsContent>
             
             <TabsContent value="creators">
-              <CreatorMatchResults projectId={id || "1"} />
+              <CreatorMatchResults projectId={id || ""} />
             </TabsContent>
           </Tabs>
         </div>
