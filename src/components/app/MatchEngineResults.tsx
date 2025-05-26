@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,197 +99,145 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     }
   };
 
-  // Simplified filter functions with explicit return types
-  const filterByYear = (games: GameMatch[]): GameMatch[] => {
-    if (matchCriteria.yearFilter === "all") return games;
+  // Simple filtering functions with basic logic
+  const applyYearFilter = (games: GameMatch[], filter: string) => {
+    if (filter === "all") return games;
     
     const currentYear = new Date().getFullYear();
-    const result: GameMatch[] = [];
-    
-    for (const game of games) {
-      let shouldInclude = false;
-      switch (matchCriteria.yearFilter) {
+    return games.filter(game => {
+      switch (filter) {
         case "current":
-          shouldInclude = game.releaseYear === currentYear;
-          break;
+          return game.releaseYear === currentYear;
         case "recent":
-          shouldInclude = game.releaseYear >= 2022 && game.releaseYear <= currentYear;
-          break;
+          return game.releaseYear >= 2022 && game.releaseYear <= currentYear;
         case "2020s":
-          shouldInclude = game.releaseYear >= 2020 && game.releaseYear < 2030;
-          break;
+          return game.releaseYear >= 2020 && game.releaseYear < 2030;
         case "2010s":
-          shouldInclude = game.releaseYear >= 2010 && game.releaseYear < 2020;
-          break;
+          return game.releaseYear >= 2010 && game.releaseYear < 2020;
         default:
-          shouldInclude = true;
+          return true;
       }
-      if (shouldInclude) result.push(game);
-    }
-    return result;
+    });
   };
 
-  const filterByTeamSize = (games: GameMatch[]): GameMatch[] => {
-    if (matchCriteria.teamSizeFilter === "all") return games;
+  const applyTeamSizeFilter = (games: GameMatch[], filter: string) => {
+    if (filter === "all") return games;
     
-    const result: GameMatch[] = [];
-    for (const game of games) {
+    return games.filter(game => {
       const teamSize = game.teamSize.toLowerCase();
-      let shouldInclude = false;
-      
-      switch (matchCriteria.teamSizeFilter) {
+      switch (filter) {
         case "solo":
-          shouldInclude = teamSize.includes("solo") || teamSize.includes("1-5");
-          break;
+          return teamSize.includes("solo") || teamSize.includes("1-5");
         case "small":
-          shouldInclude = teamSize.includes("5-20") || teamSize.includes("small");
-          break;
+          return teamSize.includes("5-20") || teamSize.includes("small");
         case "medium":
-          shouldInclude = teamSize.includes("20-50") || teamSize.includes("medium");
-          break;
+          return teamSize.includes("20-50") || teamSize.includes("medium");
         case "large":
-          shouldInclude = teamSize.includes("100+") || teamSize.includes("large");
-          break;
+          return teamSize.includes("100+") || teamSize.includes("large");
         default:
-          shouldInclude = true;
+          return true;
       }
-      if (shouldInclude) result.push(game);
-    }
-    return result;
+    });
   };
 
-  const filterByPlatform = (games: GameMatch[]): GameMatch[] => {
-    if (matchCriteria.platformFilter === "all") return games;
+  const applyPlatformFilter = (games: GameMatch[], filter: string) => {
+    if (filter === "all") return games;
     
-    const result: GameMatch[] = [];
-    for (const game of games) {
+    return games.filter(game => {
       const platform = game.platform.toLowerCase();
-      let shouldInclude = false;
-      
-      switch (matchCriteria.platformFilter) {
+      switch (filter) {
         case "pc":
-          shouldInclude = platform.includes("pc") || platform.includes("steam");
-          break;
+          return platform.includes("pc") || platform.includes("steam");
         case "switch":
-          shouldInclude = platform.includes("switch");
-          break;
+          return platform.includes("switch");
         case "console":
-          shouldInclude = platform.includes("playstation") || platform.includes("xbox") || platform.includes("switch");
-          break;
+          return platform.includes("playstation") || platform.includes("xbox") || platform.includes("switch");
         case "mobile":
-          shouldInclude = platform.includes("ios") || platform.includes("android") || platform.includes("mobile");
-          break;
+          return platform.includes("ios") || platform.includes("android") || platform.includes("mobile");
         case "cross-platform":
-          shouldInclude = platform.includes(",") || platform.includes("+");
-          break;
+          return platform.includes(",") || platform.includes("+");
         default:
-          shouldInclude = true;
+          return true;
       }
-      if (shouldInclude) result.push(game);
-    }
-    return result;
+    });
   };
 
-  const filterBySimilarity = (games: GameMatch[]): GameMatch[] => {
-    if (matchCriteria.similarityFilter === "all") return games;
+  const applySimilarityFilter = (games: GameMatch[], filter: string) => {
+    if (filter === "all") return games;
     
-    const result: GameMatch[] = [];
-    for (const game of games) {
-      let shouldInclude = false;
-      
-      switch (matchCriteria.similarityFilter) {
+    return games.filter(game => {
+      switch (filter) {
         case "high":
-          shouldInclude = game.similarity >= 85;
-          break;
+          return game.similarity >= 85;
         case "medium":
-          shouldInclude = game.similarity >= 70 && game.similarity < 85;
-          break;
+          return game.similarity >= 70 && game.similarity < 85;
         case "low":
-          shouldInclude = game.similarity < 70;
-          break;
+          return game.similarity < 70;
         default:
-          shouldInclude = true;
+          return true;
       }
-      if (shouldInclude) result.push(game);
-    }
-    return result;
+    });
   };
 
-  const filterByRevenue = (games: GameMatch[]): GameMatch[] => {
-    if (matchCriteria.revenueFilter === "all") return games;
+  const applyRevenueFilter = (games: GameMatch[], filter: string) => {
+    if (filter === "all") return games;
     
-    const result: GameMatch[] = [];
-    for (const game of games) {
+    return games.filter(game => {
       const revenueNum = parseInt(game.marketPerformance.revenue.replace(/[^\d]/g, ""));
-      let shouldInclude = false;
-      
-      switch (matchCriteria.revenueFilter) {
+      switch (filter) {
         case "indie":
-          shouldInclude = revenueNum < 100;
-          break;
+          return revenueNum < 100;
         case "aa":
-          shouldInclude = revenueNum >= 100 && revenueNum < 1000;
-          break;
+          return revenueNum >= 100 && revenueNum < 1000;
         case "aaa":
-          shouldInclude = revenueNum >= 1000;
-          break;
+          return revenueNum >= 1000;
         default:
-          shouldInclude = true;
+          return true;
       }
-      if (shouldInclude) result.push(game);
-    }
-    return result;
+    });
   };
 
-  const filterByPlayerBase = (games: GameMatch[]): GameMatch[] => {
-    if (matchCriteria.playerBaseFilter === "all") return games;
+  const applyPlayerBaseFilter = (games: GameMatch[], filter: string) => {
+    if (filter === "all") return games;
     
-    const result: GameMatch[] = [];
-    for (const game of games) {
+    return games.filter(game => {
       const playerNum = parseInt(game.marketPerformance.playerBase.replace(/[^\d]/g, ""));
-      let shouldInclude = false;
-      
-      switch (matchCriteria.playerBaseFilter) {
+      switch (filter) {
         case "niche":
-          shouldInclude = playerNum < 5;
-          break;
+          return playerNum < 5;
         case "popular":
-          shouldInclude = playerNum >= 5 && playerNum < 20;
-          break;
+          return playerNum >= 5 && playerNum < 20;
         case "mainstream":
-          shouldInclude = playerNum >= 20;
-          break;
+          return playerNum >= 20;
         default:
-          shouldInclude = true;
+          return true;
       }
-      if (shouldInclude) result.push(game);
-    }
-    return result;
+    });
   };
 
-  // Apply filters step by step with explicit types
-  const applyMatchCriteria = (gameMatches: GameMatch[]): GameMatch[] => {
+  // Apply all filters step by step
+  const applyAllFilters = (gameMatches: GameMatch[]): GameMatch[] => {
     console.log(`Starting with ${gameMatches.length} matches`);
     
-    const step1: GameMatch[] = filterByYear(gameMatches);
-    console.log(`After year filter: ${step1.length} matches`);
+    let result = applyYearFilter(gameMatches, matchCriteria.yearFilter);
+    console.log(`After year filter: ${result.length} matches`);
     
-    const step2: GameMatch[] = filterByTeamSize(step1);
-    console.log(`After team size filter: ${step2.length} matches`);
+    result = applyTeamSizeFilter(result, matchCriteria.teamSizeFilter);
+    console.log(`After team size filter: ${result.length} matches`);
     
-    const step3: GameMatch[] = filterByPlatform(step2);
-    console.log(`After platform filter: ${step3.length} matches`);
+    result = applyPlatformFilter(result, matchCriteria.platformFilter);
+    console.log(`After platform filter: ${result.length} matches`);
     
-    const step4: GameMatch[] = filterBySimilarity(step3);
-    console.log(`After similarity filter: ${step4.length} matches`);
+    result = applySimilarityFilter(result, matchCriteria.similarityFilter);
+    console.log(`After similarity filter: ${result.length} matches`);
     
-    const step5: GameMatch[] = filterByRevenue(step4);
-    console.log(`After revenue filter: ${step5.length} matches`);
+    result = applyRevenueFilter(result, matchCriteria.revenueFilter);
+    console.log(`After revenue filter: ${result.length} matches`);
     
-    const final: GameMatch[] = filterByPlayerBase(step5);
-    console.log(`Final filtered result: ${final.length} matches`);
+    result = applyPlayerBaseFilter(result, matchCriteria.playerBaseFilter);
+    console.log(`Final filtered result: ${result.length} matches`);
     
-    return final;
+    return result;
   };
 
   // Fetch live game data from external APIs
@@ -467,7 +416,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('genre, platform')
-        .eq('project_id', projectId)
+        .eq('id', projectId)
         .maybeSingle();
 
       if (projectError && projectError.code !== 'PGRST116') {
@@ -501,7 +450,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       setMatches(generatedMatches);
       
       // Apply filters and update filtered matches
-      const filtered: GameMatch[] = applyMatchCriteria(generatedMatches);
+      const filtered = applyAllFilters(generatedMatches);
       setFilteredMatches(filtered);
       
       // Update parent component with filtered match count
@@ -528,7 +477,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   // Re-apply filters when criteria changes
   useEffect(() => {
     if (matches.length > 0) {
-      const filtered: GameMatch[] = applyMatchCriteria(matches);
+      const filtered = applyAllFilters(matches);
       setFilteredMatches(filtered);
       if (onMatchesUpdate) {
         onMatchesUpdate(filtered.length);
