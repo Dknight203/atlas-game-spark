@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,17 @@ interface CommunityFinderResultsProps {
   onCommunitiesUpdate?: (count: number) => void;
 }
 
+interface RedditCommunity {
+  id: string;
+  name: string;
+  display_name: string;
+  subscribers: number;
+  description: string;
+  url: string;
+  over18: boolean;
+  created_utc: number;
+}
+
 const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFinderResultsProps) => {
   const [communities, setCommunities] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
@@ -20,7 +32,7 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
   useEffect(() => {
     const fetchProjectAndCommunities = async () => {
       try {
-        // Fetch project details to generate relevant communities
+        // Fetch project details
         const { data: projectData } = await supabase
           .from('projects')
           .select('*')
@@ -30,17 +42,28 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
         if (projectData) {
           setProject(projectData);
           
-          // Generate communities based on project genre and platform
-          const generatedCommunities = generateCommunitiesFromProject(projectData);
-          setCommunities(generatedCommunities);
+          // Search for real communities using Reddit API
+          const realCommunities = await searchRedditCommunities(projectData);
+          setCommunities(realCommunities);
           
           // Update parent component with communities count
           if (onCommunitiesUpdate) {
-            onCommunitiesUpdate(generatedCommunities.length);
+            onCommunitiesUpdate(realCommunities.length);
           }
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load communities. Using sample data.",
+          variant: "destructive",
+        });
+        // Fallback to sample data
+        const fallbackCommunities = generateFallbackCommunities();
+        setCommunities(fallbackCommunities);
+        if (onCommunitiesUpdate) {
+          onCommunitiesUpdate(fallbackCommunities.length);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -49,109 +72,145 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
     fetchProjectAndCommunities();
   }, [projectId, onCommunitiesUpdate]);
 
-  const generateCommunitiesFromProject = (projectData: any) => {
+  const searchRedditCommunities = async (projectData: any) => {
     const genre = projectData.genre?.toLowerCase() || '';
-    const platform = projectData.platform?.toLowerCase() || '';
+    const searchTerms = [
+      genre,
+      'indie games',
+      'game development',
+      projectData.platform?.toLowerCase() || 'pc gaming'
+    ];
+
+    const communities = [];
     
-    const baseCommunities = [];
+    try {
+      // Search Reddit for relevant subreddits
+      for (const term of searchTerms) {
+        const response = await fetch(`https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(term)}&limit=5&sort=relevance`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          for (const subreddit of data.data.children) {
+            const sub = subreddit.data;
+            
+            // Skip NSFW and very small communities
+            if (sub.over18 || sub.subscribers < 1000) continue;
+            
+            communities.push({
+              id: sub.id,
+              name: `r/${sub.display_name}`,
+              platform: "Reddit",
+              members: formatNumber(sub.subscribers),
+              activity: getActivityLevel(sub.subscribers),
+              relevance: calculateRelevance(sub.display_name, sub.description, genre),
+              lastPost: "Recently active",
+              description: sub.public_description || sub.description || `Community for ${sub.display_name}`,
+              tags: generateTags(sub.display_name, sub.description),
+              url: `https://reddit.com/r/${sub.display_name}`,
+              guidelines: generateGuidelines(sub.display_name)
+            });
+          }
+        }
+      }
 
-    // Always include the main indie games community
-    baseCommunities.push({
-      id: 1,
-      name: "r/indiegames",
-      platform: "Reddit",
-      members: "890K",
-      activity: "Very High",
-      relevance: 95,
-      lastPost: "2 hours ago",
-      description: "A place for indie game developers to share their work",
-      tags: ["Indie", "Development", "Showcase"],
-      url: "https://reddit.com/r/indiegames",
-      guidelines: "Post only on weekends for game showcases. Include [DEV] tag and be active in comments."
-    });
+      // Remove duplicates and sort by relevance
+      const uniqueCommunities = communities.filter((community, index, self) => 
+        index === self.findIndex(c => c.name === community.name)
+      );
 
-    // Add genre-specific communities
-    if (genre.includes('space') || genre.includes('sci-fi')) {
-      baseCommunities.push({
-        id: 2,
-        name: "r/spacegames",
-        platform: "Reddit",
-        members: "45K",
-        activity: "High",
-        relevance: 88,
-        lastPost: "5 hours ago",
-        description: "Discussion about space-themed games",
-        tags: ["Space", "Gaming", "Discussion"],
-        url: "https://reddit.com/r/spacegames",
-        guidelines: "Focus on space exploration themes. Screenshots and gameplay videos welcome."
-      });
+      return uniqueCommunities
+        .sort((a, b) => b.relevance - a.relevance)
+        .slice(0, 8);
+
+    } catch (error) {
+      console.error('Error searching Reddit communities:', error);
+      return generateFallbackCommunities();
     }
+  };
 
-    if (genre.includes('rpg')) {
-      baseCommunities.push({
-        id: 3,
-        name: "r/rpg_gamers",
+  const generateFallbackCommunities = () => {
+    return [
+      {
+        id: 1,
+        name: "r/indiegames",
         platform: "Reddit",
-        members: "156K",
-        activity: "High",
-        relevance: 85,
-        lastPost: "1 hour ago",
-        description: "Community for RPG enthusiasts and developers",
-        tags: ["RPG", "Character Development", "Storytelling"],
-        url: "https://reddit.com/r/rpg_gamers",
-        guidelines: "Include character progression mechanics. Story-driven content preferred."
-      });
-    }
-
-    if (genre.includes('life') || genre.includes('sim')) {
-      baseCommunities.push({
-        id: 4,
-        name: "r/LifeSimulationGames",
-        platform: "Reddit",
-        members: "89K",
-        activity: "High",
-        relevance: 92,
-        lastPost: "3 hours ago",
-        description: "Dedicated to life simulation and virtual life games",
-        tags: ["Life Sim", "Virtual Life", "Character Creation"],
-        url: "https://reddit.com/r/LifeSimulationGames",
-        guidelines: "Focus on daily life mechanics and character relationships. Building/customization content welcome."
-      });
-    }
-
-    // Add platform-specific communities
-    if (platform.includes('pc') || platform.includes('steam')) {
-      baseCommunities.push({
-        id: 5,
-        name: "r/pcgaming",
-        platform: "Reddit",
-        members: "2.8M",
+        members: "890K",
         activity: "Very High",
-        relevance: 79,
-        lastPost: "30 minutes ago",
-        description: "PC gaming community for discussions and recommendations",
-        tags: ["PC", "Steam", "Gaming"],
-        url: "https://reddit.com/r/pcgaming",
-        guidelines: "Tech specs and performance discussions welcome. Follow self-promotion rules."
-      });
+        relevance: 95,
+        lastPost: "2 hours ago",
+        description: "A place for indie game developers to share their work",
+        tags: ["Indie", "Development", "Showcase"],
+        url: "https://reddit.com/r/indiegames",
+        guidelines: "Post only on weekends for game showcases. Include [DEV] tag and be active in comments."
+      },
+      {
+        id: 2,
+        name: "r/gamedev",
+        platform: "Reddit",
+        members: "1.2M",
+        activity: "Very High",
+        relevance: 88,
+        lastPost: "1 hour ago",
+        description: "Game development community for professionals and hobbyists",
+        tags: ["Development", "Programming", "Community"],
+        url: "https://reddit.com/r/gamedev",
+        guidelines: "Focus on development topics. Screenshots Saturday for visual updates."
+      }
+    ];
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+    return num.toString();
+  };
+
+  const getActivityLevel = (subscribers: number) => {
+    if (subscribers > 500000) return "Very High";
+    if (subscribers > 100000) return "High";
+    if (subscribers > 10000) return "Medium";
+    return "Low";
+  };
+
+  const calculateRelevance = (name: string, description: string, genre: string) => {
+    let score = 50;
+    const text = `${name} ${description}`.toLowerCase();
+    
+    if (text.includes(genre)) score += 30;
+    if (text.includes('indie')) score += 20;
+    if (text.includes('game')) score += 15;
+    if (text.includes('dev')) score += 10;
+    
+    return Math.min(score, 100);
+  };
+
+  const generateTags = (name: string, description: string) => {
+    const tags = [];
+    const text = `${name} ${description}`.toLowerCase();
+    
+    if (text.includes('indie')) tags.push('Indie');
+    if (text.includes('dev')) tags.push('Development');
+    if (text.includes('game')) tags.push('Gaming');
+    if (text.includes('art')) tags.push('Art');
+    if (text.includes('music')) tags.push('Music');
+    
+    return tags.slice(0, 3);
+  };
+
+  const generateGuidelines = (subredditName: string) => {
+    const guidelines = [
+      "Read community rules before posting",
+      "Use appropriate post flair",
+      "Be respectful and constructive",
+      "Check if similar posts already exist"
+    ];
+    
+    if (subredditName.includes('dev')) {
+      guidelines.push("Focus on development-related content");
     }
-
-    // Always add Discord community
-    baseCommunities.push({
-      id: 6,
-      name: "Indie Game Developers",
-      platform: "Discord",
-      members: "12K",
-      activity: "High",
-      relevance: 85,
-      lastPost: "1 hour ago",
-      description: "Active community of indie developers sharing resources and feedback",
-      tags: ["Development", "Community", "Feedback"],
-      url: "https://discord.gg/indiegamedev",
-      guidelines: "Share work-in-progress for feedback. Participate in weekly showcases."
-    });
-
-    return baseCommunities;
+    
+    return guidelines.join('. ') + '.';
   };
 
   const handleViewGuidelines = (community: any) => {
@@ -195,7 +254,7 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-atlas-purple"></div>
-        <p className="ml-4 text-gray-600">Finding relevant communities...</p>
+        <p className="ml-4 text-gray-600">Searching real communities...</p>
       </div>
     );
   }
@@ -206,10 +265,10 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
         <CardHeader>
           <CardTitle>Community Opportunity Map</CardTitle>
           <CardDescription>
-            Active communities where your target audience is already engaging. Perfect for organic discovery and feedback.
+            Real communities discovered through Reddit API where your target audience is actively engaging.
             {project && (
               <span className="block mt-2 text-sm">
-                Showing communities relevant to <strong>{project.genre}</strong> games on <strong>{project.platform}</strong>
+                Searching for communities related to <strong>{project.genre}</strong> games on <strong>{project.platform}</strong>
               </span>
             )}
           </CardDescription>
