@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +28,14 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
+  // Helper function to safely convert Json to string array
+  const jsonToStringArray = (jsonData: any): string[] => {
+    if (Array.isArray(jsonData)) {
+      return jsonData.filter(item => typeof item === 'string');
+    }
+    return [];
+  };
+
   // Load existing signal profile
   useEffect(() => {
     const loadProfile = async () => {
@@ -44,8 +51,8 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
           console.error('Error loading profile:', error);
         } else if (data) {
           setProfile({
-            themes: data.themes || [],
-            mechanics: data.mechanics || [],
+            themes: jsonToStringArray(data.themes),
+            mechanics: jsonToStringArray(data.mechanics),
             tone: data.tone || "",
             targetAudience: data.target_audience || "",
             uniqueFeatures: data.unique_features || ""
