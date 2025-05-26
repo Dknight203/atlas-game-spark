@@ -156,19 +156,21 @@ const ProjectDetail = () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{project.name}</h1>
               <p className="text-gray-600 max-w-2xl">{project.description}</p>
               <div className="flex gap-4 mt-4">
-                {project.genre && (
+                {project.genre && project.genre.trim() && (
                   <span className="text-sm bg-atlas-purple bg-opacity-10 text-atlas-purple px-3 py-1 rounded-full">
                     {project.genre}
                   </span>
                 )}
-                {project.platform && (
+                {project.platform && project.platform.trim() && (
                   <span className="text-sm bg-atlas-teal bg-opacity-10 text-atlas-teal px-3 py-1 rounded-full">
                     {project.platform}
                   </span>
                 )}
-                <span className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                  {project.status}
-                </span>
+                {project.status && project.status.trim() && (
+                  <span className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                    {project.status}
+                  </span>
+                )}
               </div>
             </div>
             <Button variant="outline">
