@@ -1,15 +1,55 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   // Check if we're on a dashboard/app page to show different navigation
   const isAppPage = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/project');
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        toast({
+          title: "Error",
+          description: "Failed to sign out",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Signed out successfully",
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleProfileClick = () => {
+    toast({
+      title: "Profile",
+      description: "Profile management coming soon!",
+    });
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full top-0 z-30">
@@ -33,8 +73,12 @@ const Navbar = () => {
                 <Link to="/project/new" className="text-gray-600 hover:text-atlas-purple px-3 py-2 rounded-md text-sm font-medium">
                   New Project
                 </Link>
-                <Button variant="outline" className="ml-4">Profile</Button>
-                <Button variant="outline">Log out</Button>
+                <Button variant="outline" className="ml-4" onClick={handleProfileClick}>
+                  Profile
+                </Button>
+                <Button variant="outline" onClick={handleLogout}>
+                  Log out
+                </Button>
               </>
             ) : (
               // Marketing site navigation
@@ -83,8 +127,12 @@ const Navbar = () => {
                 <Link to="/project/new" className="text-gray-600 hover:text-atlas-purple block px-3 py-2 rounded-md text-base font-medium">
                   New Project
                 </Link>
-                <Button variant="outline" className="w-full my-2">Profile</Button>
-                <Button variant="outline" className="w-full my-2">Log out</Button>
+                <Button variant="outline" className="w-full my-2" onClick={handleProfileClick}>
+                  Profile
+                </Button>
+                <Button variant="outline" className="w-full my-2" onClick={handleLogout}>
+                  Log out
+                </Button>
               </>
             ) : (
               // Mobile marketing navigation
