@@ -69,6 +69,17 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             targetAudience: data.target_audience || "",
             uniqueFeatures: data.unique_features || ""
           });
+
+          // Load match criteria if they exist
+          setMatchCriteria({
+            yearFilter: (data as any).year_filter || "all",
+            teamSizeFilter: (data as any).team_size_filter || "all",
+            platformFilter: (data as any).platform_filter || "all",
+            genreFilter: (data as any).genre_filter || "all",
+            similarityFilter: (data as any).similarity_filter || "all",
+            revenueFilter: (data as any).revenue_filter || "all",
+            playerBaseFilter: (data as any).player_base_filter || "all"
+          });
         }
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -124,7 +135,15 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
         mechanics: profile.mechanics,
         tone: profile.tone,
         target_audience: profile.targetAudience,
-        unique_features: profile.uniqueFeatures
+        unique_features: profile.uniqueFeatures,
+        // Save match criteria as well
+        year_filter: matchCriteria.yearFilter,
+        team_size_filter: matchCriteria.teamSizeFilter,
+        platform_filter: matchCriteria.platformFilter,
+        genre_filter: matchCriteria.genreFilter,
+        similarity_filter: matchCriteria.similarityFilter,
+        revenue_filter: matchCriteria.revenueFilter,
+        player_base_filter: matchCriteria.playerBaseFilter
       };
 
       const { error } = await supabase
@@ -140,7 +159,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
       } else {
         toast({
           title: "Profile Saved",
-          description: "Your signal profile has been updated successfully.",
+          description: "Your signal profile and match criteria have been updated successfully.",
         });
       }
     } catch (error) {

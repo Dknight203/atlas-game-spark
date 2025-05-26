@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,12 +32,32 @@ interface GameMatch {
   };
 }
 
+interface MatchCriteria {
+  yearFilter: string;
+  teamSizeFilter: string;
+  platformFilter: string;
+  genreFilter: string;
+  similarityFilter: string;
+  revenueFilter: string;
+  playerBaseFilter: string;
+}
+
 const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsProps) => {
   const [matches, setMatches] = useState<GameMatch[]>([]);
+  const [filteredMatches, setFilteredMatches] = useState<GameMatch[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showMarketData, setShowMarketData] = useState(false);
   const [isLiveData, setIsLiveData] = useState(false);
+  const [matchCriteria, setMatchCriteria] = useState<MatchCriteria>({
+    yearFilter: "all",
+    teamSizeFilter: "all",
+    platformFilter: "all",
+    genreFilter: "all",
+    similarityFilter: "all",
+    revenueFilter: "all",
+    playerBaseFilter: "all"
+  });
   const { toast } = useToast();
 
   // Helper function to safely convert Json to string array
@@ -45,6 +66,156 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       return jsonData.filter((item): item is string => typeof item === 'string');
     }
     return [];
+  };
+
+  // Load match criteria from signal profile
+  const loadMatchCriteria = async () => {
+    try {
+      const { data: signalProfile, error } = await supabase
+        .from('signal_profiles')
+        .select('*')
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading signal profile:', error);
+        return;
+      }
+
+      if (signalProfile) {
+        // Extract match criteria if they exist in the profile
+        setMatchCriteria({
+          yearFilter: (signalProfile as any).year_filter || "all",
+          teamSizeFilter: (signalProfile as any).team_size_filter || "all",
+          platformFilter: (signalProfile as any).platform_filter || "all",
+          genreFilter: (signalProfile as any).genre_filter || "all",
+          similarityFilter: (signalProfile as any).similarity_filter || "all",
+          revenueFilter: (signalProfile as any).revenue_filter || "all",
+          playerBaseFilter: (signalProfile as any).player_base_filter || "all"
+        });
+      }
+    } catch (error) {
+      console.error('Error loading match criteria:', error);
+    }
+  };
+
+  // Apply filters to matches based on criteria
+  const applyMatchCriteria = (gameMatches: GameMatch[]): GameMatch[] => {
+    let filtered = [...gameMatches];
+
+    // Apply year filter
+    if (matchCriteria.yearFilter !== "all") {
+      const currentYear = new Date().getFullYear();
+      filtered = filtered.filter(game => {
+        switch (matchCriteria.yearFilter) {
+          case "current":
+            return game.releaseYear === currentYear;
+          case "recent":
+            return game.releaseYear >= 2022 && game.releaseYear <= currentYear;
+          case "2020s":
+            return game.releaseYear >= 2020 && game.releaseYear < 2030;
+          case "2010s":
+            return game.releaseYear >= 2010 && game.releaseYear < 2020;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply team size filter
+    if (matchCriteria.teamSizeFilter !== "all") {
+      filtered = filtered.filter(game => {
+        const teamSize = game.teamSize.toLowerCase();
+        switch (matchCriteria.teamSizeFilter) {
+          case "solo":
+            return teamSize.includes("solo") || teamSize.includes("1-5");
+          case "small":
+            return teamSize.includes("5-20") || teamSize.includes("small");
+          case "medium":
+            return teamSize.includes("20-50") || teamSize.includes("medium");
+          case "large":
+            return teamSize.includes("100+") || teamSize.includes("large");
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply platform filter
+    if (matchCriteria.platformFilter !== "all") {
+      filtered = filtered.filter(game => {
+        const platform = game.platform.toLowerCase();
+        switch (matchCriteria.platformFilter) {
+          case "pc":
+            return platform.includes("pc") || platform.includes("steam");
+          case "switch":
+            return platform.includes("switch");
+          case "console":
+            return platform.includes("playstation") || platform.includes("xbox") || platform.includes("switch");
+          case "mobile":
+            return platform.includes("ios") || platform.includes("android") || platform.includes("mobile");
+          case "cross-platform":
+            return platform.includes(",") || platform.includes("+");
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply similarity filter
+    if (matchCriteria.similarityFilter !== "all") {
+      filtered = filtered.filter(game => {
+        switch (matchCriteria.similarityFilter) {
+          case "high":
+            return game.similarity >= 85;
+          case "medium":
+            return game.similarity >= 70 && game.similarity < 85;
+          case "low":
+            return game.similarity < 70;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply revenue filter
+    if (matchCriteria.revenueFilter !== "all") {
+      filtered = filtered.filter(game => {
+        const revenue = game.marketPerformance.revenue;
+        const revenueNum = parseInt(revenue.replace(/[^\d]/g, ""));
+        switch (matchCriteria.revenueFilter) {
+          case "indie":
+            return revenueNum < 100;
+          case "aa":
+            return revenueNum >= 100 && revenueNum < 1000;
+          case "aaa":
+            return revenueNum >= 1000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply player base filter
+    if (matchCriteria.playerBaseFilter !== "all") {
+      filtered = filtered.filter(game => {
+        const playerBase = game.marketPerformance.playerBase;
+        const playerNum = parseInt(playerBase.replace(/[^\d]/g, ""));
+        switch (matchCriteria.playerBaseFilter) {
+          case "niche":
+            return playerNum < 5;
+          case "popular":
+            return playerNum >= 5 && playerNum < 20;
+          case "mainstream":
+            return playerNum >= 20;
+          default:
+            return true;
+        }
+      });
+    }
+
+    console.log(`Applied filters: ${gameMatches.length} -> ${filtered.length} matches`);
+    return filtered;
   };
 
   // Fetch live game data from external APIs
@@ -199,6 +370,9 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
 
   const loadMatches = async () => {
     try {
+      // Load match criteria first
+      await loadMatchCriteria();
+
       // Fetch signal profile for this project
       const { data: signalProfile, error } = await supabase
         .from('signal_profiles')
@@ -220,7 +394,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('genre, platform')
-        .eq('id', projectId)
+        .eq('project_id', projectId)
         .maybeSingle();
 
       if (projectError && projectError.code !== 'PGRST116') {
@@ -253,9 +427,13 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
 
       setMatches(generatedMatches);
       
-      // Update parent component with match count
+      // Apply filters and update filtered matches
+      const filtered = applyMatchCriteria(generatedMatches);
+      setFilteredMatches(filtered);
+      
+      // Update parent component with filtered match count
       if (onMatchesUpdate) {
-        onMatchesUpdate(generatedMatches.length);
+        onMatchesUpdate(filtered.length);
       }
 
     } catch (error) {
@@ -273,6 +451,17 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   useEffect(() => {
     loadMatches();
   }, [projectId]);
+
+  // Re-apply filters when criteria changes
+  useEffect(() => {
+    if (matches.length > 0) {
+      const filtered = applyMatchCriteria(matches);
+      setFilteredMatches(filtered);
+      if (onMatchesUpdate) {
+        onMatchesUpdate(filtered.length);
+      }
+    }
+  }, [matchCriteria, matches]);
 
   const refreshMatches = async () => {
     setIsRefreshing(true);
@@ -317,6 +506,8 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     );
   }
 
+  const displayMatches = filteredMatches.length > 0 ? filteredMatches : matches;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -337,7 +528,10 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
                   : "Sample games matching your signal profile. Live data temporarily unavailable."
                 }
                 <span className="block mt-1 text-sm">
-                  Found {matches.length} matches across all gaming platforms based on your criteria.
+                  Found {displayMatches.length} matches 
+                  {filteredMatches.length !== matches.length && matches.length > 0 && 
+                    ` (filtered from ${matches.length} total)`
+                  } across all gaming platforms based on your criteria.
                 </span>
               </CardDescription>
             </div>
@@ -365,7 +559,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
         
         <CardContent>
           <div className="space-y-4">
-            {matches.map((match) => (
+            {displayMatches.map((match) => (
               <div 
                 key={match.id} 
                 className="border rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -455,9 +649,14 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
               </div>
             ))}
             
-            {matches.length === 0 && (
+            {displayMatches.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No matches found. Try updating your signal profile to get better results.</p>
+                <p className="text-gray-500">
+                  {matches.length === 0 
+                    ? "No matches found. Try updating your signal profile to get better results."
+                    : "No matches found with current filters. Try adjusting your match criteria in the Signal Profile Builder."
+                  }
+                </p>
               </div>
             )}
           </div>
