@@ -28,6 +28,7 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("signal-profile");
   const { toast } = useToast();
 
   // Mock stats for now - these could be calculated from related data in the future
@@ -168,7 +169,10 @@ const ProjectDetail = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setActiveTab("matches")}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Game Matches</CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
@@ -179,7 +183,10 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setActiveTab("communities")}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Communities</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -190,7 +197,10 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setActiveTab("creators")}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Creators</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -203,7 +213,7 @@ const ProjectDetail = () => {
           </div>
 
           {/* Main Content Tabs */}
-          <Tabs defaultValue="signal-profile" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid grid-cols-4 w-full">
               <TabsTrigger value="signal-profile">Signal Profile</TabsTrigger>
               <TabsTrigger value="matches">Game Matches</TabsTrigger>
