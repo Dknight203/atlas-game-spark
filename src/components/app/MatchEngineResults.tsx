@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface MatchEngineResultsProps {
   projectId: string;
+  onMatchesUpdate?: (count: number) => void;
 }
 
 interface GameMatch {
@@ -30,7 +30,7 @@ interface GameMatch {
   };
 }
 
-const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
+const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsProps) => {
   const [matches, setMatches] = useState<GameMatch[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -219,6 +219,11 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       }
 
       setMatches(generatedMatches);
+      
+      // Update parent component with match count
+      if (onMatchesUpdate) {
+        onMatchesUpdate(generatedMatches.length);
+      }
 
     } catch (error) {
       console.error('Error loading matches:', error);

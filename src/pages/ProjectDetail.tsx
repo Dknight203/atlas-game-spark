@@ -67,10 +67,6 @@ const ProjectDetail = () => {
         }
 
         setProject(data);
-        
-        // Calculate actual stats based on project data
-        const calculatedStats = calculateProjectStats(data);
-        setStats(calculatedStats);
       } catch (error) {
         console.error('Error fetching project:', error);
         toast({
@@ -86,34 +82,17 @@ const ProjectDetail = () => {
     fetchProject();
   }, [id, toast]);
 
-  const calculateProjectStats = (projectData: Project) => {
-    const genre = projectData.genre?.toLowerCase() || '';
-    const platform = projectData.platform?.toLowerCase() || '';
-    
-    // Calculate matches based on genre complexity
-    let matches = 0;
-    if (genre.includes('rpg')) matches += 3;
-    if (genre.includes('space') || genre.includes('sci-fi')) matches += 2;
-    if (genre.includes('action')) matches += 2;
-    if (genre.includes('strategy')) matches += 2;
-    if (genre.includes('life') || genre.includes('sim')) matches += 4;
-    if (matches === 0) matches = 1; // Default minimum
+  // Callback functions to update stats from child components
+  const updateMatchesCount = (count: number) => {
+    setStats(prev => ({ ...prev, matches: count }));
+  };
 
-    // Calculate communities based on genre and platform
-    let communities = 1; // Always at least indie games community
-    if (genre.includes('space') || genre.includes('sci-fi')) communities += 1;
-    if (genre.includes('rpg')) communities += 1;
-    if (platform.includes('pc') || platform.includes('steam')) communities += 1;
-    communities += 1; // Discord community
+  const updateCommunitiesCount = (count: number) => {
+    setStats(prev => ({ ...prev, communities: count }));
+  };
 
-    // Calculate creators based on genre popularity
-    let creators = 1; // Always at least one indie creator
-    if (genre.includes('space') || genre.includes('sci-fi')) creators += 2;
-    if (genre.includes('rpg')) creators += 1;
-    if (genre.includes('action') || genre.includes('adventure')) creators += 1;
-    creators += 1; // Developer talks creator
-
-    return { matches, communities, creators };
+  const updateCreatorsCount = (count: number) => {
+    setStats(prev => ({ ...prev, creators: count }));
   };
 
   if (isLoading) {
@@ -257,15 +236,15 @@ const ProjectDetail = () => {
             </TabsContent>
             
             <TabsContent value="matches">
-              <MatchEngineResults projectId={id || ""} />
+              <MatchEngineResults projectId={id || ""} onMatchesUpdate={updateMatchesCount} />
             </TabsContent>
             
             <TabsContent value="communities">
-              <CommunityFinderResults projectId={id || ""} />
+              <CommunityFinderResults projectId={id || ""} onCommunitiesUpdate={updateCommunitiesCount} />
             </TabsContent>
             
             <TabsContent value="creators">
-              <CreatorMatchResults projectId={id || ""} />
+              <CreatorMatchResults projectId={id || ""} onCreatorsUpdate={updateCreatorsCount} />
             </TabsContent>
           </Tabs>
         </div>
