@@ -1,0 +1,147 @@
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+
+const Signup = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords don't match",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // Simulate signup process
+    setTimeout(() => {
+      setIsLoading(false);
+      toast({
+        title: "Account Created",
+        description: "Welcome to GameAtlas! Please check your email to verify your account.",
+      });
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <div className="pt-32 pb-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-atlas-purple mb-2">Create Account</h1>
+              <p className="text-gray-600">Start your free trial today</p>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter your full name"
+                  required
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter your email"
+                  required
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Create a password"
+                  required
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm your password"
+                  required
+                  className="mt-1"
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-atlas-purple hover:bg-opacity-90"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </form>
+            
+            <div className="mt-6 text-center">
+              <p className="text-gray-600">
+                Already have an account?{" "}
+                <Link to="/login" className="text-atlas-purple hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default Signup;
