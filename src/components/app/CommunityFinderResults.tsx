@@ -1,42 +1,116 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, MessageCircle, Users, TrendingUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CommunityFinderResultsProps {
   projectId: string;
 }
 
 const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
-  const [communities] = useState([
-    {
-      id: 1,
-      name: "r/indiegames",
-      platform: "Reddit",
-      members: "890K",
-      activity: "Very High",
-      relevance: 92,
-      lastPost: "2 hours ago",
-      description: "A place for indie game developers to share their work",
-      tags: ["Indie", "Development", "Showcase"],
-      url: "https://reddit.com/r/indiegames"
-    },
-    {
-      id: 2,
-      name: "r/spacegames",
-      platform: "Reddit",
-      members: "45K",
-      activity: "High",
-      relevance: 88,
-      lastPost: "5 hours ago",
-      description: "Discussion about space-themed games",
-      tags: ["Space", "Gaming", "Discussion"],
-      url: "https://reddit.com/r/spacegames"
-    },
-    {
-      id: 3,
+  const [communities, setCommunities] = useState<any[]>([]);
+  const [project, setProject] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjectAndCommunities = async () => {
+      try {
+        // Fetch project details to generate relevant communities
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .maybeSingle();
+
+        if (projectData) {
+          setProject(projectData);
+          
+          // Generate communities based on project genre and platform
+          const generatedCommunities = generateCommunitiesFromProject(projectData);
+          setCommunities(generatedCommunities);
+        }
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProjectAndCommunities();
+  }, [projectId]);
+
+  const generateCommunitiesFromProject = (projectData: any) => {
+    const genre = projectData.genre?.toLowerCase() || '';
+    const platform = projectData.platform?.toLowerCase() || '';
+    
+    const baseCommunities = [
+      {
+        id: 1,
+        name: "r/indiegames",
+        platform: "Reddit",
+        members: "890K",
+        activity: "Very High",
+        relevance: 92,
+        lastPost: "2 hours ago",
+        description: "A place for indie game developers to share their work",
+        tags: ["Indie", "Development", "Showcase"],
+        url: "https://reddit.com/r/indiegames"
+      }
+    ];
+
+    // Add genre-specific communities
+    if (genre.includes('space') || genre.includes('sci-fi')) {
+      baseCommunities.push({
+        id: 2,
+        name: "r/spacegames",
+        platform: "Reddit",
+        members: "45K",
+        activity: "High",
+        relevance: 88,
+        lastPost: "5 hours ago",
+        description: "Discussion about space-themed games",
+        tags: ["Space", "Gaming", "Discussion"],
+        url: "https://reddit.com/r/spacegames"
+      });
+    }
+
+    if (genre.includes('rpg')) {
+      baseCommunities.push({
+        id: 3,
+        name: "r/rpg_gamers",
+        platform: "Reddit",
+        members: "156K",
+        activity: "High",
+        relevance: 85,
+        lastPost: "1 hour ago",
+        description: "Community for RPG enthusiasts and developers",
+        tags: ["RPG", "Character Development", "Storytelling"],
+        url: "https://reddit.com/r/rpg_gamers"
+      });
+    }
+
+    // Add platform-specific communities
+    if (platform.includes('pc') || platform.includes('steam')) {
+      baseCommunities.push({
+        id: 4,
+        name: "r/pcgaming",
+        platform: "Reddit",
+        members: "2.8M",
+        activity: "Very High",
+        relevance: 79,
+        lastPost: "30 minutes ago",
+        description: "PC gaming community for discussions and recommendations",
+        tags: ["PC", "Steam", "Gaming"],
+        url: "https://reddit.com/r/pcgaming"
+      });
+    }
+
+    // Add Discord communities
+    baseCommunities.push({
+      id: 5,
       name: "Indie Game Developers",
       platform: "Discord",
       members: "12K",
@@ -46,20 +120,10 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
       description: "Active community of indie developers sharing resources and feedback",
       tags: ["Development", "Community", "Feedback"],
       url: "#"
-    },
-    {
-      id: 4,
-      name: "Space Game Enthusiasts",
-      platform: "Discord",
-      members: "8K",
-      activity: "Medium",
-      relevance: 79,
-      lastPost: "3 hours ago",
-      description: "Dedicated to discussing and sharing space exploration games",
-      tags: ["Space", "Gaming", "Enthusiasts"],
-      url: "#"
-    }
-  ]);
+    });
+
+    return baseCommunities;
+  };
 
   const getActivityColor = (activity: string) => {
     if (activity === "Very High") return "text-green-600";
@@ -80,6 +144,15 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
     return "🌐";
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-atlas-purple"></div>
+        <p className="ml-4 text-gray-600">Finding relevant communities...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -87,6 +160,11 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
           <CardTitle>Community Opportunity Map</CardTitle>
           <CardDescription>
             Active communities where your target audience is already engaging. Perfect for organic discovery and feedback.
+            {project && (
+              <span className="block mt-2 text-sm">
+                Showing communities relevant to <strong>{project.genre}</strong> games on <strong>{project.platform}</strong>
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
