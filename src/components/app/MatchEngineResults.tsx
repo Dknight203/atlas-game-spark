@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, RefreshCw, Filter, TrendingUp, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ExternalLink, RefreshCw, Filter, TrendingUp, Calendar, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,6 +22,7 @@ interface GameMatch {
   description: string;
   steamUrl?: string;
   releaseYear: number;
+  teamSize: string;
   marketPerformance: {
     revenue: string;
     playerBase: string;
@@ -31,9 +32,12 @@ interface GameMatch {
 
 const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
   const [matches, setMatches] = useState<GameMatch[]>([]);
+  const [filteredMatches, setFilteredMatches] = useState<GameMatch[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showMarketData, setShowMarketData] = useState(false);
+  const [yearFilter, setYearFilter] = useState<string>("all");
+  const [teamSizeFilter, setTeamSizeFilter] = useState<string>("all");
   const { toast } = useToast();
 
   // Helper function to safely convert Json to string array
@@ -44,7 +48,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     return [];
   };
 
-  // Expanded game database with market performance data
+  // Expanded game database with market performance data and team sizes
   const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string) => {
     const gameDatabase = {
       "Life Sim": [
@@ -59,6 +63,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Create and control virtual people in a detailed life simulation game",
           steamUrl: "https://store.steampowered.com/app/1222670/The_Sims_4/",
           releaseYear: 2014,
+          teamSize: "Large (100+ developers)",
           marketPerformance: {
             revenue: "$1.3B+ lifetime",
             playerBase: "36M+ players",
@@ -75,6 +80,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           recentActivity: "High",
           description: "Build your island paradise in this charming social simulation",
           releaseYear: 2020,
+          teamSize: "Medium (20-50 developers)",
           marketPerformance: {
             revenue: "$654M in 2020",
             playerBase: "42M+ players",
@@ -92,6 +98,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Farm, mine, fight, and build relationships in this pixel art life sim",
           steamUrl: "https://store.steampowered.com/app/413150/Stardew_Valley/",
           releaseYear: 2016,
+          teamSize: "Solo Developer",
           marketPerformance: {
             revenue: "$300M+ lifetime",
             playerBase: "20M+ players",
@@ -109,6 +116,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Restore your father's workshop in this charming post-apocalyptic life sim",
           steamUrl: "https://store.steampowered.com/app/666140/My_Time_At_Portia/",
           releaseYear: 2019,
+          teamSize: "Small (5-20 developers)",
           marketPerformance: {
             revenue: "$45M lifetime",
             playerBase: "4M+ players",
@@ -126,6 +134,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Build and manage hospitals in this quirky management simulation",
           steamUrl: "https://store.steampowered.com/app/535930/Two_Point_Hospital/",
           releaseYear: 2018,
+          teamSize: "Medium (20-50 developers)",
           marketPerformance: {
             revenue: "$35M lifetime",
             playerBase: "3M+ players",
@@ -143,10 +152,83 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Design and build amazing theme parks with detailed customization",
           steamUrl: "https://store.steampowered.com/app/493340/Planet_Coaster/",
           releaseYear: 2016,
+          teamSize: "Medium (20-50 developers)",
           marketPerformance: {
             revenue: "$120M lifetime",
             playerBase: "8M+ players",
             growthRate: "+7% YoY"
+          }
+        },
+        {
+          id: 7,
+          name: "Spiritfarer",
+          similarity: 80,
+          sharedTags: ["Life Simulation", "Emotional", "Crafting", "Adventure"],
+          platform: "Multiple",
+          communitySize: "Medium",
+          recentActivity: "Medium",
+          description: "A cozy management game about caring for spirits before releasing them",
+          steamUrl: "https://store.steampowered.com/app/972660/Spiritfarer/",
+          releaseYear: 2020,
+          teamSize: "Small (5-20 developers)",
+          marketPerformance: {
+            revenue: "$25M lifetime",
+            playerBase: "2M+ players",
+            growthRate: "+8% YoY"
+          }
+        },
+        {
+          id: 8,
+          name: "PowerWash Simulator",
+          similarity: 73,
+          sharedTags: ["Simulation", "Relaxing", "Satisfying", "Cleaning"],
+          platform: "Multiple",
+          communitySize: "Large",
+          recentActivity: "High",
+          description: "Satisfying cleaning simulation that became unexpectedly popular",
+          steamUrl: "https://store.steampowered.com/app/1290000/PowerWash_Simulator/",
+          releaseYear: 2022,
+          teamSize: "Small (5-20 developers)",
+          marketPerformance: {
+            revenue: "$50M lifetime",
+            playerBase: "5M+ players",
+            growthRate: "+40% YoY"
+          }
+        },
+        {
+          id: 9,
+          name: "House Flipper",
+          similarity: 77,
+          sharedTags: ["Simulation", "Building", "Renovation", "Business"],
+          platform: "Multiple",
+          communitySize: "Medium",
+          recentActivity: "Medium",
+          description: "Buy, renovate and sell houses in this detailed house flipping simulator",
+          steamUrl: "https://store.steampowered.com/app/613100/House_Flipper/",
+          releaseYear: 2018,
+          teamSize: "Small (5-20 developers)",
+          marketPerformance: {
+            revenue: "$40M lifetime",
+            playerBase: "6M+ players",
+            growthRate: "+6% YoY"
+          }
+        },
+        {
+          id: 10,
+          name: "Unpacking",
+          similarity: 71,
+          sharedTags: ["Life Simulation", "Emotional", "Zen", "Storytelling"],
+          platform: "Multiple",
+          communitySize: "Medium",
+          recentActivity: "Medium",
+          description: "Unpack belongings and piece together stories in this meditative game",
+          steamUrl: "https://store.steampowered.com/app/1135690/Unpacking/",
+          releaseYear: 2021,
+          teamSize: "Small (5-20 developers)",
+          marketPerformance: {
+            revenue: "$15M lifetime",
+            playerBase: "1.5M+ players",
+            growthRate: "+12% YoY"
           }
         }
       ],
@@ -162,6 +244,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Epic fantasy RPG with massive open world and endless possibilities",
           steamUrl: "https://store.steampowered.com/app/489830/The_Elder_Scrolls_V_Skyrim_Special_Edition/",
           releaseYear: 2011,
+          teamSize: "Large (100+ developers)",
           marketPerformance: {
             revenue: "$1.9B+ lifetime",
             playerBase: "60M+ players",
@@ -179,6 +262,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Hunt monsters and navigate political intrigue in this acclaimed RPG",
           steamUrl: "https://store.steampowered.com/app/292030/The_Witcher_3_Wild_Hunt/",
           releaseYear: 2015,
+          teamSize: "Large (100+ developers)",
           marketPerformance: {
             revenue: "$688M lifetime",
             playerBase: "50M+ players",
@@ -196,6 +280,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Tactical RPG with deep character customization and cooperative gameplay",
           steamUrl: "https://store.steampowered.com/app/435150/Divinity_Original_Sin_2__Definitive_Edition/",
           releaseYear: 2017,
+          teamSize: "Medium (20-50 developers)",
           marketPerformance: {
             revenue: "$85M lifetime",
             playerBase: "7M+ players",
@@ -213,6 +298,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Epic D&D adventure with unprecedented choice and consequence",
           steamUrl: "https://store.steampowered.com/app/1086940/Baldurs_Gate_3/",
           releaseYear: 2023,
+          teamSize: "Large (100+ developers)",
           marketPerformance: {
             revenue: "$650M in 2023",
             playerBase: "22M+ players",
@@ -232,6 +318,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "2D space exploration game with building and crafting mechanics",
           steamUrl: "https://store.steampowered.com/app/211820/Starbound/",
           releaseYear: 2016,
+          teamSize: "Small (5-20 developers)",
           marketPerformance: {
             revenue: "$45M lifetime",
             playerBase: "5M+ players",
@@ -249,6 +336,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Infinite procedural space exploration and survival game",
           steamUrl: "https://store.steampowered.com/app/275850/No_Mans_Sky/",
           releaseYear: 2016,
+          teamSize: "Small (5-20 developers)",
           marketPerformance: {
             revenue: "$200M+ lifetime",
             playerBase: "15M+ players",
@@ -266,6 +354,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
           description: "Build and fly spacecraft in this realistic space simulation",
           steamUrl: "https://store.steampowered.com/app/220200/Kerbal_Space_Program/",
           releaseYear: 2015,
+          teamSize: "Medium (20-50 developers)",
           marketPerformance: {
             revenue: "$100M+ lifetime",
             playerBase: "8M+ players",
@@ -338,6 +427,7 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
 
       const generatedMatches = generateMatches(themes, mechanics, tone, genre);
       setMatches(generatedMatches);
+      setFilteredMatches(generatedMatches);
 
     } catch (error) {
       console.error('Error loading matches:', error);
@@ -350,6 +440,38 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       setIsLoading(false);
     }
   };
+
+  // Filter matches based on selected criteria
+  useEffect(() => {
+    let filtered = [...matches];
+
+    if (yearFilter !== "all") {
+      const currentYear = new Date().getFullYear();
+      
+      if (yearFilter === "current") {
+        filtered = filtered.filter(match => match.releaseYear === currentYear);
+      } else if (yearFilter === "recent") {
+        filtered = filtered.filter(match => match.releaseYear >= currentYear - 3);
+      } else if (yearFilter === "2020s") {
+        filtered = filtered.filter(match => match.releaseYear >= 2020);
+      } else if (yearFilter === "2010s") {
+        filtered = filtered.filter(match => match.releaseYear >= 2010 && match.releaseYear < 2020);
+      }
+    }
+
+    if (teamSizeFilter !== "all") {
+      filtered = filtered.filter(match => {
+        const teamSize = match.teamSize.toLowerCase();
+        if (teamSizeFilter === "solo") return teamSize.includes("solo");
+        if (teamSizeFilter === "small") return teamSize.includes("small") || teamSize.includes("5-20");
+        if (teamSizeFilter === "medium") return teamSize.includes("medium") || teamSize.includes("20-50");
+        if (teamSizeFilter === "large") return teamSize.includes("large") || teamSize.includes("100+");
+        return true;
+      });
+    }
+
+    setFilteredMatches(filtered);
+  }, [matches, yearFilter, teamSizeFilter]);
 
   useEffect(() => {
     loadMatches();
@@ -405,6 +527,11 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               <CardTitle>Cross-Game Match Engine</CardTitle>
               <CardDescription>
                 Games with similar audiences and mechanics to help you identify potential communities and marketing opportunities.
+                {filteredMatches.length !== matches.length && (
+                  <span className="block mt-1 text-sm font-medium">
+                    Showing {filteredMatches.length} of {matches.length} matches
+                  </span>
+                )}
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -415,10 +542,6 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 {showMarketData ? 'Hide' : 'Show'} Market Data
-              </Button>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
               </Button>
               <Button 
                 variant="outline" 
@@ -431,10 +554,43 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               </Button>
             </div>
           </div>
+
+          {/* Filters */}
+          <div className="flex gap-4 mt-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium">Filters:</span>
+            </div>
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Release Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                <SelectItem value="current">Current Year (2025)</SelectItem>
+                <SelectItem value="recent">Recent (2022-2025)</SelectItem>
+                <SelectItem value="2020s">2020s</SelectItem>
+                <SelectItem value="2010s">2010s</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={teamSizeFilter} onValueChange={setTeamSizeFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Team Size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Team Sizes</SelectItem>
+                <SelectItem value="solo">Solo Developer</SelectItem>
+                <SelectItem value="small">Small (5-20)</SelectItem>
+                <SelectItem value="medium">Medium (20-50)</SelectItem>
+                <SelectItem value="large">Large (100+)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {matches.map((match) => (
+            {filteredMatches.map((match) => (
               <div 
                 key={match.id} 
                 className="border rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -446,6 +602,10 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
                       <span className="text-sm text-gray-500 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {match.releaseYear}
+                      </span>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {match.teamSize}
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm">{match.description}</p>
@@ -507,6 +667,22 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
                 </div>
               </div>
             ))}
+            
+            {filteredMatches.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No matches found for the selected filters.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2"
+                  onClick={() => {
+                    setYearFilter("all");
+                    setTeamSizeFilter("all");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
