@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface CommunityFinderResultsProps {
   projectId: string;
+  onCommunitiesUpdate?: (count: number) => void;
 }
 
-const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
+const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFinderResultsProps) => {
   const [communities, setCommunities] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +33,11 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
           // Generate communities based on project genre and platform
           const generatedCommunities = generateCommunitiesFromProject(projectData);
           setCommunities(generatedCommunities);
+          
+          // Update parent component with communities count
+          if (onCommunitiesUpdate) {
+            onCommunitiesUpdate(generatedCommunities.length);
+          }
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
@@ -42,7 +47,7 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
     };
 
     fetchProjectAndCommunities();
-  }, [projectId]);
+  }, [projectId, onCommunitiesUpdate]);
 
   const generateCommunitiesFromProject = (projectData: any) => {
     const genre = projectData.genre?.toLowerCase() || '';

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface CreatorMatchResultsProps {
   projectId: string;
+  onCreatorsUpdate?: (count: number) => void;
 }
 
-const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
+const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResultsProps) => {
   const [creators, setCreators] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +33,11 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
           // Generate creators based on project genre and platform
           const generatedCreators = generateCreatorsFromProject(projectData);
           setCreators(generatedCreators);
+          
+          // Update parent component with creators count
+          if (onCreatorsUpdate) {
+            onCreatorsUpdate(generatedCreators.length);
+          }
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
@@ -42,7 +47,7 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
     };
 
     fetchProjectAndCreators();
-  }, [projectId]);
+  }, [projectId, onCreatorsUpdate]);
 
   const generateCreatorsFromProject = (projectData: any) => {
     const genre = projectData.genre?.toLowerCase() || '';
