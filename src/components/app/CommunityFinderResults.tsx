@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, MessageCircle, Users, TrendingUp } from "lucide-react";
+import { ExternalLink, MessageCircle, Users, TrendingUp, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CommunityFinderResultsProps {
   projectId: string;
@@ -14,6 +15,7 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
   const [communities, setCommunities] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProjectAndCommunities = async () => {
@@ -59,7 +61,8 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
       lastPost: "2 hours ago",
       description: "A place for indie game developers to share their work",
       tags: ["Indie", "Development", "Showcase"],
-      url: "https://reddit.com/r/indiegames"
+      url: "https://reddit.com/r/indiegames",
+      guidelines: "Post only on weekends for game showcases. Include [DEV] tag and be active in comments."
     });
 
     // Add genre-specific communities
@@ -74,7 +77,8 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
         lastPost: "5 hours ago",
         description: "Discussion about space-themed games",
         tags: ["Space", "Gaming", "Discussion"],
-        url: "https://reddit.com/r/spacegames"
+        url: "https://reddit.com/r/spacegames",
+        guidelines: "Focus on space exploration themes. Screenshots and gameplay videos welcome."
       });
     }
 
@@ -89,14 +93,31 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
         lastPost: "1 hour ago",
         description: "Community for RPG enthusiasts and developers",
         tags: ["RPG", "Character Development", "Storytelling"],
-        url: "https://reddit.com/r/rpg_gamers"
+        url: "https://reddit.com/r/rpg_gamers",
+        guidelines: "Include character progression mechanics. Story-driven content preferred."
+      });
+    }
+
+    if (genre.includes('life') || genre.includes('sim')) {
+      baseCommunities.push({
+        id: 4,
+        name: "r/LifeSimulationGames",
+        platform: "Reddit",
+        members: "89K",
+        activity: "High",
+        relevance: 92,
+        lastPost: "3 hours ago",
+        description: "Dedicated to life simulation and virtual life games",
+        tags: ["Life Sim", "Virtual Life", "Character Creation"],
+        url: "https://reddit.com/r/LifeSimulationGames",
+        guidelines: "Focus on daily life mechanics and character relationships. Building/customization content welcome."
       });
     }
 
     // Add platform-specific communities
     if (platform.includes('pc') || platform.includes('steam')) {
       baseCommunities.push({
-        id: 4,
+        id: 5,
         name: "r/pcgaming",
         platform: "Reddit",
         members: "2.8M",
@@ -105,13 +126,14 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
         lastPost: "30 minutes ago",
         description: "PC gaming community for discussions and recommendations",
         tags: ["PC", "Steam", "Gaming"],
-        url: "https://reddit.com/r/pcgaming"
+        url: "https://reddit.com/r/pcgaming",
+        guidelines: "Tech specs and performance discussions welcome. Follow self-promotion rules."
       });
     }
 
     // Always add Discord community
     baseCommunities.push({
-      id: 5,
+      id: 6,
       name: "Indie Game Developers",
       platform: "Discord",
       members: "12K",
@@ -120,10 +142,29 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
       lastPost: "1 hour ago",
       description: "Active community of indie developers sharing resources and feedback",
       tags: ["Development", "Community", "Feedback"],
-      url: "#"
+      url: "https://discord.gg/indiegamedev",
+      guidelines: "Share work-in-progress for feedback. Participate in weekly showcases."
     });
 
     return baseCommunities;
+  };
+
+  const handleViewGuidelines = (community: any) => {
+    toast({
+      title: `${community.name} Guidelines`,
+      description: community.guidelines || "General community guidelines apply. Be respectful and follow posting rules.",
+    });
+  };
+
+  const handleVisitCommunity = (community: any) => {
+    if (community.url && community.url !== "#") {
+      window.open(community.url, '_blank');
+    } else {
+      toast({
+        title: "Community Link",
+        description: `Visit ${community.name} to connect with the community`,
+      });
+    }
   };
 
   const getActivityColor = (activity: string) => {
@@ -215,10 +256,19 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
                     Platform: {community.platform}
                   </span>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewGuidelines(community)}
+                    >
+                      <Info className="w-4 h-4 mr-2" />
                       View Guidelines
                     </Button>
-                    <Button size="sm" className="bg-atlas-purple hover:bg-opacity-90">
+                    <Button 
+                      size="sm" 
+                      className="bg-atlas-purple hover:bg-opacity-90"
+                      onClick={() => handleVisitCommunity(community)}
+                    >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Visit Community
                     </Button>

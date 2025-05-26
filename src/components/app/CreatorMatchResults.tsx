@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Users, Play, Calendar } from "lucide-react";
+import { ExternalLink, Users, Play, Calendar, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreatorMatchResultsProps {
   projectId: string;
@@ -13,6 +15,7 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
   const [creators, setCreators] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProjectAndCreators = async () => {
@@ -59,7 +62,8 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
       lastVideo: "1 day ago",
       recentGames: ["Hollow Knight", "Celeste", "A Hat in Time"],
       description: "Live streams focusing on indie game discoveries",
-      url: "#"
+      url: "https://twitch.tv/indiespotlight",
+      email: "contact@indiespotlight.com"
     });
 
     // Add genre-specific creators
@@ -75,7 +79,8 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
         lastVideo: "3 days ago",
         recentGames: ["Starbound", "No Man's Sky", "Astroneer"],
         description: "Reviews and gameplay of space exploration games",
-        url: "#"
+        url: "https://youtube.com/@spacegamereviews",
+        email: "business@spacegamereviews.com"
       });
 
       baseCreators.push({
@@ -89,7 +94,8 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
         lastVideo: "5 days ago",
         recentGames: ["Elite Dangerous", "Kerbal Space Program", "Outer Worlds"],
         description: "Space simulation and exploration game content",
-        url: "#"
+        url: "https://youtube.com/@cosmicgamertv",
+        email: "partnerships@cosmicgamer.tv"
       });
     }
 
@@ -105,13 +111,46 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
         lastVideo: "2 days ago",
         recentGames: ["Baldur's Gate 3", "Divinity: Original Sin 2", "Disco Elysium"],
         description: "In-depth RPG reviews and character build guides",
-        url: "#"
+        url: "https://youtube.com/@rpgmasterclass",
+        email: "collabs@rpgmasterclass.com"
+      });
+    }
+
+    if (genre.includes('life') || genre.includes('sim')) {
+      baseCreators.push({
+        id: 5,
+        name: "SimLifeGaming",
+        platform: "YouTube",
+        subscribers: "256K",
+        avgViews: "45K",
+        engagement: "Very High",
+        matchScore: 94,
+        lastVideo: "1 day ago",
+        recentGames: ["The Sims 4", "Animal Crossing", "Stardew Valley"],
+        description: "Life simulation games, building, and storytelling content",
+        url: "https://youtube.com/@simlifegaming",
+        email: "business@simlifegaming.com"
+      });
+
+      baseCreators.push({
+        id: 6,
+        name: "CozyGameCorner",
+        platform: "Twitch",
+        subscribers: "43K",
+        avgViews: "3.2K",
+        engagement: "High",
+        matchScore: 88,
+        lastVideo: "2 days ago",
+        recentGames: ["My Time at Portia", "Spiritfarer", "Coffee Talk"],
+        description: "Cozy and relaxing life simulation games",
+        url: "https://twitch.tv/cozygamecorner",
+        email: "hello@cozygamecorner.com"
       });
     }
 
     if (genre.includes('action') || genre.includes('adventure')) {
       baseCreators.push({
-        id: 5,
+        id: 7,
         name: "ActionAdventureHub",
         platform: "YouTube",
         subscribers: "203K",
@@ -121,13 +160,14 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
         lastVideo: "1 week ago",
         recentGames: ["The Legend of Zelda", "Assassin's Creed", "Horizon"],
         description: "Action-adventure game reviews and walkthroughs",
-        url: "#"
+        url: "https://youtube.com/@actionadventurehub",
+        email: "partnerships@actionadventurehub.com"
       });
     }
 
     // Always add indie-focused creator
     baseCreators.push({
-      id: 6,
+      id: 8,
       name: "IndieDeveloperTalks",
       platform: "YouTube",
       subscribers: "156K",
@@ -137,11 +177,36 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
       lastVideo: "4 days ago",
       recentGames: ["Various Indie Titles"],
       description: "Interviews with indie developers and game showcases",
-      url: "#"
+      url: "https://youtube.com/@indiedevelopertalks",
+      email: "interviews@indiedevtalks.com"
     });
 
-    // Return only the number that matches the actual count
-    return baseCreators.slice(0, Math.min(baseCreators.length, 6));
+    // Return creators based on genre relevance
+    return baseCreators;
+  };
+
+  const handleViewProfile = (creator: any) => {
+    if (creator.url && creator.url !== "#") {
+      window.open(creator.url, '_blank');
+    } else {
+      toast({
+        title: "Creator Profile",
+        description: `View ${creator.name}'s content and latest videos`,
+      });
+    }
+  };
+
+  const handleContactCreator = (creator: any) => {
+    if (creator.email) {
+      const subject = encodeURIComponent(`Collaboration Opportunity - ${project?.name || 'Indie Game'}`);
+      const body = encodeURIComponent(`Hi ${creator.name},\n\nI'm reaching out regarding a potential collaboration opportunity for my upcoming game "${project?.name || 'Indie Game'}". I believe your audience would be interested in our ${project?.genre || 'game'}.\n\nWould you be interested in discussing this further?\n\nBest regards`);
+      window.open(`mailto:${creator.email}?subject=${subject}&body=${body}`, '_blank');
+    } else {
+      toast({
+        title: "Contact Information",
+        description: `Visit ${creator.name}'s profile for contact details and collaboration information`,
+      });
+    }
   };
 
   const getEngagementColor = (engagement: string) => {
@@ -239,11 +304,20 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
                     Platform: {creator.platform}
                   </span>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewProfile(creator)}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
                       View Profile
                     </Button>
-                    <Button size="sm" className="bg-atlas-purple hover:bg-opacity-90">
-                      <ExternalLink className="w-4 h-4 mr-2" />
+                    <Button 
+                      size="sm" 
+                      className="bg-atlas-purple hover:bg-opacity-90"
+                      onClick={() => handleContactCreator(creator)}
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
                       Contact Creator
                     </Button>
                   </div>
