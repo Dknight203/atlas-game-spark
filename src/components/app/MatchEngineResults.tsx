@@ -42,9 +42,9 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
   const { toast } = useToast();
 
   // Helper function to safely convert Json to string array
-  const jsonToStringArray = (jsonData: any): string[] => {
+  const jsonToStringArray = (jsonData: unknown): string[] => {
     if (Array.isArray(jsonData)) {
-      return jsonData.filter(item => typeof item === 'string');
+      return jsonData.filter((item): item is string => typeof item === 'string');
     }
     return [];
   };
@@ -315,11 +315,11 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
         return;
       }
 
-      // Also fetch project details for genre
+      // Also fetch project details for genre - fix the column name
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('genre')
-        .eq('project_id', projectId)
+        .eq('id', projectId)
         .maybeSingle();
 
       if (projectError && projectError.code !== 'PGRST116') {
@@ -450,9 +450,9 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               <CardTitle className="flex items-center gap-2">
                 Cross-Game Match Engine
                 {isLiveData ? (
-                  <Wifi className="w-5 h-5 text-green-600" title="Live data connected" />
+                  <Wifi className="w-5 h-5 text-green-600" />
                 ) : (
-                  <WifiOff className="w-5 h-5 text-gray-400" title="Using sample data" />
+                  <WifiOff className="w-5 h-5 text-gray-400" />
                 )}
               </CardTitle>
               <CardDescription>
