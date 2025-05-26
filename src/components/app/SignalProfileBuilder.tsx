@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, X, Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignalProfileBuilderProps {
   projectId: string;
@@ -15,17 +16,50 @@ interface SignalProfileBuilderProps {
 
 const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
   const [profile, setProfile] = useState({
-    themes: ["Space", "Exploration", "Crafting"],
-    mechanics: ["Turn-based Combat", "Resource Management", "Trading"],
-    tone: "Adventure",
-    targetAudience: "RPG enthusiasts, space game fans",
-    uniqueFeatures: "Procedural galaxy generation, complex economy system"
+    themes: [] as string[],
+    mechanics: [] as string[],
+    tone: "",
+    targetAudience: "",
+    uniqueFeatures: ""
   });
   
   const [newTheme, setNewTheme] = useState("");
   const [newMechanic, setNewMechanic] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  // Load existing signal profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('signal_profiles')
+          .select('*')
+          .eq('project_id', projectId)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading profile:', error);
+        } else if (data) {
+          setProfile({
+            themes: data.themes || [],
+            mechanics: data.mechanics || [],
+            tone: data.tone || "",
+            targetAudience: data.target_audience || "",
+            uniqueFeatures: data.unique_features || ""
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [projectId]);
 
   const addTheme = () => {
     if (newTheme.trim() && !profile.themes.includes(newTheme.trim())) {
@@ -62,17 +96,52 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
   };
 
   const saveProfile = async () => {
-    setIsLoading(true);
+    setIsSaving(true);
     
-    // Simulate saving
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const profileData = {
+        project_id: projectId,
+        themes: profile.themes,
+        mechanics: profile.mechanics,
+        tone: profile.tone,
+        target_audience: profile.targetAudience,
+        unique_features: profile.uniqueFeatures
+      };
+
+      const { error } = await supabase
+        .from('signal_profiles')
+        .upsert(profileData, { onConflict: 'project_id' });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Profile Saved",
+          description: "Your signal profile has been updated successfully.",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Profile Saved",
-        description: "Your signal profile has been updated successfully.",
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
       });
-    }, 1000);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-atlas-purple"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -182,10 +251,10 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             <Button 
               onClick={saveProfile} 
               className="bg-atlas-purple hover:bg-opacity-90"
-              disabled={isLoading}
+              disabled={isSaving}
             >
               <Save className="w-4 h-4 mr-2" />
-              {isLoading ? "Saving..." : "Save Profile"}
+              {isSaving ? "Saving..." : "Save Profile"}
             </Button>
           </div>
         </CardContent>
