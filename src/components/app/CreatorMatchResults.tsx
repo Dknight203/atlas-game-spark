@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,21 +45,22 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
     const genre = projectData.genre?.toLowerCase() || '';
     const platform = projectData.platform?.toLowerCase() || '';
     
-    const baseCreators = [
-      {
-        id: 1,
-        name: "IndieSpotlight",
-        platform: "Twitch",
-        subscribers: "67K",
-        avgViews: "2.1K",
-        engagement: "Very High",
-        matchScore: 87,
-        lastVideo: "1 day ago",
-        recentGames: ["Hollow Knight", "Celeste", "A Hat in Time"],
-        description: "Live streams focusing on indie game discoveries",
-        url: "#"
-      }
-    ];
+    const baseCreators = [];
+
+    // Always include general indie creator
+    baseCreators.push({
+      id: 1,
+      name: "IndieSpotlight",
+      platform: "Twitch",
+      subscribers: "67K",
+      avgViews: "2.1K",
+      engagement: "Very High",
+      matchScore: 87,
+      lastVideo: "1 day ago",
+      recentGames: ["Hollow Knight", "Celeste", "A Hat in Time"],
+      description: "Live streams focusing on indie game discoveries",
+      url: "#"
+    });
 
     // Add genre-specific creators
     if (genre.includes('space') || genre.includes('sci-fi')) {
@@ -140,7 +140,8 @@ const CreatorMatchResults = ({ projectId }: CreatorMatchResultsProps) => {
       url: "#"
     });
 
-    return baseCreators.slice(0, 4); // Return top 4 most relevant creators
+    // Return only the number that matches the actual count
+    return baseCreators.slice(0, Math.min(baseCreators.length, 6));
   };
 
   const getEngagementColor = (engagement: string) => {

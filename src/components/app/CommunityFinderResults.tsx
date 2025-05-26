@@ -46,20 +46,21 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
     const genre = projectData.genre?.toLowerCase() || '';
     const platform = projectData.platform?.toLowerCase() || '';
     
-    const baseCommunities = [
-      {
-        id: 1,
-        name: "r/indiegames",
-        platform: "Reddit",
-        members: "890K",
-        activity: "Very High",
-        relevance: 92,
-        lastPost: "2 hours ago",
-        description: "A place for indie game developers to share their work",
-        tags: ["Indie", "Development", "Showcase"],
-        url: "https://reddit.com/r/indiegames"
-      }
-    ];
+    const baseCommunities = [];
+
+    // Always include the main indie games community
+    baseCommunities.push({
+      id: 1,
+      name: "r/indiegames",
+      platform: "Reddit",
+      members: "890K",
+      activity: "Very High",
+      relevance: 95,
+      lastPost: "2 hours ago",
+      description: "A place for indie game developers to share their work",
+      tags: ["Indie", "Development", "Showcase"],
+      url: "https://reddit.com/r/indiegames"
+    });
 
     // Add genre-specific communities
     if (genre.includes('space') || genre.includes('sci-fi')) {
@@ -108,7 +109,7 @@ const CommunityFinderResults = ({ projectId }: CommunityFinderResultsProps) => {
       });
     }
 
-    // Add Discord communities
+    // Always add Discord community
     baseCommunities.push({
       id: 5,
       name: "Indie Game Developers",
