@@ -1,12 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X, Save } from "lucide-react";
+import { Plus, X, Save, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SignalProfileBuilderProps {
@@ -20,6 +22,16 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     tone: "",
     targetAudience: "",
     uniqueFeatures: ""
+  });
+  
+  const [matchCriteria, setMatchCriteria] = useState({
+    yearFilter: "all",
+    teamSizeFilter: "all",
+    platformFilter: "all",
+    genreFilter: "all",
+    similarityFilter: "all",
+    revenueFilter: "all",
+    playerBaseFilter: "all"
   });
   
   const [newTheme, setNewTheme] = useState("");
@@ -253,6 +265,137 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
               rows={3}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Match Criteria Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Match Criteria
+          </CardTitle>
+          <CardDescription>
+            Specify what types of games you want to match with to get more relevant results.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* First row of criteria */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Release Year</Label>
+              <Select value={matchCriteria.yearFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, yearFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  <SelectItem value="current">Current Year (2025)</SelectItem>
+                  <SelectItem value="recent">Recent (2022-2025)</SelectItem>
+                  <SelectItem value="2020s">2020s</SelectItem>
+                  <SelectItem value="2010s">2010s</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Team Size</Label>
+              <Select value={matchCriteria.teamSizeFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, teamSizeFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Team Sizes</SelectItem>
+                  <SelectItem value="solo">Solo Developer</SelectItem>
+                  <SelectItem value="small">Small (5-20)</SelectItem>
+                  <SelectItem value="medium">Medium (20-50)</SelectItem>
+                  <SelectItem value="large">Large (100+)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Platform</Label>
+              <Select value={matchCriteria.platformFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, platformFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Platforms</SelectItem>
+                  <SelectItem value="pc">PC/Steam</SelectItem>
+                  <SelectItem value="switch">Nintendo Switch</SelectItem>
+                  <SelectItem value="console">Console</SelectItem>
+                  <SelectItem value="mobile">Mobile</SelectItem>
+                  <SelectItem value="cross-platform">Cross-Platform</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Similarity</Label>
+              <Select value={matchCriteria.similarityFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, similarityFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any match" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Similarities</SelectItem>
+                  <SelectItem value="high">High Match (85%+)</SelectItem>
+                  <SelectItem value="medium">Medium Match (70-84%)</SelectItem>
+                  <SelectItem value="low">Low Match (&lt;70%)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Second row of criteria */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Revenue Scale</Label>
+              <Select value={matchCriteria.revenueFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, revenueFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any revenue" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Revenue Levels</SelectItem>
+                  <SelectItem value="indie">Indie (&lt;$100M)</SelectItem>
+                  <SelectItem value="aa">AA ($100M-$1B)</SelectItem>
+                  <SelectItem value="aaa">AAA ($1B+)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Player Base</Label>
+              <Select value={matchCriteria.playerBaseFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, playerBaseFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any player base" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Player Bases</SelectItem>
+                  <SelectItem value="niche">Niche (&lt;5M players)</SelectItem>
+                  <SelectItem value="popular">Popular (5-20M players)</SelectItem>
+                  <SelectItem value="mainstream">Mainstream (20M+ players)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Genre Focus</Label>
+              <Select value={matchCriteria.genreFilter} onValueChange={(value) => setMatchCriteria({...matchCriteria, genreFilter: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any genre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genres</SelectItem>
+                  <SelectItem value="simulation">Simulation</SelectItem>
+                  <SelectItem value="farming">Farming</SelectItem>
+                  <SelectItem value="relationships">Social/Relationships</SelectItem>
+                  <SelectItem value="customization">Customization</SelectItem>
+                  <SelectItem value="relaxing">Relaxing/Cozy</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <Button 
@@ -261,7 +404,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
               disabled={isSaving}
             >
               <Save className="w-4 h-4 mr-2" />
-              {isSaving ? "Saving..." : "Save Profile"}
+              {isSaving ? "Saving..." : "Save Profile & Criteria"}
             </Button>
           </div>
         </CardContent>

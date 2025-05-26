@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, RefreshCw, Filter, TrendingUp, Calendar, Users, Wifi, WifiOff } from "lucide-react";
+import { ExternalLink, RefreshCw, TrendingUp, Calendar, Users, Wifi, WifiOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,20 +32,9 @@ interface GameMatch {
 
 const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
   const [matches, setMatches] = useState<GameMatch[]>([]);
-  const [filteredMatches, setFilteredMatches] = useState<GameMatch[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showMarketData, setShowMarketData] = useState(false);
-  
-  // Enhanced filtering options
-  const [yearFilter, setYearFilter] = useState<string>("all");
-  const [teamSizeFilter, setTeamSizeFilter] = useState<string>("all");
-  const [platformFilter, setPlatformFilter] = useState<string>("all");
-  const [genreFilter, setGenreFilter] = useState<string>("all");
-  const [similarityFilter, setSimilarityFilter] = useState<string>("all");
-  const [revenueFilter, setRevenueFilter] = useState<string>("all");
-  const [playerBaseFilter, setPlayerBaseFilter] = useState<string>("all");
-  
   const [isLiveData, setIsLiveData] = useState(false);
   const { toast } = useToast();
 
@@ -230,7 +219,6 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
       }
 
       setMatches(generatedMatches);
-      setFilteredMatches(generatedMatches);
 
     } catch (error) {
       console.error('Error loading matches:', error);
@@ -244,93 +232,6 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     }
   };
 
-  // Enhanced filter matches with more criteria
-  useEffect(() => {
-    let filtered = [...matches];
-
-    // Year filter
-    if (yearFilter !== "all") {
-      const currentYear = new Date().getFullYear();
-      
-      if (yearFilter === "current") {
-        filtered = filtered.filter(match => match.releaseYear === currentYear);
-      } else if (yearFilter === "recent") {
-        filtered = filtered.filter(match => match.releaseYear >= currentYear - 3);
-      } else if (yearFilter === "2020s") {
-        filtered = filtered.filter(match => match.releaseYear >= 2020);
-      } else if (yearFilter === "2010s") {
-        filtered = filtered.filter(match => match.releaseYear >= 2010 && match.releaseYear < 2020);
-      }
-    }
-
-    // Team size filter
-    if (teamSizeFilter !== "all") {
-      filtered = filtered.filter(match => {
-        const teamSize = match.teamSize.toLowerCase();
-        if (teamSizeFilter === "solo") return teamSize.includes("solo");
-        if (teamSizeFilter === "small") return teamSize.includes("small") || teamSize.includes("5-20");
-        if (teamSizeFilter === "medium") return teamSize.includes("medium") || teamSize.includes("20-50");
-        if (teamSizeFilter === "large") return teamSize.includes("large") || teamSize.includes("100+");
-        return true;
-      });
-    }
-
-    // Platform filter
-    if (platformFilter !== "all") {
-      filtered = filtered.filter(match => {
-        const platform = match.platform.toLowerCase();
-        if (platformFilter === "pc") return platform.includes("pc") || platform.includes("steam");
-        if (platformFilter === "switch") return platform.includes("switch");
-        if (platformFilter === "console") return platform.includes("console");
-        if (platformFilter === "mobile") return platform.includes("mobile");
-        if (platformFilter === "cross-platform") return platform.includes(",") || platform.includes("multiple");
-        return true;
-      });
-    }
-
-    // Genre/Tag filter
-    if (genreFilter !== "all") {
-      filtered = filtered.filter(match => {
-        const tags = match.sharedTags.join(" ").toLowerCase();
-        return tags.includes(genreFilter.toLowerCase());
-      });
-    }
-
-    // Similarity filter
-    if (similarityFilter !== "all") {
-      filtered = filtered.filter(match => {
-        if (similarityFilter === "high") return match.similarity >= 85;
-        if (similarityFilter === "medium") return match.similarity >= 70 && match.similarity < 85;
-        if (similarityFilter === "low") return match.similarity < 70;
-        return true;
-      });
-    }
-
-    // Revenue filter
-    if (revenueFilter !== "all") {
-      filtered = filtered.filter(match => {
-        const revenue = match.marketPerformance.revenue.toLowerCase();
-        if (revenueFilter === "indie") return revenue.includes("m") && !revenue.includes("b");
-        if (revenueFilter === "aa") return revenue.includes("100m") || revenue.includes("200m") || revenue.includes("300m");
-        if (revenueFilter === "aaa") return revenue.includes("b") || revenue.includes("1.") || revenue.includes("2.");
-        return true;
-      });
-    }
-
-    // Player base filter
-    if (playerBaseFilter !== "all") {
-      filtered = filtered.filter(match => {
-        const playerBase = match.marketPerformance.playerBase.toLowerCase();
-        if (playerBaseFilter === "niche") return playerBase.includes("k") || (playerBase.includes("m") && parseInt(playerBase) < 5);
-        if (playerBaseFilter === "popular") return playerBase.includes("m") && parseInt(playerBase) >= 5 && parseInt(playerBase) < 20;
-        if (playerBaseFilter === "mainstream") return playerBase.includes("m") && parseInt(playerBase) >= 20;
-        return true;
-      });
-    }
-
-    setFilteredMatches(filtered);
-  }, [matches, yearFilter, teamSizeFilter, platformFilter, genreFilter, similarityFilter, revenueFilter, playerBaseFilter]);
-
   useEffect(() => {
     loadMatches();
   }, [projectId]);
@@ -341,16 +242,6 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
     setTimeout(() => {
       setIsRefreshing(false);
     }, 1000);
-  };
-
-  const clearAllFilters = () => {
-    setYearFilter("all");
-    setTeamSizeFilter("all");
-    setPlatformFilter("all");
-    setGenreFilter("all");
-    setSimilarityFilter("all");
-    setRevenueFilter("all");
-    setPlayerBaseFilter("all");
   };
 
   const handleViewDetails = (match: GameMatch) => {
@@ -402,14 +293,12 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               </CardTitle>
               <CardDescription>
                 {isLiveData 
-                  ? "Live games from Steam and other databases with similar audiences and mechanics."
-                  : "Sample games with similar audiences and mechanics. Live data temporarily unavailable."
+                  ? "Live games from Steam and other databases matching your signal profile criteria."
+                  : "Sample games matching your signal profile criteria. Live data temporarily unavailable."
                 }
-                {filteredMatches.length !== matches.length && (
-                  <span className="block mt-1 text-sm font-medium">
-                    Showing {filteredMatches.length} of {matches.length} matches
-                  </span>
-                )}
+                <span className="block mt-1 text-sm">
+                  Found {matches.length} matches based on your signal profile and match criteria.
+                </span>
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -432,118 +321,11 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               </Button>
             </div>
           </div>
-
-          {/* Enhanced Filters */}
-          <div className="space-y-4 mt-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium">Match Criteria:</span>
-              <Button variant="outline" size="sm" onClick={clearAllFilters}>
-                Clear All
-              </Button>
-            </div>
-            
-            {/* First row of filters */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Release Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  <SelectItem value="current">Current Year (2025)</SelectItem>
-                  <SelectItem value="recent">Recent (2022-2025)</SelectItem>
-                  <SelectItem value="2020s">2020s</SelectItem>
-                  <SelectItem value="2010s">2010s</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={teamSizeFilter} onValueChange={setTeamSizeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Team Size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Team Sizes</SelectItem>
-                  <SelectItem value="solo">Solo Developer</SelectItem>
-                  <SelectItem value="small">Small (5-20)</SelectItem>
-                  <SelectItem value="medium">Medium (20-50)</SelectItem>
-                  <SelectItem value="large">Large (100+)</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Platforms</SelectItem>
-                  <SelectItem value="pc">PC/Steam</SelectItem>
-                  <SelectItem value="switch">Nintendo Switch</SelectItem>
-                  <SelectItem value="console">Console</SelectItem>
-                  <SelectItem value="mobile">Mobile</SelectItem>
-                  <SelectItem value="cross-platform">Cross-Platform</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={genreFilter} onValueChange={setGenreFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Genre/Theme" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Genres</SelectItem>
-                  <SelectItem value="simulation">Simulation</SelectItem>
-                  <SelectItem value="farming">Farming</SelectItem>
-                  <SelectItem value="relationships">Social/Relationships</SelectItem>
-                  <SelectItem value="customization">Customization</SelectItem>
-                  <SelectItem value="relaxing">Relaxing/Cozy</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Second row of filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Select value={similarityFilter} onValueChange={setSimilarityFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Similarity Score" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Similarities</SelectItem>
-                  <SelectItem value="high">High Match (85%+)</SelectItem>
-                  <SelectItem value="medium">Medium Match (70-84%)</SelectItem>
-                  <SelectItem value="low">Low Match (&lt;70%)</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={revenueFilter} onValueChange={setRevenueFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Revenue Scale" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Revenue Levels</SelectItem>
-                  <SelectItem value="indie">Indie (&lt;$100M)</SelectItem>
-                  <SelectItem value="aa">AA ($100M-$1B)</SelectItem>
-                  <SelectItem value="aaa">AAA ($1B+)</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={playerBaseFilter} onValueChange={setPlayerBaseFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Player Base Size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Player Bases</SelectItem>
-                  <SelectItem value="niche">Niche (&lt;5M players)</SelectItem>
-                  <SelectItem value="popular">Popular (5-20M players)</SelectItem>
-                  <SelectItem value="mainstream">Mainstream (20M+ players)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </CardHeader>
         
         <CardContent>
           <div className="space-y-4">
-            {filteredMatches.map((match) => (
+            {matches.map((match) => (
               <div 
                 key={match.id} 
                 className="border rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -621,16 +403,9 @@ const MatchEngineResults = ({ projectId }: MatchEngineResultsProps) => {
               </div>
             ))}
             
-            {filteredMatches.length === 0 && (
+            {matches.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No matches found for the selected criteria.</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-2"
-                  onClick={clearAllFilters}
-                >
-                  Clear All Filters
-                </Button>
+                <p className="text-gray-500">No matches found. Try updating your signal profile to get better results.</p>
               </div>
             )}
           </div>
