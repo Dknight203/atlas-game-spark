@@ -21,6 +21,7 @@ interface GameMatch {
   recentActivity: string;
   description: string;
   steamUrl?: string;
+  consoleUrl?: string;
   releaseYear: number;
   teamSize: string;
   marketPerformance: {
@@ -47,16 +48,17 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   };
 
   // Fetch live game data from external APIs
-  const fetchLiveGameData = async (themes: string[], mechanics: string[], tone: string, genre?: string) => {
+  const fetchLiveGameData = async (themes: string[], mechanics: string[], tone: string, genre?: string, platform?: string) => {
     try {
-      console.log('Fetching live game data...');
+      console.log('Fetching cross-platform game data...');
       
       const { data, error } = await supabase.functions.invoke('fetch-game-data', {
         body: {
           genre: genre || '',
           themes: themes,
           mechanics: mechanics,
-          tone: tone
+          tone: tone,
+          platform: platform || ''
         }
       });
 
@@ -65,10 +67,10 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
         throw error;
       }
 
-      console.log('Live game data received:', data);
+      console.log('Cross-platform game data received:', data);
       return data.games || [];
     } catch (error) {
-      console.error('Error fetching live game data:', error);
+      console.error('Error fetching cross-platform game data:', error);
       toast({
         title: "Live Data Unavailable",
         description: "Falling back to sample data. Check your internet connection.",
@@ -78,10 +80,89 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     }
   };
 
-  // Enhanced sample data with better categorization
-  const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string) => {
+  // Enhanced sample data with console games
+  const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string, platform?: string) => {
     const gameDatabase = {
-      "Life Sim": [
+      "Nintendo Switch": [
+        {
+          id: 2001,
+          name: "Animal Crossing: New Horizons",
+          similarity: 94,
+          sharedTags: ["Life Simulation", "Social", "Customization", "Relaxing"],
+          platform: "Nintendo Switch",
+          communitySize: "Very Large",
+          recentActivity: "High",
+          description: "Create your perfect island paradise with friends in this beloved life simulation",
+          consoleUrl: "https://www.nintendo.com/us/store/products/animal-crossing-new-horizons-switch/",
+          releaseYear: 2020,
+          teamSize: "Large (100+ developers)",
+          marketPerformance: {
+            revenue: "$2B+ lifetime",
+            playerBase: "39M+ players",
+            growthRate: "+15% YoY"
+          }
+        },
+        {
+          id: 2002,
+          name: "Spiritfarer",
+          similarity: 89,
+          sharedTags: ["Life Simulation", "Management", "Emotional", "Indie"],
+          platform: "Switch, PC, Console",
+          communitySize: "Medium",
+          recentActivity: "Medium",
+          description: "A cozy management game about caring for spirits before releasing them into the afterlife",
+          steamUrl: "https://store.steampowered.com/app/972660/Spiritfarer/",
+          consoleUrl: "https://www.nintendo.com/us/store/products/spiritfarer-switch/",
+          releaseYear: 2020,
+          teamSize: "Small (5-20 developers)",
+          marketPerformance: {
+            revenue: "$15M+ lifetime",
+            playerBase: "1.5M+ players",
+            growthRate: "+8% YoY"
+          }
+        }
+      ],
+      "PlayStation": [
+        {
+          id: 2003,
+          name: "Dreams",
+          similarity: 87,
+          sharedTags: ["Creation", "Community", "Sandbox", "Social"],
+          platform: "PlayStation 4, PlayStation 5",
+          communitySize: "Large",
+          recentActivity: "Medium",
+          description: "Create, share and play an endless collection of games, films, art and music",
+          consoleUrl: "https://store.playstation.com/en-us/product/UP9000-CUSA08010_00-DREAMS0000000000",
+          releaseYear: 2020,
+          teamSize: "Medium (20-50 developers)",
+          marketPerformance: {
+            revenue: "$40M+ lifetime",
+            playerBase: "3M+ players",
+            growthRate: "+6% YoY"
+          }
+        }
+      ],
+      "Mobile": [
+        {
+          id: 2004,
+          name: "Sky: Children of the Light",
+          similarity: 85,
+          sharedTags: ["Social", "Exploration", "Relaxing", "MMO"],
+          platform: "iOS, Android, Switch",
+          communitySize: "Very Large",
+          recentActivity: "Very High",
+          description: "A peaceful MMO about exploring mystical realms and connecting with others",
+          consoleUrl: "https://apps.apple.com/us/app/sky-children-of-the-light/id1462117269",
+          releaseYear: 2019,
+          teamSize: "Medium (20-50 developers)",
+          marketPerformance: {
+            revenue: "$100M+ lifetime",
+            playerBase: "160M+ downloads",
+            growthRate: "+25% YoY"
+          }
+        }
+      ],
+      "Default": [
         {
           id: 1,
           name: "The Sims 4",
@@ -99,70 +180,21 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
             playerBase: "36M+ players",
             growthRate: "+15% YoY"
           }
-        },
-        {
-          id: 11,
-          name: "Stardew Valley",
-          similarity: 88,
-          sharedTags: ["Life Simulation", "Farming", "Relationships", "Pixel Art"],
-          platform: "PC, Switch, Mobile",
-          communitySize: "Large",
-          recentActivity: "Very High",
-          description: "A farming simulation game with life sim elements and cozy gameplay",
-          steamUrl: "https://store.steampowered.com/app/413150/Stardew_Valley/",
-          releaseYear: 2016,
-          teamSize: "Solo Developer",
-          marketPerformance: {
-            revenue: "$300M+ lifetime",
-            playerBase: "20M+ players",
-            growthRate: "+25% YoY"
-          }
-        },
-        {
-          id: 12,
-          name: "Animal Crossing: New Horizons",
-          similarity: 85,
-          sharedTags: ["Life Simulation", "Social", "Customization", "Relaxing"],
-          platform: "Switch",
-          communitySize: "Very Large",
-          recentActivity: "High",
-          description: "Create your own island paradise and live a peaceful life",
-          releaseYear: 2020,
-          teamSize: "Large (100+ developers)",
-          marketPerformance: {
-            revenue: "$2B+ lifetime",
-            playerBase: "39M+ players",
-            growthRate: "+10% YoY"
-          }
-        },
-        {
-          id: 13,
-          name: "My Time at Portia",
-          similarity: 82,
-          sharedTags: ["Life Simulation", "Crafting", "Adventure", "Relationships"],
-          platform: "PC, Switch, Console",
-          communitySize: "Medium",
-          recentActivity: "Medium",
-          description: "Restore your Pa's neglected workshop to its former glory",
-          steamUrl: "https://store.steampowered.com/app/666140/My_Time_at_Portia/",
-          releaseYear: 2019,
-          teamSize: "Small (5-20 developers)",
-          marketPerformance: {
-            revenue: "$50M+ lifetime",
-            playerBase: "3M+ players",
-            growthRate: "+5% YoY"
-          }
         }
       ]
     };
 
-    // For life sim projects, return life sim games
-    if (genre?.toLowerCase().includes("life") || genre?.toLowerCase().includes("sim")) {
-      return gameDatabase["Life Sim"];
+    // Return platform-specific games
+    if (platform?.toLowerCase().includes('switch')) {
+      return gameDatabase["Nintendo Switch"];
+    } else if (platform?.toLowerCase().includes('playstation') || platform?.toLowerCase().includes('ps')) {
+      return gameDatabase["PlayStation"];
+    } else if (platform?.toLowerCase().includes('mobile') || platform?.toLowerCase().includes('ios') || platform?.toLowerCase().includes('android')) {
+      return gameDatabase["Mobile"];
     }
 
-    // Default fallback
-    return gameDatabase["Life Sim"];
+    // Default to mixed results
+    return [...gameDatabase["Default"], ...gameDatabase["Nintendo Switch"].slice(0, 1)];
   };
 
   const loadMatches = async () => {
@@ -184,10 +216,10 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
         return;
       }
 
-      // Also fetch project details for genre
+      // Also fetch project details for genre and platform
       const { data: project, error: projectError } = await supabase
         .from('projects')
-        .select('genre')
+        .select('genre, platform')
         .eq('id', projectId)
         .maybeSingle();
 
@@ -200,21 +232,22 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       const mechanics = signalProfile ? jsonToStringArray(signalProfile.mechanics) : [];
       const tone = signalProfile?.tone || "";
       const genre = project?.genre || "";
+      const platform = project?.platform || "";
 
       // Try to fetch live data first, fall back to sample data
       let generatedMatches: GameMatch[] = [];
       
       try {
-        console.log('Attempting to fetch live game data...');
-        generatedMatches = await fetchLiveGameData(themes, mechanics, tone, genre);
+        console.log('Attempting to fetch cross-platform game data...');
+        generatedMatches = await fetchLiveGameData(themes, mechanics, tone, genre, platform);
         setIsLiveData(true);
         toast({
           title: "Live Data Connected",
-          description: "Showing current games from Steam and other databases",
+          description: "Showing current games from multiple platforms and databases",
         });
       } catch (error) {
-        console.log('Live data fetch failed, using sample data');
-        generatedMatches = generateMatches(themes, mechanics, tone, genre);
+        console.log('Live data fetch failed, using enhanced sample data');
+        generatedMatches = generateMatches(themes, mechanics, tone, genre, platform);
         setIsLiveData(false);
       }
 
@@ -252,6 +285,8 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   const handleViewDetails = (match: GameMatch) => {
     if (match.steamUrl) {
       window.open(match.steamUrl, '_blank');
+    } else if (match.consoleUrl) {
+      window.open(match.consoleUrl, '_blank');
     } else {
       toast({
         title: "Game Details",
@@ -289,7 +324,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="flex items-center gap-2">
-                Cross-Game Match Engine
+                Cross-Platform Match Engine
                 {isLiveData ? (
                   <Wifi className="w-5 h-5 text-green-600" />
                 ) : (
@@ -298,11 +333,11 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
               </CardTitle>
               <CardDescription>
                 {isLiveData 
-                  ? "Live games from Steam and other databases matching your signal profile criteria."
-                  : "Sample games matching your signal profile criteria. Live data temporarily unavailable."
+                  ? "Live games from Steam, console stores, and game databases matching your signal profile."
+                  : "Sample games matching your signal profile. Live data temporarily unavailable."
                 }
                 <span className="block mt-1 text-sm">
-                  Found {matches.length} matches based on your signal profile and match criteria.
+                  Found {matches.length} matches across all gaming platforms based on your criteria.
                 </span>
               </CardDescription>
             </div>
@@ -396,14 +431,26 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
                     </span>
                     <span>Platform: {match.platform}</span>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleViewDetails(match)}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    {match.consoleUrl && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.open(match.consoleUrl, '_blank')}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Console Store
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewDetails(match)}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
