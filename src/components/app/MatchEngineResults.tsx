@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,7 +68,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   };
 
   // Load match criteria from signal profile
-  const loadMatchCriteria = async () => {
+  const loadMatchCriteria = async (): Promise<void> => {
     try {
       const { data: signalProfile, error } = await supabase
         .from('signal_profiles')
@@ -83,15 +82,15 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       }
 
       if (signalProfile) {
-        // Extract match criteria if they exist in the profile
+        const profile = signalProfile as any;
         setMatchCriteria({
-          yearFilter: (signalProfile as any).year_filter || "all",
-          teamSizeFilter: (signalProfile as any).team_size_filter || "all",
-          platformFilter: (signalProfile as any).platform_filter || "all",
-          genreFilter: (signalProfile as any).genre_filter || "all",
-          similarityFilter: (signalProfile as any).similarity_filter || "all",
-          revenueFilter: (signalProfile as any).revenue_filter || "all",
-          playerBaseFilter: (signalProfile as any).player_base_filter || "all"
+          yearFilter: profile.year_filter || "all",
+          teamSizeFilter: profile.team_size_filter || "all",
+          platformFilter: profile.platform_filter || "all",
+          genreFilter: profile.genre_filter || "all",
+          similarityFilter: profile.similarity_filter || "all",
+          revenueFilter: profile.revenue_filter || "all",
+          playerBaseFilter: profile.player_base_filter || "all"
         });
       }
     } catch (error) {
@@ -99,127 +98,143 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     }
   };
 
+  // Simplified filter functions to avoid type recursion
+  const filterByYear = (games: GameMatch[], yearFilter: string): GameMatch[] => {
+    if (yearFilter === "all") return games;
+    
+    const currentYear = new Date().getFullYear();
+    return games.filter((game: GameMatch) => {
+      switch (yearFilter) {
+        case "current":
+          return game.releaseYear === currentYear;
+        case "recent":
+          return game.releaseYear >= 2022 && game.releaseYear <= currentYear;
+        case "2020s":
+          return game.releaseYear >= 2020 && game.releaseYear < 2030;
+        case "2010s":
+          return game.releaseYear >= 2010 && game.releaseYear < 2020;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filterByTeamSize = (games: GameMatch[], teamSizeFilter: string): GameMatch[] => {
+    if (teamSizeFilter === "all") return games;
+    
+    return games.filter((game: GameMatch) => {
+      const teamSize: string = game.teamSize.toLowerCase();
+      switch (teamSizeFilter) {
+        case "solo":
+          return teamSize.includes("solo") || teamSize.includes("1-5");
+        case "small":
+          return teamSize.includes("5-20") || teamSize.includes("small");
+        case "medium":
+          return teamSize.includes("20-50") || teamSize.includes("medium");
+        case "large":
+          return teamSize.includes("100+") || teamSize.includes("large");
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filterByPlatform = (games: GameMatch[], platformFilter: string): GameMatch[] => {
+    if (platformFilter === "all") return games;
+    
+    return games.filter((game: GameMatch) => {
+      const platform: string = game.platform.toLowerCase();
+      switch (platformFilter) {
+        case "pc":
+          return platform.includes("pc") || platform.includes("steam");
+        case "switch":
+          return platform.includes("switch");
+        case "console":
+          return platform.includes("playstation") || platform.includes("xbox") || platform.includes("switch");
+        case "mobile":
+          return platform.includes("ios") || platform.includes("android") || platform.includes("mobile");
+        case "cross-platform":
+          return platform.includes(",") || platform.includes("+");
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filterBySimilarity = (games: GameMatch[], similarityFilter: string): GameMatch[] => {
+    if (similarityFilter === "all") return games;
+    
+    return games.filter((game: GameMatch) => {
+      const similarity: number = game.similarity;
+      switch (similarityFilter) {
+        case "high":
+          return similarity >= 85;
+        case "medium":
+          return similarity >= 70 && similarity < 85;
+        case "low":
+          return similarity < 70;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filterByRevenue = (games: GameMatch[], revenueFilter: string): GameMatch[] => {
+    if (revenueFilter === "all") return games;
+    
+    return games.filter((game: GameMatch) => {
+      const revenue: string = game.marketPerformance.revenue;
+      const revenueNum: number = parseInt(revenue.replace(/[^\d]/g, ""));
+      switch (revenueFilter) {
+        case "indie":
+          return revenueNum < 100;
+        case "aa":
+          return revenueNum >= 100 && revenueNum < 1000;
+        case "aaa":
+          return revenueNum >= 1000;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filterByPlayerBase = (games: GameMatch[], playerBaseFilter: string): GameMatch[] => {
+    if (playerBaseFilter === "all") return games;
+    
+    return games.filter((game: GameMatch) => {
+      const playerBase: string = game.marketPerformance.playerBase;
+      const playerNum: number = parseInt(playerBase.replace(/[^\d]/g, ""));
+      switch (playerBaseFilter) {
+        case "niche":
+          return playerNum < 5;
+        case "popular":
+          return playerNum >= 5 && playerNum < 20;
+        case "mainstream":
+          return playerNum >= 20;
+        default:
+          return true;
+      }
+    });
+  };
+
   // Apply filters to matches based on criteria
   const applyMatchCriteria = (gameMatches: GameMatch[]): GameMatch[] => {
-    let filtered = [...gameMatches];
+    let filtered: GameMatch[] = [...gameMatches];
 
-    // Apply year filter
-    if (matchCriteria.yearFilter !== "all") {
-      const currentYear = new Date().getFullYear();
-      filtered = filtered.filter(game => {
-        switch (matchCriteria.yearFilter) {
-          case "current":
-            return game.releaseYear === currentYear;
-          case "recent":
-            return game.releaseYear >= 2022 && game.releaseYear <= currentYear;
-          case "2020s":
-            return game.releaseYear >= 2020 && game.releaseYear < 2030;
-          case "2010s":
-            return game.releaseYear >= 2010 && game.releaseYear < 2020;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply team size filter
-    if (matchCriteria.teamSizeFilter !== "all") {
-      filtered = filtered.filter(game => {
-        const teamSize = game.teamSize.toLowerCase();
-        switch (matchCriteria.teamSizeFilter) {
-          case "solo":
-            return teamSize.includes("solo") || teamSize.includes("1-5");
-          case "small":
-            return teamSize.includes("5-20") || teamSize.includes("small");
-          case "medium":
-            return teamSize.includes("20-50") || teamSize.includes("medium");
-          case "large":
-            return teamSize.includes("100+") || teamSize.includes("large");
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply platform filter
-    if (matchCriteria.platformFilter !== "all") {
-      filtered = filtered.filter(game => {
-        const platform = game.platform.toLowerCase();
-        switch (matchCriteria.platformFilter) {
-          case "pc":
-            return platform.includes("pc") || platform.includes("steam");
-          case "switch":
-            return platform.includes("switch");
-          case "console":
-            return platform.includes("playstation") || platform.includes("xbox") || platform.includes("switch");
-          case "mobile":
-            return platform.includes("ios") || platform.includes("android") || platform.includes("mobile");
-          case "cross-platform":
-            return platform.includes(",") || platform.includes("+");
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply similarity filter
-    if (matchCriteria.similarityFilter !== "all") {
-      filtered = filtered.filter(game => {
-        switch (matchCriteria.similarityFilter) {
-          case "high":
-            return game.similarity >= 85;
-          case "medium":
-            return game.similarity >= 70 && game.similarity < 85;
-          case "low":
-            return game.similarity < 70;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply revenue filter
-    if (matchCriteria.revenueFilter !== "all") {
-      filtered = filtered.filter(game => {
-        const revenue = game.marketPerformance.revenue;
-        const revenueNum = parseInt(revenue.replace(/[^\d]/g, ""));
-        switch (matchCriteria.revenueFilter) {
-          case "indie":
-            return revenueNum < 100;
-          case "aa":
-            return revenueNum >= 100 && revenueNum < 1000;
-          case "aaa":
-            return revenueNum >= 1000;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply player base filter
-    if (matchCriteria.playerBaseFilter !== "all") {
-      filtered = filtered.filter(game => {
-        const playerBase = game.marketPerformance.playerBase;
-        const playerNum = parseInt(playerBase.replace(/[^\d]/g, ""));
-        switch (matchCriteria.playerBaseFilter) {
-          case "niche":
-            return playerNum < 5;
-          case "popular":
-            return playerNum >= 5 && playerNum < 20;
-          case "mainstream":
-            return playerNum >= 20;
-          default:
-            return true;
-        }
-      });
-    }
+    // Apply filters sequentially to avoid complex type inference
+    filtered = filterByYear(filtered, matchCriteria.yearFilter);
+    filtered = filterByTeamSize(filtered, matchCriteria.teamSizeFilter);
+    filtered = filterByPlatform(filtered, matchCriteria.platformFilter);
+    filtered = filterBySimilarity(filtered, matchCriteria.similarityFilter);
+    filtered = filterByRevenue(filtered, matchCriteria.revenueFilter);
+    filtered = filterByPlayerBase(filtered, matchCriteria.playerBaseFilter);
 
     console.log(`Applied filters: ${gameMatches.length} -> ${filtered.length} matches`);
     return filtered;
   };
 
   // Fetch live game data from external APIs
-  const fetchLiveGameData = async (themes: string[], mechanics: string[], tone: string, genre?: string, platform?: string) => {
+  const fetchLiveGameData = async (themes: string[], mechanics: string[], tone: string, genre?: string, platform?: string): Promise<GameMatch[]> => {
     try {
       console.log('Fetching cross-platform game data...');
       
@@ -252,7 +267,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   };
 
   // Enhanced sample data with console games
-  const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string, platform?: string) => {
+  const generateMatches = (themes: string[], mechanics: string[], tone: string, genre?: string, platform?: string): GameMatch[] => {
     const gameDatabase = {
       "Nintendo Switch": [
         {
@@ -368,7 +383,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     return [...gameDatabase["Default"], ...gameDatabase["Nintendo Switch"].slice(0, 1)];
   };
 
-  const loadMatches = async () => {
+  const loadMatches = async (): Promise<void> => {
     try {
       // Load match criteria first
       await loadMatchCriteria();
@@ -402,11 +417,11 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       }
 
       // Generate matches based on the signal profile data
-      const themes = signalProfile ? jsonToStringArray(signalProfile.themes) : [];
-      const mechanics = signalProfile ? jsonToStringArray(signalProfile.mechanics) : [];
-      const tone = signalProfile?.tone || "";
-      const genre = project?.genre || "";
-      const platform = project?.platform || "";
+      const themes: string[] = signalProfile ? jsonToStringArray(signalProfile.themes) : [];
+      const mechanics: string[] = signalProfile ? jsonToStringArray(signalProfile.mechanics) : [];
+      const tone: string = signalProfile?.tone || "";
+      const genre: string = project?.genre || "";
+      const platform: string = project?.platform || "";
 
       // Try to fetch live data first, fall back to sample data
       let generatedMatches: GameMatch[] = [];
@@ -428,7 +443,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       setMatches(generatedMatches);
       
       // Apply filters and update filtered matches
-      const filtered = applyMatchCriteria(generatedMatches);
+      const filtered: GameMatch[] = applyMatchCriteria(generatedMatches);
       setFilteredMatches(filtered);
       
       // Update parent component with filtered match count
@@ -455,7 +470,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
   // Re-apply filters when criteria changes
   useEffect(() => {
     if (matches.length > 0) {
-      const filtered = applyMatchCriteria(matches);
+      const filtered: GameMatch[] = applyMatchCriteria(matches);
       setFilteredMatches(filtered);
       if (onMatchesUpdate) {
         onMatchesUpdate(filtered.length);
@@ -463,7 +478,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     }
   }, [matchCriteria, matches]);
 
-  const refreshMatches = async () => {
+  const refreshMatches = async (): Promise<void> => {
     setIsRefreshing(true);
     await loadMatches();
     setTimeout(() => {
@@ -471,7 +486,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     }, 1000);
   };
 
-  const handleViewDetails = (match: GameMatch) => {
+  const handleViewDetails = (match: GameMatch): void => {
     if (match.steamUrl) {
       window.open(match.steamUrl, '_blank');
     } else if (match.consoleUrl) {
@@ -484,13 +499,13 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     }
   };
 
-  const getSimilarityColor = (similarity: number) => {
+  const getSimilarityColor = (similarity: number): string => {
     if (similarity >= 80) return "bg-green-100 text-green-800";
     if (similarity >= 70) return "bg-yellow-100 text-yellow-800";
     return "bg-gray-100 text-gray-800";
   };
 
-  const getActivityColor = (activity: string) => {
+  const getActivityColor = (activity: string): string => {
     if (activity === "Very High") return "text-green-600";
     if (activity === "High") return "text-green-500";
     if (activity === "Medium") return "text-yellow-600";
@@ -506,7 +521,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     );
   }
 
-  const displayMatches = filteredMatches.length > 0 ? filteredMatches : matches;
+  const displayMatches: GameMatch[] = filteredMatches.length > 0 ? filteredMatches : matches;
 
   return (
     <div className="space-y-6">
@@ -559,7 +574,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
         
         <CardContent>
           <div className="space-y-4">
-            {displayMatches.map((match) => (
+            {displayMatches.map((match: GameMatch) => (
               <div 
                 key={match.id} 
                 className="border rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -587,7 +602,7 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {match.sharedTags.map((tag) => (
+                  {match.sharedTags.map((tag: string) => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
