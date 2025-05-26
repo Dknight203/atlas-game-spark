@@ -124,3 +124,46 @@
     @apply atlas-button border-2 border-atlas-purple text-atlas-purple hover:bg-atlas-purple hover:bg-opacity-10;
   }
 }
+
+@layer utilities {
+  .atlas-purple {
+    color: #6E59A5;
+  }
+  
+  .bg-atlas-purple {
+    background-color: #6E59A5;
+  }
+  
+  .atlas-teal {
+    color: #33C3F0;
+  }
+  
+  .bg-atlas-teal {
+    background-color: #33C3F0;
+  }
+  
+  .atlas-orange {
+    color: #FF6B35;
+  }
+  
+  .bg-atlas-orange {
+    background-color: #FF6B35;
+  }
+  
+  .atlas-dark {
+    color: #2D3748;
+  }
+  
+  .bg-atlas-dark {
+    background-color: #2D3748;
+  }
+  
+  .atlas-light {
+    color: #F7FAFC;
+  }
+  
+  .bg-atlas-light {
+    background-color: #F7FAFC;
+  }
+}
+</lov-utilities>
