@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +20,18 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
   const [needsApiKey, setNeedsApiKey] = useState(false);
   const { toast } = useToast();
 
+  // Memoize the callback to prevent infinite re-renders
+  const handleCreatorsUpdate = useCallback((count: number) => {
+    if (onCreatorsUpdate) {
+      onCreatorsUpdate(count);
+    }
+  }, [onCreatorsUpdate]);
+
   useEffect(() => {
     const fetchProjectAndCreators = async () => {
       try {
+        console.log('Fetching project and creators for project:', projectId);
+        
         // Fetch project details
         const { data: projectData } = await supabase
           .from('projects')
@@ -35,12 +44,11 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
           
           // Search for creators across multiple platforms
           const allCreators = await searchMultiPlatformCreators(projectData);
-          setCreators(allCreators);
+          const creatorsArray = Array.isArray(allCreators) ? allCreators : [];
+          setCreators(creatorsArray);
           
           // Update parent component with creators count
-          if (onCreatorsUpdate && Array.isArray(allCreators)) {
-            onCreatorsUpdate(allCreators.length);
-          }
+          handleCreatorsUpdate(creatorsArray.length);
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
@@ -50,8 +58,10 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       }
     };
 
-    fetchProjectAndCreators();
-  }, [projectId, onCreatorsUpdate]);
+    if (projectId) {
+      fetchProjectAndCreators();
+    }
+  }, [projectId, handleCreatorsUpdate]);
 
   const searchMultiPlatformCreators = async (projectData: any) => {
     const genre = projectData.genre?.toLowerCase() || '';
@@ -112,7 +122,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
           searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(creator.name)}`;
           break;
         case 'twitch':
-          searchUrl = `https://www.twitch.tv/search?term=${encodeURIComponent(creator.name)}`;
+          searchUrl = `https://www.twitch.com/search?term=${encodeURIComponent(creator.name)}`;
           break;
         case 'tiktok':
           searchUrl = `https://www.tiktok.com/search?q=${encodeURIComponent(creator.name)}`;
