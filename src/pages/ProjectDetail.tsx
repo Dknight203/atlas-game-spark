@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Settings, Play, Users, Target, TrendingUp } from "lucide-react";
@@ -179,19 +180,19 @@ const ProjectDetail = () => {
               <p className="text-gray-600 max-w-2xl">{project.description}</p>
               <div className="flex gap-4 mt-4">
                 {project.genre && project.genre.trim() && (
-                  <span className="text-sm bg-atlas-purple bg-opacity-10 text-atlas-purple px-3 py-1 rounded-full">
+                  <Badge variant="secondary" className="bg-atlas-purple bg-opacity-10 text-atlas-purple border-atlas-purple/20">
                     {project.genre}
-                  </span>
+                  </Badge>
                 )}
                 {project.platform && project.platform.trim() && (
-                  <span className="text-sm bg-atlas-teal bg-opacity-10 text-atlas-teal px-3 py-1 rounded-full">
+                  <Badge variant="secondary" className="bg-atlas-teal bg-opacity-10 text-atlas-teal border-atlas-teal/20">
                     {project.platform}
-                  </span>
+                  </Badge>
                 )}
                 {project.status && project.status.trim() && (
-                  <span className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                     {project.status}
-                  </span>
+                  </Badge>
                 )}
               </div>
             </div>
