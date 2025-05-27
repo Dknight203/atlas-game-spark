@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -212,7 +211,6 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
     toast({
       title: "Contact Information",
       description: `To contact ${creator.name}: ${creator.contactMethod || 'Check their profile for business contact details'}`,
-      duration: 5000,
     });
   };
 
