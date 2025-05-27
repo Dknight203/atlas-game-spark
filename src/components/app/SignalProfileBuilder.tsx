@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X, Save } from "lucide-react";
+import { Plus, X, Save, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SignalProfileBuilderProps {
@@ -23,6 +22,12 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     targetAudience: "",
     uniqueFeatures: "",
     genre: ""
+  });
+  
+  const [filters, setFilters] = useState({
+    genreFilter: "",
+    themeFilter: "",
+    mechanicFilter: ""
   });
   
   const [newTheme, setNewTheme] = useState("");
@@ -114,6 +119,15 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     loadProfile();
   }, [projectId]);
 
+  // Filter functions
+  const filteredThemes = profile.themes.filter(theme => 
+    theme.toLowerCase().includes(filters.themeFilter.toLowerCase())
+  );
+
+  const filteredMechanics = profile.mechanics.filter(mechanic => 
+    mechanic.toLowerCase().includes(filters.mechanicFilter.toLowerCase())
+  );
+
   const addTheme = () => {
     if (newTheme.trim() && !profile.themes.includes(newTheme.trim())) {
       setProfile({
@@ -145,6 +159,14 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     setProfile({
       ...profile,
       mechanics: profile.mechanics.filter(m => m !== mechanic)
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      genreFilter: "",
+      themeFilter: "",
+      mechanicFilter: ""
     });
   };
 
@@ -220,6 +242,53 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Filters Section */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="w-4 h-4 text-atlas-purple" />
+              <Label className="text-base font-semibold">Filters</Label>
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Clear All
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label className="text-sm">Filter Themes</Label>
+                <Input
+                  value={filters.themeFilter}
+                  onChange={(e) => setFilters({ ...filters, themeFilter: e.target.value })}
+                  placeholder="Search themes..."
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Filter Mechanics</Label>
+                <Input
+                  value={filters.mechanicFilter}
+                  onChange={(e) => setFilters({ ...filters, mechanicFilter: e.target.value })}
+                  placeholder="Search mechanics..."
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Filter by Genre</Label>
+                <Select value={filters.genreFilter} onValueChange={(value) => setFilters({ ...filters, genreFilter: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All genres" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 bg-white">
+                    <SelectItem value="">All genres</SelectItem>
+                    {gameGenres
+                      .filter(genre => !filters.genreFilter || genre.toLowerCase().includes(filters.genreFilter.toLowerCase()))
+                      .map((genre) => (
+                        <SelectItem key={genre} value={genre.toLowerCase()}>
+                          {genre}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
           {/* Genre Selection */}
           <div>
             <Label className="text-base font-semibold">Game Genre</Label>
@@ -229,11 +298,13 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
                 <SelectValue placeholder="Select a genre" />
               </SelectTrigger>
               <SelectContent className="max-h-60 bg-white">
-                {gameGenres.map((genre) => (
-                  <SelectItem key={genre} value={genre.toLowerCase()}>
-                    {genre}
-                  </SelectItem>
-                ))}
+                {gameGenres
+                  .filter(genre => !filters.genreFilter || genre.toLowerCase().includes(filters.genreFilter.toLowerCase()))
+                  .map((genre) => (
+                    <SelectItem key={genre} value={genre.toLowerCase()}>
+                      {genre}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -243,7 +314,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             <Label className="text-base font-semibold">Themes & Setting</Label>
             <p className="text-sm text-gray-600 mb-3">What themes and settings does your game explore?</p>
             <div className="flex flex-wrap gap-2 mb-3">
-              {profile.themes.map((theme) => (
+              {filteredThemes.map((theme) => (
                 <Badge key={theme} variant="secondary" className="flex items-center gap-1">
                   {theme}
                   <X 
@@ -252,6 +323,9 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
                   />
                 </Badge>
               ))}
+              {filters.themeFilter && filteredThemes.length === 0 && (
+                <p className="text-sm text-gray-500">No themes match your filter</p>
+              )}
             </div>
             <div className="flex gap-2">
               <Input
@@ -271,7 +345,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             <Label className="text-base font-semibold">Core Mechanics</Label>
             <p className="text-sm text-gray-600 mb-3">What are the main gameplay mechanics?</p>
             <div className="flex flex-wrap gap-2 mb-3">
-              {profile.mechanics.map((mechanic) => (
+              {filteredMechanics.map((mechanic) => (
                 <Badge key={mechanic} variant="secondary" className="flex items-center gap-1">
                   {mechanic}
                   <X 
@@ -280,6 +354,9 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
                   />
                 </Badge>
               ))}
+              {filters.mechanicFilter && filteredMechanics.length === 0 && (
+                <p className="text-sm text-gray-500">No mechanics match your filter</p>
+              )}
             </div>
             <div className="flex gap-2">
               <Input

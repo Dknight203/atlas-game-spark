@@ -36,6 +36,12 @@ const ProjectDetail = () => {
     setActiveTab(tab);
   };
 
+  const handleProjectUpdate = (updatedProject: any) => {
+    // This would ideally trigger a refetch or update the project state
+    // For now, we'll just log it
+    console.log('Project updated:', updatedProject);
+  };
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -44,19 +50,13 @@ const ProjectDetail = () => {
     return <ProjectNotFound />;
   }
 
-  // Debug logging for rendering
-  console.log('🎨 Rendering tags...');
-  console.log('🎨 Genre check:', project.genre && project.genre.trim(), 'Will render genre:', !!(project.genre && project.genre.trim()));
-  console.log('🎨 Platform check:', project.platform && project.platform.trim(), 'Will render platform:', !!(project.platform && project.platform.trim()));
-  console.log('🎨 Status check:', project.status && project.status.trim(), 'Will render status:', !!(project.status && project.status.trim()));
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
       <div className="pt-20 pb-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <ProjectHeader project={project} />
+          <ProjectHeader project={project} onProjectUpdate={handleProjectUpdate} />
           <ProjectStats stats={stats} onStatClick={handleStatClick} />
           <ProjectTabs 
             projectId={id || ""} 
