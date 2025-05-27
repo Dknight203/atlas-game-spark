@@ -66,6 +66,22 @@ const ProjectDetail = () => {
           return;
         }
 
+        console.log('🔍 Project data fetched:', data);
+        console.log('🔍 Genre value:', data.genre, 'Type:', typeof data.genre, 'Length:', data.genre?.length);
+        console.log('🔍 Platform value:', data.platform, 'Type:', typeof data.platform, 'Length:', data.platform?.length);
+        console.log('🔍 Status value:', data.status, 'Type:', typeof data.status, 'Length:', data.status?.length);
+        
+        // Check for special characters or whitespace
+        if (data.genre) {
+          console.log('🔍 Genre characters:', Array.from(data.genre).map(char => `"${char}" (${char.charCodeAt(0)})`));
+          console.log('🔍 Genre trimmed:', `"${data.genre.trim()}"`, 'Trimmed length:', data.genre.trim().length);
+        }
+        
+        if (data.platform) {
+          console.log('🔍 Platform characters:', Array.from(data.platform).map(char => `"${char}" (${char.charCodeAt(0)})`));
+          console.log('🔍 Platform trimmed:', `"${data.platform.trim()}"`, 'Trimmed length:', data.platform.trim().length);
+        }
+
         setProject(data);
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -134,6 +150,12 @@ const ProjectDetail = () => {
       </div>
     );
   }
+
+  // Debug logging for rendering
+  console.log('🎨 Rendering tags...');
+  console.log('🎨 Genre check:', project.genre && project.genre.trim(), 'Will render genre:', !!(project.genre && project.genre.trim()));
+  console.log('🎨 Platform check:', project.platform && project.platform.trim(), 'Will render platform:', !!(project.platform && project.platform.trim()));
+  console.log('🎨 Status check:', project.status && project.status.trim(), 'Will render status:', !!(project.status && project.status.trim()));
 
   return (
     <div className="min-h-screen bg-gray-50">
