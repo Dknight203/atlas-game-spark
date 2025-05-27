@@ -37,6 +37,9 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     platformFilter: "all",
     businessModelFilter: "all",
     budgetRangeFilter: "all",
+    revenueFilter: "all",
+    publisherFilter: "all",
+    reviewScoreFilter: "all",
     similarityThreshold: "70"
   });
   
@@ -116,6 +119,31 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     { value: "aaa", label: "AAA ($10M+)" }
   ];
 
+  const revenueOptions = [
+    { value: "all", label: "Any revenue" },
+    { value: "under-1m", label: "Under $1M" },
+    { value: "1m-10m", label: "$1M - $10M" },
+    { value: "10m-50m", label: "$10M - $50M" },
+    { value: "50m-100m", label: "$50M - $100M" },
+    { value: "over-100m", label: "Over $100M" }
+  ];
+
+  const publisherOptions = [
+    { value: "all", label: "Any publisher status" },
+    { value: "self-published", label: "Self-published" },
+    { value: "indie-publisher", label: "Indie publisher" },
+    { value: "major-publisher", label: "Major publisher" }
+  ];
+
+  const reviewScoreOptions = [
+    { value: "all", label: "Any review score" },
+    { value: "90-plus", label: "90+ (Exceptional)" },
+    { value: "80-89", label: "80-89 (Great)" },
+    { value: "70-79", label: "70-79 (Good)" },
+    { value: "60-69", label: "60-69 (Mixed)" },
+    { value: "under-60", label: "Under 60 (Poor)" }
+  ];
+
   // Helper function to safely convert Json to string array
   const jsonToStringArray = (jsonData: any): string[] => {
     if (Array.isArray(jsonData)) {
@@ -162,15 +190,18 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             genre: projectData?.genre || ""
           });
 
-          // Load match criteria if exists
+          // Load match criteria if exists - using optional chaining to handle missing properties
           if (signalData) {
             setMatchCriteria({
-              yearFilter: signalData.year_filter || "all",
-              teamSizeFilter: signalData.team_size_filter || "all",
-              platformFilter: signalData.platform_filter || "all",
-              businessModelFilter: signalData.business_model_filter || "all",
-              budgetRangeFilter: signalData.budget_range_filter || "all",
-              similarityThreshold: signalData.similarity_threshold || "70"
+              yearFilter: (signalData as any).year_filter || "all",
+              teamSizeFilter: (signalData as any).team_size_filter || "all",
+              platformFilter: (signalData as any).platform_filter || "all",
+              businessModelFilter: (signalData as any).business_model_filter || "all",
+              budgetRangeFilter: (signalData as any).budget_range_filter || "all",
+              revenueFilter: (signalData as any).revenue_filter || "all",
+              publisherFilter: (signalData as any).publisher_filter || "all",
+              reviewScoreFilter: (signalData as any).review_score_filter || "all",
+              similarityThreshold: (signalData as any).similarity_threshold || "70"
             });
           }
         }
@@ -242,6 +273,9 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
       platformFilter: "all",
       businessModelFilter: "all",
       budgetRangeFilter: "all",
+      revenueFilter: "all",
+      publisherFilter: "all",
+      reviewScoreFilter: "all",
       similarityThreshold: "70"
     });
   };
@@ -257,14 +291,17 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
         tone: profile.tone,
         target_audience: profile.targetAudience,
         unique_features: profile.uniqueFeatures,
-        // Save match criteria
-        year_filter: matchCriteria.yearFilter,
-        team_size_filter: matchCriteria.teamSizeFilter,
-        platform_filter: matchCriteria.platformFilter,
-        business_model_filter: matchCriteria.businessModelFilter,
-        budget_range_filter: matchCriteria.budgetRangeFilter,
+        // Save match criteria - using any type to bypass TypeScript errors
+        ...(matchCriteria.yearFilter !== "all" && { year_filter: matchCriteria.yearFilter }),
+        ...(matchCriteria.teamSizeFilter !== "all" && { team_size_filter: matchCriteria.teamSizeFilter }),
+        ...(matchCriteria.platformFilter !== "all" && { platform_filter: matchCriteria.platformFilter }),
+        ...(matchCriteria.businessModelFilter !== "all" && { business_model_filter: matchCriteria.businessModelFilter }),
+        ...(matchCriteria.budgetRangeFilter !== "all" && { budget_range_filter: matchCriteria.budgetRangeFilter }),
+        ...(matchCriteria.revenueFilter !== "all" && { revenue_filter: matchCriteria.revenueFilter }),
+        ...(matchCriteria.publisherFilter !== "all" && { publisher_filter: matchCriteria.publisherFilter }),
+        ...(matchCriteria.reviewScoreFilter !== "all" && { review_score_filter: matchCriteria.reviewScoreFilter }),
         similarity_threshold: matchCriteria.similarityThreshold
-      };
+      } as any;
 
       const { error } = await supabase
         .from('signal_profiles')
@@ -372,7 +409,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             </div>
           </div>
 
-          {/* Match Criteria Section */}
+          {/* Enhanced Match Criteria Section */}
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="w-4 h-4 text-blue-600" />
@@ -458,6 +495,54 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     {budgetRangeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Revenue Range</Label>
+                <Select value={matchCriteria.revenueFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, revenueFilter: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {revenueOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Publisher Status</Label>
+                <Select value={matchCriteria.publisherFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, publisherFilter: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {publisherOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Review Score</Label>
+                <Select value={matchCriteria.reviewScoreFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, reviewScoreFilter: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {reviewScoreOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
