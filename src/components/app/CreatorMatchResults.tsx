@@ -87,13 +87,14 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         if (data.error.includes('API key not configured')) {
           setNeedsApiKey(true);
           setError('Some platforms require API keys. You can still see creators from other platforms.');
-          return data?.creators || [];
+          return Array.isArray(data?.creators) ? data.creators : [];
         }
         throw new Error(data.error);
       }
 
-      console.log('Received creators from multi-platform search:', Array.isArray(data?.creators) ? data.creators.length : 0);
-      return data?.creators || [];
+      const creatorsArray = Array.isArray(data?.creators) ? data.creators : [];
+      console.log('Received creators from multi-platform search:', creatorsArray.length);
+      return creatorsArray;
       
     } catch (error) {
       console.error('Error searching creators:', error);
