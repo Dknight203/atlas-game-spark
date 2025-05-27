@@ -71,37 +71,64 @@ export type Database = {
       }
       signal_profiles: {
         Row: {
+          budget_range_filter: string | null
+          business_model_filter: string | null
           created_at: string | null
           id: string
           mechanics: Json | null
+          platform_filter: string | null
           project_id: string
+          publisher_filter: string | null
+          revenue_filter: string | null
+          review_score_filter: string | null
+          similarity_threshold: string | null
           target_audience: string | null
+          team_size_filter: string | null
           themes: Json | null
           tone: string | null
           unique_features: string | null
           updated_at: string | null
+          year_filter: string | null
         }
         Insert: {
+          budget_range_filter?: string | null
+          business_model_filter?: string | null
           created_at?: string | null
           id?: string
           mechanics?: Json | null
+          platform_filter?: string | null
           project_id: string
+          publisher_filter?: string | null
+          revenue_filter?: string | null
+          review_score_filter?: string | null
+          similarity_threshold?: string | null
           target_audience?: string | null
+          team_size_filter?: string | null
           themes?: Json | null
           tone?: string | null
           unique_features?: string | null
           updated_at?: string | null
+          year_filter?: string | null
         }
         Update: {
+          budget_range_filter?: string | null
+          business_model_filter?: string | null
           created_at?: string | null
           id?: string
           mechanics?: Json | null
+          platform_filter?: string | null
           project_id?: string
+          publisher_filter?: string | null
+          revenue_filter?: string | null
+          review_score_filter?: string | null
+          similarity_threshold?: string | null
           target_audience?: string | null
+          team_size_filter?: string | null
           themes?: Json | null
           tone?: string | null
           unique_features?: string | null
           updated_at?: string | null
+          year_filter?: string | null
         }
         Relationships: [
           {

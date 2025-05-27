@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,18 +189,18 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             genre: projectData?.genre || ""
           });
 
-          // Load match criteria if exists - using optional chaining to handle missing properties
+          // Load match criteria if exists
           if (signalData) {
             setMatchCriteria({
-              yearFilter: (signalData as any).year_filter || "all",
-              teamSizeFilter: (signalData as any).team_size_filter || "all",
-              platformFilter: (signalData as any).platform_filter || "all",
-              businessModelFilter: (signalData as any).business_model_filter || "all",
-              budgetRangeFilter: (signalData as any).budget_range_filter || "all",
-              revenueFilter: (signalData as any).revenue_filter || "all",
-              publisherFilter: (signalData as any).publisher_filter || "all",
-              reviewScoreFilter: (signalData as any).review_score_filter || "all",
-              similarityThreshold: (signalData as any).similarity_threshold || "70"
+              yearFilter: signalData.year_filter || "all",
+              teamSizeFilter: signalData.team_size_filter || "all",
+              platformFilter: signalData.platform_filter || "all",
+              businessModelFilter: signalData.business_model_filter || "all",
+              budgetRangeFilter: signalData.budget_range_filter || "all",
+              revenueFilter: signalData.revenue_filter || "all",
+              publisherFilter: signalData.publisher_filter || "all",
+              reviewScoreFilter: signalData.review_score_filter || "all",
+              similarityThreshold: signalData.similarity_threshold || "70"
             });
           }
         }
@@ -291,17 +290,16 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
         tone: profile.tone,
         target_audience: profile.targetAudience,
         unique_features: profile.uniqueFeatures,
-        // Save match criteria - using any type to bypass TypeScript errors
-        ...(matchCriteria.yearFilter !== "all" && { year_filter: matchCriteria.yearFilter }),
-        ...(matchCriteria.teamSizeFilter !== "all" && { team_size_filter: matchCriteria.teamSizeFilter }),
-        ...(matchCriteria.platformFilter !== "all" && { platform_filter: matchCriteria.platformFilter }),
-        ...(matchCriteria.businessModelFilter !== "all" && { business_model_filter: matchCriteria.businessModelFilter }),
-        ...(matchCriteria.budgetRangeFilter !== "all" && { budget_range_filter: matchCriteria.budgetRangeFilter }),
-        ...(matchCriteria.revenueFilter !== "all" && { revenue_filter: matchCriteria.revenueFilter }),
-        ...(matchCriteria.publisherFilter !== "all" && { publisher_filter: matchCriteria.publisherFilter }),
-        ...(matchCriteria.reviewScoreFilter !== "all" && { review_score_filter: matchCriteria.reviewScoreFilter }),
+        year_filter: matchCriteria.yearFilter,
+        team_size_filter: matchCriteria.teamSizeFilter,
+        platform_filter: matchCriteria.platformFilter,
+        business_model_filter: matchCriteria.businessModelFilter,
+        budget_range_filter: matchCriteria.budgetRangeFilter,
+        revenue_filter: matchCriteria.revenueFilter,
+        publisher_filter: matchCriteria.publisherFilter,
+        review_score_filter: matchCriteria.reviewScoreFilter,
         similarity_threshold: matchCriteria.similarityThreshold
-      } as any;
+      };
 
       const { error } = await supabase
         .from('signal_profiles')
@@ -419,7 +417,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
               </Button>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              Set specific criteria to filter the games that will be matched to your project.
+              Set specific criteria to filter the games that will be matched to your project. This helps you find games that align with your development approach and target metrics.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
