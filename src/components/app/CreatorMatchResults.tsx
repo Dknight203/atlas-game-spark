@@ -12,21 +12,6 @@ interface CreatorMatchResultsProps {
   onCreatorsUpdate?: (count: number) => void;
 }
 
-interface YouTubeChannel {
-  id: string;
-  snippet: {
-    title: string;
-    description: string;
-    thumbnails: any;
-    publishedAt: string;
-  };
-  statistics: {
-    subscriberCount: string;
-    videoCount: string;
-    viewCount: string;
-  };
-}
-
 const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResultsProps) => {
   const [creators, setCreators] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
@@ -118,8 +103,8 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         lastVideo: "2 days ago",
         recentGames: ["No Man's Sky", "Kerbal Space Program", "Elite Dangerous"],
         description: "Reviews and gameplay of space exploration games",
-        url: "https://youtube.com/@spacegamecentral",
-        email: "contact@spacegamecentral.com"
+        searchTerm: "space game reviews YouTube",
+        contactMethod: "YouTube channel contact form"
       });
     }
 
@@ -135,8 +120,8 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         lastVideo: "1 day ago",
         recentGames: ["Stardew Valley", "Animal Crossing", "My Time at Portia"],
         description: "Relaxing life simulation and cozy games",
-        url: "https://youtube.com/@cozylifegaming",
-        email: "hello@cozylifegaming.com"
+        searchTerm: "cozy life gaming YouTube",
+        contactMethod: "YouTube channel about section"
       });
     }
 
@@ -152,8 +137,8 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       lastVideo: "3 days ago",
       recentGames: ["Hollow Knight", "Celeste", "Hades"],
       description: "Discovering and showcasing unique indie games",
-      url: "https://youtube.com/@indiespotlight",
-      email: "collabs@indiespotlight.com"
+      searchTerm: "indie spotlight YouTube",
+      contactMethod: "Channel business email in about section"
     });
 
     creators.push({
@@ -167,8 +152,8 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       lastVideo: "1 week ago",
       recentGames: ["Various Indie Titles"],
       description: "Supporting indie developers and their stories",
-      url: "https://youtube.com/@smalldevbigdreams",
-      email: "support@smalldevbigdreams.com"
+      searchTerm: "small dev big dreams YouTube",
+      contactMethod: "Twitter DM or YouTube comments"
     });
 
     // Add some Twitch streamers
@@ -183,8 +168,8 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       lastVideo: "Live now",
       recentGames: ["Various Indie Games"],
       description: "Live streams featuring new and upcoming indie games",
-      url: "https://twitch.tv/indiegamehunter",
-      email: "business@indiegamehunter.tv"
+      searchTerm: "indie game hunter Twitch",
+      contactMethod: "Twitch whisper or Discord"
     });
 
     return creators.sort((a, b) => b.matchScore - a.matchScore);
@@ -203,34 +188,32 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         lastVideo: "1 day ago",
         recentGames: ["Hollow Knight", "Celeste", "A Hat in Time"],
         description: "Honest reviews of indie games from a developer perspective",
-        url: "https://youtube.com/@indiegamereviews",
-        email: "contact@indiegamereviews.com"
+        searchTerm: "indie game reviews YouTube",
+        contactMethod: "YouTube channel business email"
       }
     ];
   };
 
-  const handleViewProfile = (creator: any) => {
-    if (creator.url && creator.url !== "#") {
-      window.open(creator.url, '_blank');
+  const handleSearchCreator = (creator: any) => {
+    if (creator.searchTerm) {
+      const searchUrl = creator.platform === "Twitch" 
+        ? `https://www.twitch.tv/search?term=${encodeURIComponent(creator.name)}`
+        : `https://www.youtube.com/results?search_query=${encodeURIComponent(creator.searchTerm)}`;
+      window.open(searchUrl, '_blank');
     } else {
       toast({
-        title: "Creator Profile",
-        description: `View ${creator.name}'s content and latest videos`,
+        title: "Search Creator",
+        description: `Search for "${creator.name}" on ${creator.platform} to find their content`,
       });
     }
   };
 
-  const handleContactCreator = (creator: any) => {
-    if (creator.email) {
-      const subject = encodeURIComponent(`Collaboration Opportunity - ${project?.name || 'Indie Game'}`);
-      const body = encodeURIComponent(`Hi ${creator.name},\n\nI'm reaching out regarding a potential collaboration opportunity for my upcoming ${project?.genre || 'indie'} game "${project?.name || 'Indie Game'}". Based on your recent coverage of similar games, I believe your audience would be genuinely interested in our project.\n\nWould you be interested in an early preview or discussing a potential collaboration?\n\nBest regards`);
-      window.open(`mailto:${creator.email}?subject=${subject}&body=${body}`, '_blank');
-    } else {
-      toast({
-        title: "Contact Information",
-        description: `Visit ${creator.name}'s profile for contact details and collaboration information`,
-      });
-    }
+  const handleGetContactInfo = (creator: any) => {
+    toast({
+      title: "Contact Information",
+      description: `To contact ${creator.name}: ${creator.contactMethod || 'Check their profile for business contact details'}`,
+      duration: 5000,
+    });
   };
 
   const getEngagementColor = (engagement: string) => {
@@ -267,7 +250,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         <CardHeader>
           <CardTitle>Creator Match Engine</CardTitle>
           <CardDescription>
-            Real content creators discovered through platform APIs who have recently covered similar games and have engaged audiences.
+            Content creators who have recently covered similar games and have engaged audiences.
             {project && (
               <span className="block mt-2 text-sm">
                 Searching for creators who cover <strong>{project.genre}</strong> games on <strong>{project.platform}</strong>
@@ -331,18 +314,18 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleViewProfile(creator)}
+                      onClick={() => handleSearchCreator(creator)}
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
-                      View Profile
+                      Search Creator
                     </Button>
                     <Button 
                       size="sm" 
                       className="bg-atlas-purple hover:bg-opacity-90"
-                      onClick={() => handleContactCreator(creator)}
+                      onClick={() => handleGetContactInfo(creator)}
                     >
                       <Mail className="w-4 h-4 mr-2" />
-                      Contact Creator
+                      Get Contact Info
                     </Button>
                   </div>
                 </div>
