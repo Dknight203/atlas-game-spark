@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
   const [creators, setCreators] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,17 +43,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load creators. Using sample data.",
-          variant: "destructive",
-        });
-        // Fallback to sample data
-        const fallbackCreators = generateFallbackCreators();
-        setCreators(fallbackCreators);
-        if (onCreatorsUpdate) {
-          onCreatorsUpdate(fallbackCreators.length);
-        }
+        setError('Failed to load creators. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -64,153 +56,62 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
     const genre = projectData.genre?.toLowerCase() || '';
     const platform = projectData.platform?.toLowerCase() || '';
     
-    // For demo purposes, we'll simulate YouTube API calls
-    // In production, you'd need a YouTube API key
+    // Build search queries based on project data
     const searchQueries = [
       `${genre} game review`,
-      `indie game ${genre}`,
-      `${platform} gaming`,
-      'indie game developer'
+      `indie ${genre} games`,
+      `${platform} gaming review`,
+      'indie game review',
+      'small indie games',
+      `${genre} gameplay`
     ];
 
     try {
-      // This would be the actual YouTube API call structure:
-      // const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=channel&key=${YOUTUBE_API_KEY}`);
+      console.log('Calling YouTube API with search queries:', searchQueries);
       
-      // For now, return realistic mock data based on the search terms
-      return generateRealisticCreators(genre, platform);
+      const { data, error } = await supabase.functions.invoke('search-youtube-creators', {
+        body: { 
+          searchQueries,
+          genre,
+          platform 
+        }
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        if (data.error.includes('API key not configured')) {
+          setError('YouTube API key not configured. Please set up your YouTube API key to search for real creators.');
+          return [];
+        }
+        throw new Error(data.error);
+      }
+
+      console.log('Received creators from YouTube API:', data?.creators?.length || 0);
+      return data?.creators || [];
       
     } catch (error) {
       console.error('Error searching YouTube creators:', error);
-      return generateFallbackCreators();
+      throw error;
     }
-  };
-
-  const generateRealisticCreators = (genre: string, platform: string) => {
-    const creators = [];
-    
-    // Generate creators based on genre
-    if (genre.includes('space') || genre.includes('sci-fi')) {
-      creators.push({
-        id: 'space_gaming_1',
-        name: "SpaceGameCentral",
-        platform: "YouTube",
-        subscribers: "45K",
-        avgViews: "8.2K",
-        engagement: "High",
-        matchScore: 89,
-        lastVideo: "2 days ago",
-        recentGames: ["No Man's Sky", "Kerbal Space Program", "Elite Dangerous"],
-        description: "Reviews and gameplay of space exploration games",
-        searchTerm: "space game reviews YouTube",
-        contactMethod: "YouTube channel contact form"
-      });
-    }
-
-    if (genre.includes('life') || genre.includes('sim')) {
-      creators.push({
-        id: 'life_sim_1',
-        name: "CozyLifeGaming",
-        platform: "YouTube",
-        subscribers: "78K",
-        avgViews: "12.5K",
-        engagement: "Very High",
-        matchScore: 92,
-        lastVideo: "1 day ago",
-        recentGames: ["Stardew Valley", "Animal Crossing", "My Time at Portia"],
-        description: "Relaxing life simulation and cozy games",
-        searchTerm: "cozy life gaming YouTube",
-        contactMethod: "YouTube channel about section"
-      });
-    }
-
-    // Always include indie-focused creators
-    creators.push({
-      id: 'indie_spotlight',
-      name: "IndieSpotlight",
-      platform: "YouTube",
-      subscribers: "23K",
-      avgViews: "5.8K",
-      engagement: "High",
-      matchScore: 85,
-      lastVideo: "3 days ago",
-      recentGames: ["Hollow Knight", "Celeste", "Hades"],
-      description: "Discovering and showcasing unique indie games",
-      searchTerm: "indie spotlight YouTube",
-      contactMethod: "Channel business email in about section"
-    });
-
-    creators.push({
-      id: 'small_dev_big_dreams',
-      name: "SmallDevBigDreams",
-      platform: "YouTube",
-      subscribers: "8.9K",
-      avgViews: "2.1K",
-      engagement: "Very High",
-      matchScore: 88,
-      lastVideo: "1 week ago",
-      recentGames: ["Various Indie Titles"],
-      description: "Supporting indie developers and their stories",
-      searchTerm: "small dev big dreams YouTube",
-      contactMethod: "Twitter DM or YouTube comments"
-    });
-
-    // Add some Twitch streamers
-    creators.push({
-      id: 'indie_stream_1',
-      name: "IndieGameHunter",
-      platform: "Twitch",
-      subscribers: "15K",
-      avgViews: "850",
-      engagement: "High",
-      matchScore: 82,
-      lastVideo: "Live now",
-      recentGames: ["Various Indie Games"],
-      description: "Live streams featuring new and upcoming indie games",
-      searchTerm: "indie game hunter Twitch",
-      contactMethod: "Twitch whisper or Discord"
-    });
-
-    return creators.sort((a, b) => b.matchScore - a.matchScore);
-  };
-
-  const generateFallbackCreators = () => {
-    return [
-      {
-        id: 1,
-        name: "IndieGameReviews",
-        platform: "YouTube",
-        subscribers: "34K",
-        avgViews: "6.7K",
-        engagement: "High",
-        matchScore: 87,
-        lastVideo: "1 day ago",
-        recentGames: ["Hollow Knight", "Celeste", "A Hat in Time"],
-        description: "Honest reviews of indie games from a developer perspective",
-        searchTerm: "indie game reviews YouTube",
-        contactMethod: "YouTube channel business email"
-      }
-    ];
   };
 
   const handleSearchCreator = (creator: any) => {
-    if (creator.searchTerm) {
-      const searchUrl = creator.platform === "Twitch" 
-        ? `https://www.twitch.tv/search?term=${encodeURIComponent(creator.name)}`
-        : `https://www.youtube.com/results?search_query=${encodeURIComponent(creator.searchTerm)}`;
-      window.open(searchUrl, '_blank');
+    if (creator.channelUrl) {
+      window.open(creator.channelUrl, '_blank');
     } else {
-      toast({
-        title: "Search Creator",
-        description: `Search for "${creator.name}" on ${creator.platform} to find their content`,
-      });
+      const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(creator.name)}`;
+      window.open(searchUrl, '_blank');
     }
   };
 
   const handleGetContactInfo = (creator: any) => {
     toast({
       title: "Contact Information",
-      description: `To contact ${creator.name}: ${creator.contactMethod || 'Check their profile for business contact details'}`,
+      description: `To contact ${creator.name}: ${creator.contactMethod || 'Check their YouTube channel about section for business contact details'}`,
     });
   };
 
@@ -237,8 +138,32 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-atlas-purple"></div>
-        <p className="ml-4 text-gray-600">Searching real creators...</p>
+        <p className="ml-4 text-gray-600">Searching real YouTube creators...</p>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Creator Match Engine</CardTitle>
+          <CardDescription>
+            Find real content creators for your indie game
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">{error}</p>
+            {error.includes('API key') && (
+              <p className="text-gray-600 text-sm">
+                You'll need a YouTube Data API v3 key to search for real creators. 
+                Once configured, this will show actual YouTube channels that cover games similar to yours.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -248,7 +173,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         <CardHeader>
           <CardTitle>Creator Match Engine</CardTitle>
           <CardDescription>
-            Content creators who have recently covered similar games and have engaged audiences.
+            Real YouTube content creators who cover games similar to yours.
             {project && (
               <span className="block mt-2 text-sm">
                 Searching for creators who cover <strong>{project.genre}</strong> games on <strong>{project.platform}</strong>
@@ -257,79 +182,85 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {creators.map((creator) => (
-              <div 
-                key={creator.id} 
-                className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{getPlatformIcon(creator.platform)}</span>
-                    <div>
-                      <h3 className="text-lg font-semibold">{creator.name}</h3>
-                      <p className="text-gray-600 text-sm mb-2">{creator.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {creator.subscribers} subs
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Play className="w-4 h-4" />
-                          {creator.avgViews} avg views
-                        </span>
-                        <span className={`flex items-center gap-1 ${getEngagementColor(creator.engagement)}`}>
-                          📊 {creator.engagement} engagement
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {creator.lastVideo}
-                        </span>
+          {creators.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No creators found matching your criteria. Try adjusting your project's genre or platform settings.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {creators.map((creator) => (
+                <div 
+                  key={creator.id} 
+                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{getPlatformIcon(creator.platform)}</span>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold">{creator.name}</h3>
+                        <p className="text-gray-600 text-sm mb-2">{creator.description}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Users className="w-4 h-4" />
+                            {creator.subscribers} subs
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Play className="w-4 h-4" />
+                            {creator.avgViews} avg views
+                          </span>
+                          <span className={`flex items-center gap-1 ${getEngagementColor(creator.engagement)}`}>
+                            📊 {creator.engagement} engagement
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {creator.lastVideo}
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getMatchColor(creator.matchScore)}`}>
+                      {creator.matchScore}% match
+                    </span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getMatchColor(creator.matchScore)}`}>
-                    {creator.matchScore}% match
-                  </span>
-                </div>
-                
-                <div className="mb-3">
-                  <p className="text-sm text-gray-600 mb-2">Recently covered games:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {creator.recentGames.map((game) => (
-                      <Badge key={game} variant="outline" className="text-xs">
-                        {game}
-                      </Badge>
-                    ))}
+                  
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 mb-2">Content focus:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {creator.recentGames.map((game: string, index: number) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {game}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      Platform: {creator.platform}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleSearchCreator(creator)}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Channel
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-atlas-purple hover:bg-opacity-90"
+                        onClick={() => handleGetContactInfo(creator)}
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        Contact Info
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    Platform: {creator.platform}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleSearchCreator(creator)}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Search Creator
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      className="bg-atlas-purple hover:bg-opacity-90"
-                      onClick={() => handleGetContactInfo(creator)}
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Get Contact Info
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
