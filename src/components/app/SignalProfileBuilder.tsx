@@ -66,27 +66,42 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     return [];
   };
 
-  // Load existing signal profile
+  // Load existing signal profile and project data
   useEffect(() => {
     const loadProfile = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // Load signal profile
+        const { data: signalData, error: signalError } = await supabase
           .from('signal_profiles')
           .select('*')
           .eq('project_id', projectId)
           .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading profile:', error);
-        } else if (data) {
+        // Load project data for genre
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('genre')
+          .eq('id', projectId)
+          .single();
+
+        if (signalError && signalError.code !== 'PGRST116') {
+          console.error('Error loading signal profile:', signalError);
+        }
+
+        if (projectError) {
+          console.error('Error loading project:', projectError);
+        }
+
+        // Set profile data
+        if (signalData || projectData) {
           setProfile({
-            themes: jsonToStringArray(data.themes),
-            mechanics: jsonToStringArray(data.mechanics),
-            tone: data.tone || "",
-            targetAudience: data.target_audience || "",
-            uniqueFeatures: data.unique_features || "",
-            genre: data.genre || ""
+            themes: signalData ? jsonToStringArray(signalData.themes) : [],
+            mechanics: signalData ? jsonToStringArray(signalData.mechanics) : [],
+            tone: signalData?.tone || "",
+            targetAudience: signalData?.target_audience || "",
+            uniqueFeatures: signalData?.unique_features || "",
+            genre: projectData?.genre || ""
           });
         }
       } catch (error) {
