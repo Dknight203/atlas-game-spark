@@ -22,48 +22,14 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
 
   // Memoize the callback to prevent infinite re-renders
   const handleCreatorsUpdate = useCallback((count: number) => {
+    console.log('Updating creators count:', count);
     if (onCreatorsUpdate) {
       onCreatorsUpdate(count);
     }
   }, [onCreatorsUpdate]);
 
-  useEffect(() => {
-    const fetchProjectAndCreators = async () => {
-      try {
-        console.log('Fetching project and creators for project:', projectId);
-        
-        // Fetch project details
-        const { data: projectData } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', projectId)
-          .maybeSingle();
-
-        if (projectData) {
-          setProject(projectData);
-          
-          // Search for creators across multiple platforms
-          const allCreators = await searchMultiPlatformCreators(projectData);
-          const creatorsArray = Array.isArray(allCreators) ? allCreators : [];
-          setCreators(creatorsArray);
-          
-          // Update parent component with creators count
-          handleCreatorsUpdate(creatorsArray.length);
-        }
-      } catch (error) {
-        console.error('Error fetching project data:', error);
-        setError('Failed to load creators. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (projectId) {
-      fetchProjectAndCreators();
-    }
-  }, [projectId, handleCreatorsUpdate]);
-
-  const searchMultiPlatformCreators = async (projectData: any) => {
+  // Memoize the search function to prevent recreation on every render
+  const searchMultiPlatformCreators = useCallback(async (projectData: any) => {
     const genre = projectData.genre?.toLowerCase() || '';
     const platform = projectData.platform?.toLowerCase() || '';
     
@@ -110,7 +76,43 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       console.error('Error searching creators:', error);
       throw error;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const fetchProjectAndCreators = async () => {
+      try {
+        console.log('Fetching project and creators for project:', projectId);
+        
+        // Fetch project details
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .maybeSingle();
+
+        if (projectData) {
+          setProject(projectData);
+          
+          // Search for creators across multiple platforms
+          const allCreators = await searchMultiPlatformCreators(projectData);
+          const creatorsArray = Array.isArray(allCreators) ? allCreators : [];
+          setCreators(creatorsArray);
+          
+          // Update parent component with creators count
+          handleCreatorsUpdate(creatorsArray.length);
+        }
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+        setError('Failed to load creators. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchProjectAndCreators();
+    }
+  }, [projectId, searchMultiPlatformCreators, handleCreatorsUpdate]);
 
   const handleSearchCreator = (creator: any) => {
     if (creator.channelUrl) {
