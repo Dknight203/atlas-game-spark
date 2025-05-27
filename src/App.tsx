@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Demo from "./pages/Demo";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ResetPassword from "./pages/ResetPassword";
 import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import Contact from "./pages/Contact";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/demo" element={<Demo />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/features" element={<FeaturesPage />} />
             <Route path="/contact" element={<Contact />} />
