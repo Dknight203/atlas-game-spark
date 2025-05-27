@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Users, Play, Calendar, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import YouTubeApiKeySetup from "./YouTubeApiKeySetup";
 
 interface CreatorMatchResultsProps {
   projectId: string;
@@ -17,6 +18,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsApiKey, setNeedsApiKey] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,6 +86,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
 
       if (data?.error) {
         if (data.error.includes('API key not configured')) {
+          setNeedsApiKey(true);
           setError('YouTube API key not configured. Please set up your YouTube API key to search for real creators.');
           return [];
         }
@@ -141,6 +144,10 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         <p className="ml-4 text-gray-600">Searching real YouTube creators...</p>
       </div>
     );
+  }
+
+  if (needsApiKey) {
+    return <YouTubeApiKeySetup />;
   }
 
   if (error) {
