@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +38,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
           setCreators(allCreators);
           
           // Update parent component with creators count
-          if (onCreatorsUpdate) {
+          if (onCreatorsUpdate && Array.isArray(allCreators)) {
             onCreatorsUpdate(allCreators.length);
           }
         }
@@ -93,7 +92,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         throw new Error(data.error);
       }
 
-      console.log('Received creators from multi-platform search:', data?.creators?.length || 0);
+      console.log('Received creators from multi-platform search:', Array.isArray(data?.creators) ? data.creators.length : 0);
       return data?.creators || [];
       
     } catch (error) {
