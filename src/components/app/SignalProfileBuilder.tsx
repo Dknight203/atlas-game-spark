@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -270,12 +271,12 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
               </div>
               <div>
                 <Label className="text-sm">Filter by Genre</Label>
-                <Select value={filters.genreFilter} onValueChange={(value) => setFilters({ ...filters, genreFilter: value })}>
+                <Select value={filters.genreFilter} onValueChange={(value) => setFilters({ ...filters, genreFilter: value === "all-genres" ? "" : value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="All genres" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 bg-white">
-                    <SelectItem value="">All genres</SelectItem>
+                    <SelectItem value="all-genres">All genres</SelectItem>
                     {gameGenres
                       .filter(genre => !filters.genreFilter || genre.toLowerCase().includes(filters.genreFilter.toLowerCase()))
                       .map((genre) => (
