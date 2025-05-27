@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -21,8 +20,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     mechanics: [] as string[],
     tone: "",
     targetAudience: "",
-    uniqueFeatures: "",
-    genre: ""
+    uniqueFeatures: ""
   });
   
   const [newTheme, setNewTheme] = useState("");
@@ -30,33 +28,6 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-
-  // Game genres for the dropdown
-  const gameGenres = [
-    "Action",
-    "Adventure", 
-    "RPG",
-    "Strategy",
-    "Simulation",
-    "Life Sim",
-    "Racing",
-    "Sports",
-    "Fighting",
-    "Puzzle",
-    "Platform",
-    "Shooter",
-    "Horror",
-    "Survival",
-    "Sandbox",
-    "MMORPG",
-    "Battle Royale",
-    "Tower Defense",
-    "Visual Novel",
-    "Roguelike",
-    "Casual",
-    "Educational",
-    "Music/Rhythm"
-  ];
 
   // Helper function to safely convert Json to string array
   const jsonToStringArray = (jsonData: any): string[] => {
@@ -85,8 +56,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
             mechanics: jsonToStringArray(data.mechanics),
             tone: data.tone || "",
             targetAudience: data.target_audience || "",
-            uniqueFeatures: data.unique_features || "",
-            genre: data.genre || ""
+            uniqueFeatures: data.unique_features || ""
           });
         }
       } catch (error) {
@@ -193,24 +163,6 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Genre Selection */}
-          <div>
-            <Label className="text-base font-semibold">Game Genre</Label>
-            <p className="text-sm text-gray-600 mb-3">What genre best describes your game?</p>
-            <Select value={profile.genre} onValueChange={(value) => setProfile({ ...profile, genre: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a genre" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60 bg-white">
-                {gameGenres.map((genre) => (
-                  <SelectItem key={genre} value={genre.toLowerCase()}>
-                    {genre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Themes */}
           <div>
             <Label className="text-base font-semibold">Themes & Setting</Label>
