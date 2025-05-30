@@ -524,9 +524,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_organization: {
+        Args: { org_id: string; user_id: string }
+        Returns: boolean
+      }
       generate_invitation_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_organization_member: {
+        Args: { org_id: string; user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

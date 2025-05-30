@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,47 @@ const ProjectNew = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const genreOptions = [
+    "Action",
+    "Adventure", 
+    "RPG",
+    "Strategy",
+    "Simulation",
+    "Sports",
+    "Racing",
+    "Puzzle",
+    "Platformer",
+    "Fighting",
+    "Shooter",
+    "Horror",
+    "Survival",
+    "Sandbox",
+    "MMO",
+    "Card Game",
+    "Educational",
+    "Casual",
+    "Arcade",
+    "Other"
+  ];
+
+  const platformOptions = [
+    "PC (Windows)",
+    "PC (Mac)",
+    "PC (Linux)",
+    "Mobile (iOS)",
+    "Mobile (Android)",
+    "Nintendo Switch",
+    "PlayStation 5",
+    "PlayStation 4",
+    "Xbox Series X/S",
+    "Xbox One",
+    "Web Browser",
+    "VR (Meta Quest)",
+    "VR (Steam VR)",
+    "Cross-Platform",
+    "Other"
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +128,13 @@ const ProjectNew = () => {
     });
   };
 
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData({
+      ...formData,
+      [field]: value
+    });
+  };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -136,26 +185,34 @@ const ProjectNew = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="genre">Primary Genre</Label>
-                      <Input
-                        id="genre"
-                        name="genre"
-                        value={formData.genre}
-                        onChange={handleInputChange}
-                        placeholder="e.g., RPG, Platformer, Puzzle"
-                        className="mt-1"
-                      />
+                      <Select value={formData.genre} onValueChange={(value) => handleSelectChange('genre', value)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select genre" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {genreOptions.map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
                       <Label htmlFor="platform">Target Platform</Label>
-                      <Input
-                        id="platform"
-                        name="platform"
-                        value={formData.platform}
-                        onChange={handleInputChange}
-                        placeholder="e.g., PC, Mobile, Console"
-                        className="mt-1"
-                      />
+                      <Select value={formData.platform} onValueChange={(value) => handleSelectChange('platform', value)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {platformOptions.map((platform) => (
+                            <SelectItem key={platform} value={platform}>
+                              {platform}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
