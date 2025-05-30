@@ -12,9 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface SignalProfileBuilderProps {
   projectId: string;
+  onComplete?: () => void;
 }
 
-const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
+const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderProps) => {
   const [profile, setProfile] = useState({
     themes: [] as string[],
     mechanics: [] as string[],
@@ -279,10 +280,10 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
     });
   };
 
-  const saveProfile = async () => {
-    setIsSaving(true);
-    
+  const handleSaveProfile = async () => {
     try {
+      setIsLoading(true);
+      
       const profileData = {
         project_id: projectId,
         themes: profile.themes,
@@ -329,6 +330,9 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
           title: "Profile Saved",
           description: "Your signal profile and match criteria have been updated successfully.",
         });
+
+        // Notify parent component that profile is complete
+        onComplete?.();
       }
     } catch (error) {
       console.error('Save error:', error);
@@ -338,7 +342,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
         variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
@@ -689,7 +693,7 @@ const SignalProfileBuilder = ({ projectId }: SignalProfileBuilderProps) => {
 
           <div className="flex justify-end">
             <Button 
-              onClick={saveProfile} 
+              onClick={handleSaveProfile} 
               className="bg-atlas-purple hover:bg-opacity-90"
               disabled={isSaving}
             >
