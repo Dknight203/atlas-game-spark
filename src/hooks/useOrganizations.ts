@@ -72,26 +72,39 @@ export const useOrganizations = () => {
 
   const fetchOrgMembers = async (orgId: string) => {
     try {
-      // Get organization members with profile data using correct join syntax
+      // First get organization members
       const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
-        .select(`
-          *,
-          profiles!user_id (
-            email,
-            full_name
-          )
-        `)
+        .select('*')
         .eq('organization_id', orgId);
 
       if (membersError) throw membersError;
 
-      // Transform the data to include user details
-      const membersWithDetails: OrganizationMember[] = (membersData || []).map(member => ({
-        ...member,
-        user_email: member.profiles?.email || 'Unknown',
-        user_name: member.profiles?.full_name || member.profiles?.email || 'Unknown User',
-      }));
+      if (!membersData || membersData.length === 0) {
+        setCurrentOrgMembers([]);
+        return;
+      }
+
+      // Get user IDs to fetch profiles
+      const userIds = membersData.map(member => member.user_id);
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine member data with profile data
+      const membersWithDetails: OrganizationMember[] = membersData.map(member => {
+        const profile = profilesData?.find(p => p.id === member.user_id);
+        return {
+          ...member,
+          user_email: profile?.email || 'Unknown',
+          user_name: profile?.full_name || profile?.email || 'Unknown User',
+        };
+      });
 
       setCurrentOrgMembers(membersWithDetails);
     } catch (error) {
