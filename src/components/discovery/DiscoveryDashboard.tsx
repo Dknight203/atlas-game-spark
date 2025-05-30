@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Filter, Download } from "lucide-react";
+import { Plus, Search, Filter, Download, TrendingUp } from "lucide-react";
 import { useDiscovery } from "@/hooks/useDiscovery";
 import DiscoveryListBuilder from "./DiscoveryListBuilder";
 import EnhancedGameCard from "./EnhancedGameCard";
@@ -47,17 +47,14 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
   };
 
   const handleTrackGame = (gameId: string) => {
-    // TODO: Implement game tracking functionality
     console.log('Track game:', gameId);
   };
 
   const handleAnalyzeGame = (gameId: string) => {
-    // TODO: Implement game analysis functionality
     console.log('Analyze game:', gameId);
   };
 
   const handleExportData = () => {
-    // TODO: Implement data export functionality
     console.log('Export data');
   };
 
@@ -162,7 +159,10 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
                   <p className="text-gray-600">
                     {Object.keys(activeFilters).length > 0 
                       ? "No games match your current filters" 
-                      : "No games available"}
+                      : "Setting up discovery engine..."}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Enhanced game data will be available once the discovery tables are configured.
                   </p>
                 </div>
               )}

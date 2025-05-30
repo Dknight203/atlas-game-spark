@@ -1,85 +1,99 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { DiscoveryList, EnhancedGameData, DiscoveryFilters } from "@/types/discovery";
 
+// Mock data for enhanced games until database is set up
+const mockEnhancedGameData: EnhancedGameData[] = [
+  {
+    id: "1",
+    game_id: "steam_1234",
+    name: "Indie Adventure Quest",
+    platform: "Steam",
+    genre: ["Adventure", "Indie"],
+    tags: ["Adventure", "Story Rich", "Single-player"],
+    release_date: "2023-06-15",
+    developer: "Small Studio Games",
+    publisher: "Indie Publisher",
+    price: 19.99,
+    rating_average: 4.3,
+    review_count: 2450,
+    download_count: 15000,
+    revenue_estimate: 75000.00,
+    player_retention_d1: 0.68,
+    player_retention_d7: 0.35,
+    player_retention_d30: 0.18,
+    metadata: {},
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    game_id: "ios_5678",
+    name: "Mobile Puzzle Master",
+    platform: "iOS",
+    genre: ["Puzzle", "Casual"],
+    tags: ["Puzzle", "Family Friendly", "Touch Controls"],
+    release_date: "2023-08-20",
+    developer: "Touch Games Inc",
+    publisher: "Mobile First",
+    price: 4.99,
+    rating_average: 4.1,
+    review_count: 8900,
+    download_count: 125000,
+    revenue_estimate: 180000.00,
+    player_retention_d1: 0.72,
+    player_retention_d7: 0.42,
+    player_retention_d30: 0.25,
+    metadata: {},
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "3",
+    game_id: "switch_9012",
+    name: "Cozy Farm Life",
+    platform: "Nintendo Switch",
+    genre: ["Simulation", "Life"],
+    tags: ["Farming", "Relaxing", "Multiplayer"],
+    release_date: "2023-04-10",
+    developer: "Cozy Studios",
+    publisher: "Nintendo",
+    price: 29.99,
+    rating_average: 4.5,
+    review_count: 5200,
+    download_count: 45000,
+    revenue_estimate: 320000.00,
+    player_retention_d1: 0.75,
+    player_retention_d7: 0.48,
+    player_retention_d30: 0.32,
+    metadata: {},
+    created_at: new Date().toISOString(),
+  }
+];
+
 export const useDiscovery = (projectId: string) => {
   const [discoveryLists, setDiscoveryLists] = useState<DiscoveryList[]>([]);
-  const [enhancedGameData, setEnhancedGameData] = useState<EnhancedGameData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [enhancedGameData] = useState<EnhancedGameData[]>(mockEnhancedGameData);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchDiscoveryData = async () => {
-      if (!projectId) return;
-
-      try {
-        setIsLoading(true);
-
-        // Fetch discovery lists
-        const { data: lists, error: listsError } = await supabase
-          .from('discovery_lists')
-          .select('*')
-          .eq('project_id', projectId)
-          .order('updated_at', { ascending: false });
-
-        if (listsError) throw listsError;
-
-        // Fetch enhanced game data
-        const { data: gameData, error: gameDataError } = await supabase
-          .from('enhanced_game_data')
-          .select('*')
-          .order('last_updated', { ascending: false })
-          .limit(100);
-
-        if (gameDataError) throw gameDataError;
-
-        setDiscoveryLists((lists || []).map(item => ({
-          ...item,
-          filters: item.filters as Record<string, any>,
-          metadata: item.metadata as Record<string, any>
-        })) as DiscoveryList[]);
-
-        setEnhancedGameData((gameData || []).map(item => ({
-          ...item,
-          metadata: item.metadata as Record<string, any>
-        })) as EnhancedGameData[]);
-
-      } catch (error) {
-        console.error('Error fetching discovery data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load discovery data",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDiscoveryData();
-  }, [projectId, toast]);
+    // For now, we'll use local state for discovery lists
+    // Once database tables are set up, this will fetch from Supabase
+    setIsLoading(false);
+  }, [projectId]);
 
   const createDiscoveryList = async (name: string, description: string, filters: DiscoveryFilters) => {
     try {
-      const { data, error } = await supabase
-        .from('discovery_lists')
-        .insert([{
-          project_id: projectId,
-          name,
-          description,
-          filters
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newList = {
-        ...data,
-        filters: data.filters as Record<string, any>
-      } as DiscoveryList;
+      const newList: DiscoveryList = {
+        id: Math.random().toString(36).substring(7),
+        project_id: projectId,
+        name,
+        description: description || "",
+        filters,
+        is_public: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
       setDiscoveryLists(prev => [newList, ...prev]);
       
@@ -102,30 +116,18 @@ export const useDiscovery = (projectId: string) => {
 
   const updateDiscoveryList = async (listId: string, updates: Partial<DiscoveryList>) => {
     try {
-      const { data, error } = await supabase
-        .from('discovery_lists')
-        .update(updates)
-        .eq('id', listId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const updatedList = {
-        ...data,
-        filters: data.filters as Record<string, any>
-      } as DiscoveryList;
-
       setDiscoveryLists(prev => 
-        prev.map(list => list.id === listId ? updatedList : list)
+        prev.map(list => 
+          list.id === listId 
+            ? { ...list, ...updates, updated_at: new Date().toISOString() }
+            : list
+        )
       );
 
       toast({
         title: "Success",
         description: "Discovery list updated successfully",
       });
-
-      return updatedList;
     } catch (error) {
       console.error('Error updating discovery list:', error);
       toast({
@@ -139,13 +141,6 @@ export const useDiscovery = (projectId: string) => {
 
   const deleteDiscoveryList = async (listId: string) => {
     try {
-      const { error } = await supabase
-        .from('discovery_lists')
-        .delete()
-        .eq('id', listId);
-
-      if (error) throw error;
-
       setDiscoveryLists(prev => prev.filter(list => list.id !== listId));
       
       toast({
