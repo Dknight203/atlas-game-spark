@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -9,25 +10,33 @@ interface Project {
   description: string;
   genre: string;
   platform: string;
+  platforms: string[];
   status: string;
   created_at: string;
   updated_at: string;
 }
 
-export const useProject = (id?: string) => {
+export const useProject = (providedId?: string) => {
+  const { id: urlId } = useParams();
+  const projectId = providedId || urlId;
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!id) return;
+      if (!projectId) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Fetching project with ID:', projectId);
 
       try {
         const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .eq('id', id)
+          .eq('id', projectId)
           .maybeSingle();
 
         if (error) {
@@ -49,22 +58,7 @@ export const useProject = (id?: string) => {
           return;
         }
 
-        console.log('🔍 Project data fetched:', data);
-        console.log('🔍 Genre value:', data.genre, 'Type:', typeof data.genre, 'Length:', data.genre?.length);
-        console.log('🔍 Platform value:', data.platform, 'Type:', typeof data.platform, 'Length:', data.platform?.length);
-        console.log('🔍 Status value:', data.status, 'Type:', typeof data.status, 'Length:', data.status?.length);
-        
-        // Check for special characters or whitespace
-        if (data.genre) {
-          console.log('🔍 Genre characters:', Array.from(data.genre).map(char => `"${char}" (${char.charCodeAt(0)})`));
-          console.log('🔍 Genre trimmed:', `"${data.genre.trim()}"`, 'Trimmed length:', data.genre.trim().length);
-        }
-        
-        if (data.platform) {
-          console.log('🔍 Platform characters:', Array.from(data.platform).map(char => `"${char}" (${char.charCodeAt(0)})`));
-          console.log('🔍 Platform trimmed:', `"${data.platform.trim()}"`, 'Trimmed length:', data.platform.trim().length);
-        }
-
+        console.log('Project data fetched successfully:', data);
         setProject(data);
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -79,7 +73,7 @@ export const useProject = (id?: string) => {
     };
 
     fetchProject();
-  }, [id, toast]);
+  }, [projectId, toast]);
 
   return { project, isLoading };
 };
