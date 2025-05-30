@@ -18,6 +18,7 @@ const ProjectNew = () => {
     name: "",
     description: "",
     genre: "",
+    secondary_genre: "",
     platform: "",
     status: "development"
   });
@@ -135,6 +136,9 @@ const ProjectNew = () => {
     });
   };
 
+  // Filter out the selected primary genre from secondary genre options
+  const secondaryGenreOptions = genreOptions.filter(genre => genre !== formData.genre);
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -184,10 +188,10 @@ const ProjectNew = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="genre">Primary Genre</Label>
+                      <Label htmlFor="genre">Primary Genre *</Label>
                       <Select value={formData.genre} onValueChange={(value) => handleSelectChange('genre', value)}>
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select genre" />
+                          <SelectValue placeholder="Select primary genre" />
                         </SelectTrigger>
                         <SelectContent>
                           {genreOptions.map((genre) => (
@@ -200,20 +204,37 @@ const ProjectNew = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="platform">Target Platform</Label>
-                      <Select value={formData.platform} onValueChange={(value) => handleSelectChange('platform', value)}>
+                      <Label htmlFor="secondary_genre">Secondary Genre</Label>
+                      <Select value={formData.secondary_genre} onValueChange={(value) => handleSelectChange('secondary_genre', value)}>
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select platform" />
+                          <SelectValue placeholder="Select secondary genre" />
                         </SelectTrigger>
                         <SelectContent>
-                          {platformOptions.map((platform) => (
-                            <SelectItem key={platform} value={platform}>
-                              {platform}
+                          <SelectItem value="">None</SelectItem>
+                          {secondaryGenreOptions.map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="platform">Target Platform</Label>
+                    <Select value={formData.platform} onValueChange={(value) => handleSelectChange('platform', value)}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {platformOptions.map((platform) => (
+                          <SelectItem key={platform} value={platform}>
+                            {platform}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex gap-4">
