@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FileTemplate, Plus, MoreHorizontal, Edit, Trash2, Copy, Globe, Lock } from "lucide-react";
+import { File, Plus, MoreHorizontal, Edit, Trash2, Copy, Globe, Lock } from "lucide-react";
 
 interface ProjectTemplatesProps {
   organizationId?: string;
@@ -113,7 +113,7 @@ const ProjectTemplates = ({ organizationId, onUseTemplate }: ProjectTemplatesPro
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <FileTemplate className="w-5 h-5 text-purple-600" />
+                  <File className="w-5 h-5 text-purple-600" />
                   <CardTitle className="text-base">{template.name}</CardTitle>
                 </div>
                 <div className="flex items-center gap-1">
@@ -172,7 +172,7 @@ const ProjectTemplates = ({ organizationId, onUseTemplate }: ProjectTemplatesPro
         {templates.length === 0 && (
           <Card className="border-dashed col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <FileTemplate className="w-8 h-8 text-gray-400 mb-2" />
+              <File className="w-8 h-8 text-gray-400 mb-2" />
               <p className="text-gray-600 mb-4">No templates yet</p>
               <Button onClick={() => setShowCreateDialog(true)} variant="outline">
                 <Plus className="w-4 h-4 mr-2" />

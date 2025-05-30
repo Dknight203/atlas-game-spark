@@ -95,15 +95,15 @@ const TeamManagement = ({ organizationId }: TeamManagementProps) => {
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarFallback>
-                    {member.profiles?.full_name?.charAt(0) || member.profiles?.email?.charAt(0) || '?'}
+                    {member.user_name?.charAt(0) || member.user_email?.charAt(0) || '?'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium">
-                    {member.profiles?.full_name || 'Unknown User'}
+                    {member.user_name || 'Unknown User'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {member.profiles?.email}
+                    {member.user_email}
                   </p>
                 </div>
               </div>

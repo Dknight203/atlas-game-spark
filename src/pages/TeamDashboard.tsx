@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrganizationSelector from "@/components/team/OrganizationSelector";
 import TeamManagement from "@/components/team/TeamManagement";
 import ProjectTemplates from "@/components/team/ProjectTemplates";
-import { Building2, Users, FileTemplate } from "lucide-react";
+import { Building2, Users, File } from "lucide-react";
 
 const TeamDashboard = () => {
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
@@ -43,7 +43,7 @@ const TeamDashboard = () => {
                       Team Members
                     </TabsTrigger>
                     <TabsTrigger value="templates" className="flex items-center gap-2">
-                      <FileTemplate className="w-4 h-4" />
+                      <File className="w-4 h-4" />
                       Templates
                     </TabsTrigger>
                   </TabsList>

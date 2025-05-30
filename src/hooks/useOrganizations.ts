@@ -20,10 +20,8 @@ interface OrganizationMember {
   role: 'owner' | 'admin' | 'member' | 'viewer';
   invited_by: string;
   joined_at: string;
-  profiles?: {
-    full_name: string;
-    email: string;
-  };
+  user_email?: string;
+  user_name?: string;
 }
 
 export const useOrganizations = () => {
@@ -58,19 +56,37 @@ export const useOrganizations = () => {
 
   const fetchOrgMembers = async (orgId: string) => {
     try {
-      const { data, error } = await supabase
+      // First get organization members
+      const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('organization_id', orgId);
 
-      if (error) throw error;
-      setCurrentOrgMembers(data || []);
+      if (membersError) throw membersError;
+
+      // Then get user details for each member
+      const membersWithDetails: OrganizationMember[] = [];
+      
+      for (const member of membersData || []) {
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(member.user_id);
+        
+        if (!userError && userData.user) {
+          membersWithDetails.push({
+            ...member,
+            user_email: userData.user.email,
+            user_name: userData.user.user_metadata?.full_name || userData.user.email,
+          });
+        } else {
+          // Fallback if we can't get user details
+          membersWithDetails.push({
+            ...member,
+            user_email: 'Unknown',
+            user_name: 'Unknown User',
+          });
+        }
+      }
+
+      setCurrentOrgMembers(membersWithDetails);
     } catch (error) {
       console.error('Error fetching org members:', error);
       toast({
