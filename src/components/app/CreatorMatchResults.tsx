@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,68 +21,13 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
   const [needsApiKey, setNeedsApiKey] = useState(false);
   const { toast } = useToast();
 
-  // Memoize the callback to prevent infinite re-renders
-  const handleCreatorsUpdate = useCallback((count: number) => {
-    console.log('Updating creators count:', count);
-    if (onCreatorsUpdate) {
-      onCreatorsUpdate(count);
-    }
-  }, [onCreatorsUpdate]);
-
-  // Memoize the search function to prevent recreation on every render
-  const searchMultiPlatformCreators = useCallback(async (projectData: any) => {
-    const genre = projectData.genre?.toLowerCase() || '';
-    const platform = projectData.platform?.toLowerCase() || '';
-    
-    // Build search queries based on project data
-    const searchQueries = [
-      `${genre} game review`,
-      `indie ${genre} games`,
-      `${platform} gaming review`,
-      'indie game review',
-      'small indie games',
-      `${genre} gameplay`
-    ];
-
-    try {
-      console.log('Calling multi-platform creator search with queries:', searchQueries);
-      
-      const { data, error } = await supabase.functions.invoke('search-youtube-creators', {
-        body: { 
-          searchQueries,
-          genre,
-          platform 
-        }
-      });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-
-      if (data?.error) {
-        if (data.error.includes('API key not configured')) {
-          setNeedsApiKey(true);
-          setError('Some platforms require API keys. You can still see creators from other platforms.');
-          return Array.isArray(data?.creators) ? data.creators : [];
-        }
-        throw new Error(data.error);
-      }
-
-      const creatorsArray = Array.isArray(data?.creators) ? data.creators : [];
-      console.log('Received creators from multi-platform search:', creatorsArray.length);
-      return creatorsArray;
-      
-    } catch (error) {
-      console.error('Error searching creators:', error);
-      throw error;
-    }
-  }, []);
-
   useEffect(() => {
     const fetchProjectAndCreators = async () => {
+      if (!projectId) return;
+      
       try {
         console.log('Fetching project and creators for project:', projectId);
+        setIsLoading(true);
         
         // Fetch project details
         const { data: projectData } = await supabase
@@ -95,13 +39,62 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
         if (projectData) {
           setProject(projectData);
           
-          // Search for creators across multiple platforms
-          const allCreators = await searchMultiPlatformCreators(projectData);
-          const creatorsArray = Array.isArray(allCreators) ? allCreators : [];
-          setCreators(creatorsArray);
+          const genre = projectData.genre?.toLowerCase() || '';
+          const platform = projectData.platform?.toLowerCase() || '';
           
-          // Update parent component with creators count
-          handleCreatorsUpdate(creatorsArray.length);
+          // Build search queries based on project data
+          const searchQueries = [
+            `${genre} game review`,
+            `indie ${genre} games`,
+            `${platform} gaming review`,
+            'indie game review',
+            'small indie games',
+            `${genre} gameplay`
+          ];
+
+          try {
+            console.log('Calling multi-platform creator search with queries:', searchQueries);
+            
+            const { data, error } = await supabase.functions.invoke('search-youtube-creators', {
+              body: { 
+                searchQueries,
+                genre,
+                platform 
+              }
+            });
+
+            if (error) {
+              console.error('Supabase function error:', error);
+              throw error;
+            }
+
+            if (data?.error) {
+              if (data.error.includes('API key not configured')) {
+                setNeedsApiKey(true);
+                setError('Some platforms require API keys. You can still see creators from other platforms.');
+                const creatorsArray = Array.isArray(data?.creators) ? data.creators : [];
+                setCreators(creatorsArray);
+                if (onCreatorsUpdate) {
+                  onCreatorsUpdate(creatorsArray.length);
+                }
+                return;
+              }
+              throw new Error(data.error);
+            }
+
+            const creatorsArray = Array.isArray(data?.creators) ? data.creators : [];
+            console.log('Received creators from multi-platform search:', creatorsArray.length);
+            setCreators(creatorsArray);
+            
+            // Update parent component with creators count
+            if (onCreatorsUpdate) {
+              onCreatorsUpdate(creatorsArray.length);
+            }
+            
+          } catch (error) {
+            console.error('Error searching creators:', error);
+            setError('Failed to load creators. Please try again.');
+          }
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
@@ -111,10 +104,8 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       }
     };
 
-    if (projectId) {
-      fetchProjectAndCreators();
-    }
-  }, [projectId, searchMultiPlatformCreators, handleCreatorsUpdate]);
+    fetchProjectAndCreators();
+  }, [projectId, onCreatorsUpdate]);
 
   const handleSearchCreator = (creator: any) => {
     if (creator.channelUrl) {
@@ -306,11 +297,11 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                     <div className="mb-3">
                       <p className="text-sm text-gray-600 mb-2">Content focus:</p>
                       <div className="flex flex-wrap gap-2">
-                        {Array.isArray(creator.recentGames) && creator.recentGames.map((game: string, index: number) => (
+                        {creator.recentGames && Array.isArray(creator.recentGames) ? creator.recentGames.map((game: string, index: number) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {game}
                           </Badge>
-                        ))}
+                        )) : null}
                       </div>
                     </div>
                     
@@ -349,4 +340,3 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
 };
 
 export default CreatorMatchResults;
-
