@@ -175,7 +175,6 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
             <Save className="w-4 h-4 mr-2" />
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
-        </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
