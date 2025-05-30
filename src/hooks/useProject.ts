@@ -60,10 +60,12 @@ export const useProject = (providedId?: string) => {
 
         console.log('Project data fetched successfully:', data);
         
-        // Convert the data to match our Project interface
+        // Convert the data to match our Project interface with proper type handling
         const projectData: Project = {
           ...data,
-          platforms: Array.isArray(data.platforms) ? data.platforms : []
+          platforms: Array.isArray(data.platforms) 
+            ? (data.platforms as string[]).filter((platform): platform is string => typeof platform === 'string')
+            : []
         };
         
         setProject(projectData);
