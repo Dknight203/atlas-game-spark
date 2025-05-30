@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -305,7 +306,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                     <div className="mb-3">
                       <p className="text-sm text-gray-600 mb-2">Content focus:</p>
                       <div className="flex flex-wrap gap-2">
-                        {creator.recentGames && Array.isArray(creator.recentGames) && creator.recentGames.map((game: string, index: number) => (
+                        {Array.isArray(creator.recentGames) && creator.recentGames.map((game: string, index: number) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {game}
                           </Badge>
@@ -348,3 +349,4 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
 };
 
 export default CreatorMatchResults;
+
