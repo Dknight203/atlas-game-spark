@@ -45,9 +45,18 @@ export const useAnalytics = (projectId: string) => {
 
         if (userStatsError) throw userStatsError;
 
-        setAnalyticsData(analytics || []);
+        // Type cast the results to match our interfaces
+        setAnalyticsData((analytics || []).map(item => ({
+          ...item,
+          metadata: item.metadata as Record<string, any>
+        })) as AnalyticsData[]);
+        
         setCompetitorData(competitors || []);
-        setUserAnalytics(userStats || []);
+        
+        setUserAnalytics((userStats || []).map(item => ({
+          ...item,
+          metadata: item.metadata as Record<string, any>
+        })) as UserAnalytics[]);
 
         // If no data exists, populate with sample data
         if (!analytics?.length && !competitors?.length && !userStats?.length) {
