@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, X } from "lucide-react";
 import { useDiscovery } from "@/hooks/useDiscovery";
 import DiscoveryListBuilder from "./DiscoveryListBuilder";
 import EnhancedGameCard from "./EnhancedGameCard";
+import DiscoveryFilters from "./DiscoveryFilters";
 import SmartSuggestions from "@/components/ai/SmartSuggestions";
-import type { DiscoveryFilters } from "@/types/discovery";
+import type { DiscoveryFilters as DiscoveryFiltersType } from "@/types/discovery";
 
 interface DiscoveryDashboardProps {
   projectId: string;
@@ -16,14 +17,21 @@ interface DiscoveryDashboardProps {
 const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
   const { discoveryLists, enhancedGameData, applyFilters, createDiscoveryList } = useDiscovery(projectId);
   const [showBuilder, setShowBuilder] = useState(false);
-  const [selectedList, setSelectedList] = useState<string | null>(null);
-  const [currentFilters, setCurrentFilters] = useState<DiscoveryFilters>({});
+  const [currentFilters, setCurrentFilters] = useState<DiscoveryFiltersType>({});
   const [filteredGames, setFilteredGames] = useState(enhancedGameData);
 
-  const handleFilterApply = (filters: DiscoveryFilters) => {
-    setCurrentFilters(filters);
-    const filtered = applyFilters(filters);
+  // Update filtered games when data or filters change
+  useEffect(() => {
+    const filtered = applyFilters(currentFilters);
     setFilteredGames(filtered);
+  }, [enhancedGameData, currentFilters, applyFilters]);
+
+  const handleFilterChange = (filters: DiscoveryFiltersType) => {
+    setCurrentFilters(filters);
+  };
+
+  const clearFilters = () => {
+    setCurrentFilters({});
   };
 
   const handleSuggestionApply = (suggestion: any) => {
@@ -41,17 +49,32 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
         break;
     }
     
-    handleFilterApply(newFilters);
+    setCurrentFilters(newFilters);
   };
 
-  const handleListSave = async (name: string, description: string, filters: DiscoveryFilters) => {
+  const handleListSave = async (name: string, description: string, filters: DiscoveryFiltersType) => {
     try {
       const newList = await createDiscoveryList(name, description, filters);
       setShowBuilder(false);
-      handleFilterApply(filters);
+      setCurrentFilters(filters);
     } catch (error) {
       console.error('Error creating discovery list:', error);
     }
+  };
+
+  const handleApplyListFilters = (filters: DiscoveryFiltersType) => {
+    setCurrentFilters(filters);
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (currentFilters.platforms?.length) count++;
+    if (currentFilters.genres?.length) count++;
+    if (currentFilters.tags?.length) count++;
+    if (currentFilters.priceRange) count++;
+    if (currentFilters.ratingRange) count++;
+    if (currentFilters.releaseYearRange) count++;
+    return count;
   };
 
   return (
@@ -77,38 +100,49 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
             </Button>
             <Button 
               variant="outline"
-              onClick={() => handleFilterApply({})}
+              onClick={clearFilters}
+              disabled={getActiveFilterCount() === 0}
             >
-              <Filter className="w-4 h-4 mr-2" />
-              Clear Filters
+              <X className="w-4 h-4 mr-2" />
+              Clear Filters {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
             </Button>
           </div>
 
           <div className="grid lg:grid-cols-4 gap-6">
+            {/* Filters Sidebar */}
+            <div className="lg:col-span-1">
+              <DiscoveryFilters
+                filters={currentFilters}
+                onFiltersChange={handleFilterChange}
+                resultCount={filteredGames.length}
+                totalCount={enhancedGameData.length}
+              />
+            </div>
+
             {/* Main Content */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               {/* Discovery Lists */}
               {discoveryLists.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-3">Your Discovery Lists</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-3">
                     {discoveryLists.map((list) => (
                       <Card key={list.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-base">{list.name}</CardTitle>
-                          <CardDescription className="text-sm">
-                            {list.description}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex justify-between items-center text-sm text-gray-500">
-                            <span>Created {new Date(list.created_at).toLocaleDateString()}</span>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">{list.name}</h4>
+                              <p className="text-xs text-gray-600 mt-1">{list.description}</p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                Created {new Date(list.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => handleFilterApply(list.filters)}
+                              onClick={() => handleApplyListFilters(list.filters)}
                             >
-                              Apply Filters
+                              Apply
                             </Button>
                           </div>
                         </CardContent>
@@ -118,7 +152,7 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
                 </div>
               )}
 
-              {/* Filtered Games Results */}
+              {/* Results */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">
                   Discovered Games ({filteredGames.length})
@@ -128,12 +162,15 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
                     <CardContent className="py-8 text-center">
                       <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600">
-                        No games found matching your current filters. Try adjusting your criteria or use AI suggestions.
+                        {enhancedGameData.length === 0 
+                          ? "No games available. Try refreshing or check back later."
+                          : "No games match your current filters. Try adjusting your criteria."
+                        }
                       </p>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     {filteredGames.map((game) => (
                       <EnhancedGameCard key={game.id} game={game} />
                     ))}
