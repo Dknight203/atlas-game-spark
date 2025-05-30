@@ -9,6 +9,183 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_data: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_date: string
+          metric_type: string
+          metric_value: number | null
+          project_id: string | null
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date: string
+          metric_type: string
+          metric_value?: number | null
+          project_id?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date?: string
+          metric_type?: string
+          metric_value?: number | null
+          project_id?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_tracking: {
+        Row: {
+          competitor_id: string | null
+          competitor_name: string
+          created_at: string
+          current_rank: number | null
+          downloads_estimate: number | null
+          id: string
+          last_updated: string | null
+          platform: string
+          previous_rank: number | null
+          project_id: string | null
+          rating_average: number | null
+          revenue_estimate: number | null
+          review_count: number | null
+        }
+        Insert: {
+          competitor_id?: string | null
+          competitor_name: string
+          created_at?: string
+          current_rank?: number | null
+          downloads_estimate?: number | null
+          id?: string
+          last_updated?: string | null
+          platform: string
+          previous_rank?: number | null
+          project_id?: string | null
+          rating_average?: number | null
+          revenue_estimate?: number | null
+          review_count?: number | null
+        }
+        Update: {
+          competitor_id?: string | null
+          competitor_name?: string
+          created_at?: string
+          current_rank?: number | null
+          downloads_estimate?: number | null
+          id?: string
+          last_updated?: string | null
+          platform?: string
+          previous_rank?: number | null
+          project_id?: string | null
+          rating_average?: number | null
+          revenue_estimate?: number | null
+          review_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_tracking_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_trends: {
+        Row: {
+          created_at: string
+          genre: string
+          id: string
+          metadata: Json | null
+          platform: string
+          trend_date: string
+          trend_type: string
+          trend_value: number
+        }
+        Insert: {
+          created_at?: string
+          genre: string
+          id?: string
+          metadata?: Json | null
+          platform: string
+          trend_date: string
+          trend_type: string
+          trend_value: number
+        }
+        Update: {
+          created_at?: string
+          genre?: string
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          trend_date?: string
+          trend_type?: string
+          trend_value?: number
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean | null
+          id: string
+          in_app_enabled: boolean | null
+          is_enabled: boolean | null
+          notification_type: string
+          project_id: string | null
+          threshold_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          is_enabled?: boolean | null
+          notification_type: string
+          project_id?: string | null
+          threshold_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          is_enabled?: boolean | null
+          notification_type?: string
+          project_id?: string | null
+          threshold_value?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -135,6 +312,47 @@ export type Database = {
             foreignKeyName: "signal_profiles_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_analytics: {
+        Row: {
+          created_at: string
+          date_recorded: string
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_value: number
+          project_id: string | null
+          user_segment: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_recorded: string
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_value: number
+          project_id?: string | null
+          user_segment?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_recorded?: string
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_value?: number
+          project_id?: string | null
+          user_segment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_analytics_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },

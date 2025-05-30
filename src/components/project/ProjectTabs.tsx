@@ -4,6 +4,7 @@ import SignalProfileBuilder from "@/components/app/SignalProfileBuilder";
 import MatchEngineResults from "@/components/app/MatchEngineResults";
 import CommunityFinderResults from "@/components/app/CommunityFinderResults";
 import CreatorMatchResults from "@/components/app/CreatorMatchResults";
+import AnalyticsDashboard from "@/components/analytics/AnalyticsDashboard";
 
 interface ProjectTabsProps {
   projectId: string;
@@ -24,11 +25,12 @@ const ProjectTabs = ({
 }: ProjectTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
-      <TabsList className="grid grid-cols-4 w-full">
+      <TabsList className="grid grid-cols-5 w-full">
         <TabsTrigger value="signal-profile">Signal Profile</TabsTrigger>
         <TabsTrigger value="matches">Game Matches</TabsTrigger>
         <TabsTrigger value="communities">Communities</TabsTrigger>
         <TabsTrigger value="creators">Creators</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
       </TabsList>
       
       <TabsContent value="signal-profile">
@@ -45,6 +47,10 @@ const ProjectTabs = ({
       
       <TabsContent value="creators">
         <CreatorMatchResults projectId={projectId} onCreatorsUpdate={onCreatorsUpdate} />
+      </TabsContent>
+      
+      <TabsContent value="analytics">
+        <AnalyticsDashboard projectId={projectId} />
       </TabsContent>
     </Tabs>
   );
