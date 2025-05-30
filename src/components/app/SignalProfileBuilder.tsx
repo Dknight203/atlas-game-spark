@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X, Save, Filter } from "lucide-react";
+import { Save, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import SmartSuggestions from "@/components/ai/SmartSuggestions";
+import TagAutoComplete from "@/components/ai/TagAutoComplete";
+import AutoComplete from "@/components/ai/AutoComplete";
 
 interface SignalProfileBuilderProps {
   projectId: string;
@@ -43,11 +45,30 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     similarityThreshold: "70"
   });
   
-  const [newTheme, setNewTheme] = useState("");
-  const [newMechanic, setNewMechanic] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  // Predefined suggestions for autocomplete
+  const themeSuggestions = [
+    "Fantasy", "Sci-Fi", "Medieval", "Post-Apocalyptic", "Cyberpunk", "Steampunk",
+    "Horror", "Mystery", "Adventure", "Comedy", "Romance", "War", "Space",
+    "Pirates", "Zombies", "Magic", "Technology", "Nature", "Urban", "Western"
+  ];
+
+  const mechanicSuggestions = [
+    "Turn-based Combat", "Real-time Strategy", "Puzzle Solving", "Platform Jumping",
+    "Resource Management", "Base Building", "Crafting", "Inventory Management",
+    "Skill Trees", "Character Customization", "Dialogue Choices", "Stealth",
+    "Racing", "Time Management", "Card Battles", "Match-3", "Physics-based",
+    "Roguelike", "Permadeath", "Procedural Generation"
+  ];
+
+  const toneSuggestions = [
+    "Dark and Serious", "Light-hearted", "Epic and Heroic", "Mysterious",
+    "Comedic", "Dramatic", "Relaxing", "Intense", "Nostalgic", "Quirky",
+    "Atmospheric", "Cheerful", "Melancholic", "Suspenseful", "Whimsical"
+  ];
 
   // Game genres for the dropdown
   const gameGenres = [
@@ -144,14 +165,6 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     { value: "under-60", label: "Under 60 (Poor)" }
   ];
 
-  // Helper function to safely convert Json to string array
-  const jsonToStringArray = (jsonData: any): string[] => {
-    if (Array.isArray(jsonData)) {
-      return jsonData.filter(item => typeof item === 'string');
-    }
-    return [];
-  };
-
   // Load existing signal profile and project data
   useEffect(() => {
     const loadProfile = async () => {
@@ -215,47 +228,37 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     loadProfile();
   }, [projectId]);
 
-  // Filter functions
-  const filteredThemes = profile.themes.filter(theme => 
-    theme.toLowerCase().includes(filters.themeFilter.toLowerCase())
-  );
-
-  const filteredMechanics = profile.mechanics.filter(mechanic => 
-    mechanic.toLowerCase().includes(filters.mechanicFilter.toLowerCase())
-  );
-
-  const addTheme = () => {
-    if (newTheme.trim() && !profile.themes.includes(newTheme.trim())) {
-      setProfile({
-        ...profile,
-        themes: [...profile.themes, newTheme.trim()]
-      });
-      setNewTheme("");
+  // Helper function to safely convert Json to string array
+  const jsonToStringArray = (jsonData: any): string[] => {
+    if (Array.isArray(jsonData)) {
+      return jsonData.filter(item => typeof item === 'string');
     }
+    return [];
   };
 
-  const removeTheme = (theme: string) => {
-    setProfile({
-      ...profile,
-      themes: profile.themes.filter(t => t !== theme)
-    });
-  };
-
-  const addMechanic = () => {
-    if (newMechanic.trim() && !profile.mechanics.includes(newMechanic.trim())) {
-      setProfile({
-        ...profile,
-        mechanics: [...profile.mechanics, newMechanic.trim()]
-      });
-      setNewMechanic("");
+  // Handle AI suggestions
+  const handleSuggestionApply = (suggestion: any) => {
+    switch (suggestion.type) {
+      case 'theme':
+        if (!profile.themes.includes(suggestion.value)) {
+          setProfile(prev => ({
+            ...prev,
+            themes: [...prev.themes, suggestion.value]
+          }));
+        }
+        break;
+      case 'mechanic':
+        if (!profile.mechanics.includes(suggestion.value)) {
+          setProfile(prev => ({
+            ...prev,
+            mechanics: [...prev.mechanics, suggestion.value]
+          }));
+        }
+        break;
+      case 'tone':
+        setProfile(prev => ({ ...prev, tone: suggestion.value }));
+        break;
     }
-  };
-
-  const removeMechanic = (mechanic: string) => {
-    setProfile({
-      ...profile,
-      mechanics: profile.mechanics.filter(m => m !== mechanic)
-    });
   };
 
   const clearFilters = () => {
@@ -355,354 +358,116 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Signal Profile Builder</CardTitle>
-          <CardDescription>
-            Define your game's core attributes and match criteria to help our matching engine find similar games and communities.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Filters Section */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="w-4 h-4 text-atlas-purple" />
-              <Label className="text-base font-semibold">Profile Filters</Label>
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Clear All
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="text-sm">Filter Themes</Label>
-                <Input
-                  value={filters.themeFilter}
-                  onChange={(e) => setFilters({ ...filters, themeFilter: e.target.value })}
-                  placeholder="Search themes..."
-                />
-              </div>
-              <div>
-                <Label className="text-sm">Filter Mechanics</Label>
-                <Input
-                  value={filters.mechanicFilter}
-                  onChange={(e) => setFilters({ ...filters, mechanicFilter: e.target.value })}
-                  placeholder="Search mechanics..."
-                />
-              </div>
-              <div>
-                <Label className="text-sm">Filter by Genre</Label>
-                <Select value={filters.genreFilter} onValueChange={(value) => setFilters({ ...filters, genreFilter: value === "all-genres" ? "" : value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All genres" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 bg-white">
-                    <SelectItem value="all-genres">All genres</SelectItem>
-                    {gameGenres
-                      .filter(genre => !filters.genreFilter || genre.toLowerCase().includes(filters.genreFilter.toLowerCase()))
-                      .map((genre) => (
-                        <SelectItem key={genre} value={genre.toLowerCase()}>
-                          {genre}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Enhanced Match Criteria Section */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="w-4 h-4 text-blue-600" />
-              <Label className="text-base font-semibold">Match Criteria</Label>
-              <Button variant="outline" size="sm" onClick={resetMatchCriteria}>
-                Reset to Default
-              </Button>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Set specific criteria to filter the games that will be matched to your project. This helps you find games that align with your development approach and target metrics.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Release Year</Label>
-                <Select value={matchCriteria.yearFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, yearFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {yearOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Team Size</Label>
-                <Select value={matchCriteria.teamSizeFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, teamSizeFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {teamSizeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Platform Focus</Label>
-                <Select value={matchCriteria.platformFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, platformFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {platformOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Business Model</Label>
-                <Select value={matchCriteria.businessModelFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, businessModelFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {businessModelOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Budget Range</Label>
-                <Select value={matchCriteria.budgetRangeFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, budgetRangeFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {budgetRangeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Revenue Range</Label>
-                <Select value={matchCriteria.revenueFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, revenueFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {revenueOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Publisher Status</Label>
-                <Select value={matchCriteria.publisherFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, publisherFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {publisherOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Review Score</Label>
-                <Select value={matchCriteria.reviewScoreFilter} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, reviewScoreFilter: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    {reviewScoreOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Minimum Similarity</Label>
-                <Select value={matchCriteria.similarityThreshold} onValueChange={(value) => setMatchCriteria({ ...matchCriteria, similarityThreshold: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="50">50% - Show all matches</SelectItem>
-                    <SelectItem value="60">60% - Good matches</SelectItem>
-                    <SelectItem value="70">70% - Strong matches</SelectItem>
-                    <SelectItem value="80">80% - Very strong matches</SelectItem>
-                    <SelectItem value="90">90% - Only best matches</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Genre Selection */}
-          <div>
-            <Label className="text-base font-semibold">Game Genre</Label>
-            <p className="text-sm text-gray-600 mb-3">What genre best describes your game?</p>
-            <Select value={profile.genre} onValueChange={(value) => setProfile({ ...profile, genre: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a genre" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60 bg-white">
-                {gameGenres
-                  .filter(genre => !filters.genreFilter || genre.toLowerCase().includes(filters.genreFilter.toLowerCase()))
-                  .map((genre) => (
+    <div className="grid lg:grid-cols-3 gap-6">
+      {/* Main Profile Builder */}
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Signal Profile Builder</CardTitle>
+            <CardDescription>
+              Define your game's core attributes and match criteria to help our matching engine find similar games and communities.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Genre Selection */}
+            <div>
+              <Label className="text-base font-semibold">Game Genre</Label>
+              <p className="text-sm text-gray-600 mb-3">What genre best describes your game?</p>
+              <Select value={profile.genre} onValueChange={(value) => setProfile({ ...profile, genre: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a genre" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 bg-white">
+                  {gameGenres.map((genre) => (
                     <SelectItem key={genre} value={genre.toLowerCase()}>
                       {genre}
                     </SelectItem>
                   ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Themes */}
-          <div>
-            <Label className="text-base font-semibold">Themes & Setting</Label>
-            <p className="text-sm text-gray-600 mb-3">What themes and settings does your game explore?</p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {filteredThemes.map((theme) => (
-                <Badge key={theme} variant="secondary" className="flex items-center gap-1">
-                  {theme}
-                  <X 
-                    className="w-3 h-3 cursor-pointer hover:text-red-500" 
-                    onClick={() => removeTheme(theme)}
-                  />
-                </Badge>
-              ))}
-              {filters.themeFilter && filteredThemes.length === 0 && (
-                <p className="text-sm text-gray-500">No themes match your filter</p>
-              )}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex gap-2">
-              <Input
-                value={newTheme}
-                onChange={(e) => setNewTheme(e.target.value)}
-                placeholder="Add a theme..."
-                onKeyPress={(e) => e.key === 'Enter' && addTheme()}
+
+            {/* Themes with AI suggestions */}
+            <TagAutoComplete
+              tags={profile.themes}
+              onTagsChange={(themes) => setProfile({ ...profile, themes })}
+              suggestions={themeSuggestions}
+              label="Themes & Setting"
+              placeholder="Add a theme..."
+              className="w-full"
+            />
+
+            {/* Mechanics with AI suggestions */}
+            <TagAutoComplete
+              tags={profile.mechanics}
+              onTagsChange={(mechanics) => setProfile({ ...profile, mechanics })}
+              suggestions={mechanicSuggestions}
+              label="Core Mechanics"
+              placeholder="Add a mechanic..."
+              className="w-full"
+            />
+
+            {/* Tone with autocomplete */}
+            <div>
+              <Label htmlFor="tone" className="text-base font-semibold">Tone & Mood</Label>
+              <p className="text-sm text-gray-600 mb-3">How would you describe the overall feel of your game?</p>
+              <AutoComplete
+                value={profile.tone}
+                onChange={(tone) => setProfile({ ...profile, tone })}
+                suggestions={toneSuggestions}
+                placeholder="e.g., Dark and mysterious, Light-hearted, Epic adventure"
               />
-              <Button onClick={addTheme} variant="outline" size="sm">
-                <Plus className="w-4 h-4" />
+            </div>
+
+            {/* Target Audience */}
+            <div>
+              <Label htmlFor="audience" className="text-base font-semibold">Target Audience</Label>
+              <p className="text-sm text-gray-600 mb-3">Who is your ideal player?</p>
+              <Textarea
+                id="audience"
+                value={profile.targetAudience}
+                onChange={(e) => setProfile({ ...profile, targetAudience: e.target.value })}
+                placeholder="Describe your target audience..."
+                rows={3}
+              />
+            </div>
+
+            {/* Unique Features */}
+            <div>
+              <Label htmlFor="features" className="text-base font-semibold">Unique Features</Label>
+              <p className="text-sm text-gray-600 mb-3">What makes your game special?</p>
+              <Textarea
+                id="features"
+                value={profile.uniqueFeatures}
+                onChange={(e) => setProfile({ ...profile, uniqueFeatures: e.target.value })}
+                placeholder="Describe what sets your game apart..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button 
+                onClick={handleSaveProfile} 
+                className="bg-atlas-purple hover:bg-opacity-90"
+                disabled={isSaving}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? "Saving..." : "Save Profile"}
               </Button>
             </div>
-          </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Mechanics */}
-          <div>
-            <Label className="text-base font-semibold">Core Mechanics</Label>
-            <p className="text-sm text-gray-600 mb-3">What are the main gameplay mechanics?</p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {filteredMechanics.map((mechanic) => (
-                <Badge key={mechanic} variant="secondary" className="flex items-center gap-1">
-                  {mechanic}
-                  <X 
-                    className="w-3 h-3 cursor-pointer hover:text-red-500" 
-                    onClick={() => removeMechanic(mechanic)}
-                  />
-                </Badge>
-              ))}
-              {filters.mechanicFilter && filteredMechanics.length === 0 && (
-                <p className="text-sm text-gray-500">No mechanics match your filter</p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={newMechanic}
-                onChange={(e) => setNewMechanic(e.target.value)}
-                placeholder="Add a mechanic..."
-                onKeyPress={(e) => e.key === 'Enter' && addMechanic()}
-              />
-              <Button onClick={addMechanic} variant="outline" size="sm">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Tone */}
-          <div>
-            <Label htmlFor="tone" className="text-base font-semibold">Tone & Mood</Label>
-            <p className="text-sm text-gray-600 mb-3">How would you describe the overall feel of your game?</p>
-            <Input
-              id="tone"
-              value={profile.tone}
-              onChange={(e) => setProfile({ ...profile, tone: e.target.value })}
-              placeholder="e.g., Dark and mysterious, Light-hearted, Epic adventure"
-            />
-          </div>
-
-          {/* Target Audience */}
-          <div>
-            <Label htmlFor="audience" className="text-base font-semibold">Target Audience</Label>
-            <p className="text-sm text-gray-600 mb-3">Who is your ideal player?</p>
-            <Textarea
-              id="audience"
-              value={profile.targetAudience}
-              onChange={(e) => setProfile({ ...profile, targetAudience: e.target.value })}
-              placeholder="Describe your target audience..."
-              rows={3}
-            />
-          </div>
-
-          {/* Unique Features */}
-          <div>
-            <Label htmlFor="features" className="text-base font-semibold">Unique Features</Label>
-            <p className="text-sm text-gray-600 mb-3">What makes your game special?</p>
-            <Textarea
-              id="features"
-              value={profile.uniqueFeatures}
-              onChange={(e) => setProfile({ ...profile, uniqueFeatures: e.target.value })}
-              placeholder="Describe what sets your game apart..."
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <Button 
-              onClick={handleSaveProfile} 
-              className="bg-atlas-purple hover:bg-opacity-90"
-              disabled={isSaving}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? "Saving..." : "Save Profile & Criteria"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* AI Suggestions Sidebar */}
+      <div className="lg:col-span-1">
+        <SmartSuggestions
+          type="profile"
+          data={profile}
+          onSuggestionApply={handleSuggestionApply}
+          className="sticky top-4"
+        />
+      </div>
     </div>
   );
 };
