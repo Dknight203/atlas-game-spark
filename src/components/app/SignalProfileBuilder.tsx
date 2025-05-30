@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Filter } from "lucide-react";
+import { Save, Sparkles, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SmartSuggestions from "@/components/ai/SmartSuggestions";
 import TagAutoComplete from "@/components/ai/TagAutoComplete";
@@ -18,6 +20,7 @@ interface SignalProfileBuilderProps {
 }
 
 const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderProps) => {
+  const [projectData, setProjectData] = useState<any>(null);
   const [profile, setProfile] = useState({
     themes: [] as string[],
     mechanics: [] as string[],
@@ -27,12 +30,6 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     genre: ""
   });
   
-  const [filters, setFilters] = useState({
-    genreFilter: "",
-    themeFilter: "",
-    mechanicFilter: ""
-  });
-
   const [matchCriteria, setMatchCriteria] = useState({
     yearFilter: "all",
     teamSizeFilter: "all",
@@ -46,7 +43,7 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
   });
   
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [editingProject, setEditingProject] = useState(false);
   const { toast } = useToast();
 
   // Predefined suggestions for autocomplete
@@ -72,29 +69,10 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
 
   // Game genres for the dropdown
   const gameGenres = [
-    "Action",
-    "Adventure", 
-    "RPG",
-    "Strategy",
-    "Simulation",
-    "Life Sim",
-    "Racing",
-    "Sports",
-    "Fighting",
-    "Puzzle",
-    "Platform",
-    "Shooter",
-    "Horror",
-    "Survival",
-    "Sandbox",
-    "MMORPG",
-    "Battle Royale",
-    "Tower Defense",
-    "Visual Novel",
-    "Roguelike",
-    "Casual",
-    "Educational",
-    "Music/Rhythm"
+    "Action", "Adventure", "RPG", "Strategy", "Simulation", "Life Sim",
+    "Racing", "Sports", "Fighting", "Puzzle", "Platform", "Shooter",
+    "Horror", "Survival", "Sandbox", "MMORPG", "Battle Royale",
+    "Tower Defense", "Visual Novel", "Roguelike", "Casual", "Educational", "Music/Rhythm"
   ];
 
   // Match criteria options
@@ -167,9 +145,23 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
 
   // Load existing signal profile and project data
   useEffect(() => {
-    const loadProfile = async () => {
+    const loadData = async () => {
       setIsLoading(true);
       try {
+        // Load project data first
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .single();
+
+        if (projectError) {
+          console.error('Error loading project:', projectError);
+          return;
+        }
+
+        setProjectData(projectData);
+
         // Load signal profile
         const { data: signalData, error: signalError } = await supabase
           .from('signal_profiles')
@@ -177,55 +169,66 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
           .eq('project_id', projectId)
           .maybeSingle();
 
-        // Load project data for genre
-        const { data: projectData, error: projectError } = await supabase
-          .from('projects')
-          .select('genre')
-          .eq('id', projectId)
-          .single();
-
         if (signalError && signalError.code !== 'PGRST116') {
           console.error('Error loading signal profile:', signalError);
         }
 
-        if (projectError) {
-          console.error('Error loading project:', projectError);
+        // Set profile data, using project data as fallbacks
+        setProfile({
+          themes: signalData ? jsonToStringArray(signalData.themes) : [],
+          mechanics: signalData ? jsonToStringArray(signalData.mechanics) : [],
+          tone: signalData?.tone || "",
+          targetAudience: signalData?.target_audience || "",
+          uniqueFeatures: signalData?.unique_features || projectData?.description || "",
+          genre: signalData?.genre || projectData?.genre || ""
+        });
+
+        // Auto-set platform filter based on project platforms
+        let platformFilter = "all";
+        if (projectData?.platforms && Array.isArray(projectData.platforms) && projectData.platforms.length > 0) {
+          // Map common platform names to filter values
+          const platformMap: Record<string, string> = {
+            'pc': 'pc',
+            'windows': 'pc',
+            'nintendo switch': 'switch',
+            'switch': 'switch',
+            'mobile': 'mobile',
+            'ios': 'mobile',
+            'android': 'mobile'
+          };
+          
+          const firstPlatform = projectData.platforms[0].toLowerCase();
+          platformFilter = platformMap[firstPlatform] || "all";
         }
 
-        // Set profile data
-        if (signalData || projectData) {
-          setProfile({
-            themes: signalData ? jsonToStringArray(signalData.themes) : [],
-            mechanics: signalData ? jsonToStringArray(signalData.mechanics) : [],
-            tone: signalData?.tone || "",
-            targetAudience: signalData?.target_audience || "",
-            uniqueFeatures: signalData?.unique_features || "",
-            genre: projectData?.genre || ""
+        // Load match criteria if exists
+        if (signalData) {
+          setMatchCriteria({
+            yearFilter: signalData.year_filter || "all",
+            teamSizeFilter: signalData.team_size_filter || "all",
+            platformFilter: signalData.platform_filter || platformFilter,
+            businessModelFilter: signalData.business_model_filter || "all",
+            budgetRangeFilter: signalData.budget_range_filter || "all",
+            revenueFilter: signalData.revenue_filter || "all",
+            publisherFilter: signalData.publisher_filter || "all",
+            reviewScoreFilter: signalData.review_score_filter || "all",
+            similarityThreshold: signalData.similarity_threshold || "70"
           });
-
-          // Load match criteria if exists
-          if (signalData) {
-            setMatchCriteria({
-              yearFilter: signalData.year_filter || "all",
-              teamSizeFilter: signalData.team_size_filter || "all",
-              platformFilter: signalData.platform_filter || "all",
-              businessModelFilter: signalData.business_model_filter || "all",
-              budgetRangeFilter: signalData.budget_range_filter || "all",
-              revenueFilter: signalData.revenue_filter || "all",
-              publisherFilter: signalData.publisher_filter || "all",
-              reviewScoreFilter: signalData.review_score_filter || "all",
-              similarityThreshold: signalData.similarity_threshold || "70"
-            });
-          }
+        } else {
+          // Set intelligent defaults based on project
+          setMatchCriteria(prev => ({
+            ...prev,
+            platformFilter
+          }));
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
+        console.error('Error loading data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadProfile();
+    loadData();
   }, [projectId]);
 
   // Helper function to safely convert Json to string array
@@ -234,6 +237,53 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
       return jsonData.filter(item => typeof item === 'string');
     }
     return [];
+  };
+
+  // Generate AI suggestions from project description
+  const generateSuggestionsFromDescription = () => {
+    if (!projectData?.description) {
+      toast({
+        title: "No Description",
+        description: "Add a project description to generate AI suggestions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Simple keyword-based suggestions (could be enhanced with AI)
+    const description = projectData.description.toLowerCase();
+    const newThemes: string[] = [];
+    const newMechanics: string[] = [];
+    
+    // Theme suggestions based on keywords
+    if (description.includes('fantasy') || description.includes('magic')) newThemes.push('Fantasy', 'Magic');
+    if (description.includes('sci-fi') || description.includes('space')) newThemes.push('Sci-Fi', 'Space');
+    if (description.includes('horror') || description.includes('scary')) newThemes.push('Horror');
+    if (description.includes('puzzle')) newMechanics.push('Puzzle Solving');
+    if (description.includes('combat') || description.includes('fight')) newMechanics.push('Real-time Combat');
+    if (description.includes('strategy')) newMechanics.push('Strategic Planning');
+
+    // Add only new suggestions
+    const uniqueThemes = newThemes.filter(theme => !profile.themes.includes(theme));
+    const uniqueMechanics = newMechanics.filter(mechanic => !profile.mechanics.includes(mechanic));
+
+    if (uniqueThemes.length > 0 || uniqueMechanics.length > 0) {
+      setProfile(prev => ({
+        ...prev,
+        themes: [...prev.themes, ...uniqueThemes],
+        mechanics: [...prev.mechanics, ...uniqueMechanics]
+      }));
+
+      toast({
+        title: "Suggestions Applied",
+        description: `Added ${uniqueThemes.length} themes and ${uniqueMechanics.length} mechanics.`,
+      });
+    } else {
+      toast({
+        title: "No New Suggestions",
+        description: "No new themes or mechanics were found in your project description.",
+      });
+    }
   };
 
   // Handle AI suggestions
@@ -261,26 +311,30 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     }
   };
 
-  const clearFilters = () => {
-    setFilters({
-      genreFilter: "",
-      themeFilter: "",
-      mechanicFilter: ""
-    });
-  };
+  const handleUpdateProject = async (field: string, value: string) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ [field]: value })
+        .eq('id', projectId);
 
-  const resetMatchCriteria = () => {
-    setMatchCriteria({
-      yearFilter: "all",
-      teamSizeFilter: "all",
-      platformFilter: "all",
-      businessModelFilter: "all",
-      budgetRangeFilter: "all",
-      revenueFilter: "all",
-      publisherFilter: "all",
-      reviewScoreFilter: "all",
-      similarityThreshold: "70"
-    });
+      if (error) {
+        console.error('Error updating project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update project",
+          variant: "destructive",
+        });
+      } else {
+        setProjectData((prev: any) => ({ ...prev, [field]: value }));
+        toast({
+          title: "Project Updated",
+          description: "Project information has been updated successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -317,16 +371,9 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
           variant: "destructive",
         });
       } else {
-        // Also update the project's genre
-        if (profile.genre) {
-          const { error: projectError } = await supabase
-            .from('projects')
-            .update({ genre: profile.genre })
-            .eq('id', projectId);
-
-          if (projectError) {
-            console.error('Error updating project genre:', projectError);
-          }
+        // Also update the project's genre if it changed
+        if (profile.genre && profile.genre !== projectData?.genre) {
+          await handleUpdateProject('genre', profile.genre);
         }
 
         toast({
@@ -334,7 +381,6 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
           description: "Your signal profile and match criteria have been updated successfully.",
         });
 
-        // Notify parent component that profile is complete
         onComplete?.();
       }
     } catch (error) {
@@ -361,31 +407,108 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     <div className="grid lg:grid-cols-3 gap-6">
       {/* Main Profile Builder */}
       <div className="lg:col-span-2 space-y-6">
+        {/* Project Summary Card */}
+        {projectData && (
+          <Card className="border-l-4 border-l-atlas-purple">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Project: {projectData.name}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingProject(!editingProject)}
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Genre</Label>
+                  <div className="flex items-center gap-2">
+                    {editingProject ? (
+                      <Select 
+                        value={profile.genre} 
+                        onValueChange={(value) => {
+                          setProfile({ ...profile, genre: value });
+                          handleUpdateProject('genre', value);
+                        }}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gameGenres.map((genre) => (
+                            <SelectItem key={genre} value={genre.toLowerCase()}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="secondary">{profile.genre || projectData.genre || 'Not set'}</Badge>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Platforms</Label>
+                  <div className="flex flex-wrap gap-1">
+                    {projectData.platforms?.map((platform: string) => (
+                      <Badge key={platform} variant="outline" className="text-xs">
+                        {platform}
+                      </Badge>
+                    )) || <span className="text-sm text-gray-500">Not set</span>}
+                  </div>
+                </div>
+              </div>
+              
+              {projectData.description && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Description</Label>
+                  <p className="text-sm text-gray-700 mt-1">{projectData.description}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generateSuggestionsFromDescription}
+                    className="mt-2"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Generate Suggestions from Description
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
-            <CardTitle>Signal Profile Builder</CardTitle>
+            <CardTitle>Enhanced Signal Profile</CardTitle>
             <CardDescription>
-              Define your game's core attributes and match criteria to help our matching engine find similar games and communities.
+              Build upon your project details to create a comprehensive profile for better matching.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Genre Selection */}
-            <div>
-              <Label className="text-base font-semibold">Game Genre</Label>
-              <p className="text-sm text-gray-600 mb-3">What genre best describes your game?</p>
-              <Select value={profile.genre} onValueChange={(value) => setProfile({ ...profile, genre: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a genre" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60 bg-white">
-                  {gameGenres.map((genre) => (
-                    <SelectItem key={genre} value={genre.toLowerCase()}>
-                      {genre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Only show genre if not set in project */}
+            {!projectData?.genre && (
+              <div>
+                <Label className="text-base font-semibold">Game Genre</Label>
+                <p className="text-sm text-gray-600 mb-3">What genre best describes your game?</p>
+                <Select value={profile.genre} onValueChange={(value) => setProfile({ ...profile, genre: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a genre" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 bg-white">
+                    {gameGenres.map((genre) => (
+                      <SelectItem key={genre} value={genre.toLowerCase()}>
+                        {genre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Themes with AI suggestions */}
             <TagAutoComplete
@@ -449,10 +572,10 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
               <Button 
                 onClick={handleSaveProfile} 
                 className="bg-atlas-purple hover:bg-opacity-90"
-                disabled={isSaving}
+                disabled={isLoading}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? "Saving..." : "Save Profile"}
+                {isLoading ? "Saving..." : "Save Profile"}
               </Button>
             </div>
           </CardContent>

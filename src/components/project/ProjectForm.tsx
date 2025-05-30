@@ -22,8 +22,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
     description: "",
     genre: prefillData.genre || "",
     secondary_genre: "",
-    platforms: prefillData.platform ? [prefillData.platform] : [] as string[],
-    status: "development"
+    platforms: prefillData.platform ? [prefillData.platform] : [] as string[]
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -66,7 +65,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase
+      const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert([
           {
@@ -76,26 +75,85 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
             genre: formData.genre,
             platform: formData.platforms[0], // Keep the first platform for backwards compatibility
             platforms: formData.platforms, // Store all platforms in the new column
-            status: formData.status
+            status: formData.status || 'development'
           }
         ])
         .select()
         .single();
 
-      if (error) {
-        console.error('Project creation error:', error);
+      if (projectError) {
+        console.error('Project creation error:', projectError);
         toast({
           title: "Error",
-          description: error.message,
+          description: projectError.message,
           variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Project Created",
-          description: `${formData.name} has been created successfully!`,
-        });
-        navigate(`/project/${data.id}`);
+        return;
       }
+
+      // Create initial signal profile if we have enough data
+      if (formData.description || formData.genre) {
+        try {
+          // Auto-set platform filter based on project platforms
+          let platformFilter = "all";
+          if (formData.platforms && formData.platforms.length > 0) {
+            const platformMap: Record<string, string> = {
+              'pc': 'pc',
+              'windows': 'pc',
+              'nintendo switch': 'switch',
+              'switch': 'switch',
+              'mobile': 'mobile',
+              'ios': 'mobile',
+              'android': 'mobile'
+            };
+            
+            const firstPlatform = formData.platforms[0].toLowerCase();
+            platformFilter = platformMap[firstPlatform] || "all";
+          }
+
+          const signalProfileData = {
+            project_id: project.id,
+            themes: [], // Will be populated in profile builder
+            mechanics: [], // Will be populated in profile builder
+            tone: "",
+            target_audience: "",
+            unique_features: formData.description || "",
+            platform_filter: platformFilter,
+            year_filter: "all",
+            team_size_filter: "all",
+            business_model_filter: "all",
+            budget_range_filter: "all",
+            revenue_filter: "all",
+            publisher_filter: "all",
+            review_score_filter: "all",
+            similarity_threshold: "70"
+          };
+
+          const { error: profileError } = await supabase
+            .from('signal_profiles')
+            .insert([signalProfileData]);
+
+          if (profileError) {
+            console.error('Signal profile creation error:', profileError);
+            // Don't block project creation if profile fails
+          }
+        } catch (profileError) {
+          console.error('Signal profile creation error:', profileError);
+          // Don't block project creation if profile fails
+        }
+      }
+
+      toast({
+        title: "Project Created",
+        description: `${formData.name} has been created successfully!`,
+      });
+      
+      // Navigate to the project with a hint about the profile
+      navigate(`/project/${project.id}`, { 
+        state: { 
+          showProfileHint: !formData.description && !formData.genre 
+        } 
+      });
     } catch (error) {
       console.error('Unexpected error:', error);
       toast({

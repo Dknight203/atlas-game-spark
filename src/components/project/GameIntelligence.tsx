@@ -1,19 +1,17 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Search, 
   Target, 
   TrendingUp, 
-  Plus,
-  Settings,
-  Play,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Lightbulb
 } from "lucide-react";
 import SignalProfileBuilder from "@/components/app/SignalProfileBuilder";
 import DiscoveryDashboard from "@/components/discovery/DiscoveryDashboard";
@@ -23,8 +21,17 @@ interface GameIntelligenceProps {
 }
 
 const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
+  const location = useLocation();
   const [activeStep, setActiveStep] = useState("profile");
   const [profileComplete, setProfileComplete] = useState(false);
+  const [showProfileHint, setShowProfileHint] = useState(false);
+
+  // Check if we should show the profile completion hint
+  useEffect(() => {
+    if (location.state?.showProfileHint) {
+      setShowProfileHint(true);
+    }
+  }, [location.state]);
 
   const steps = [
     {
@@ -71,8 +78,24 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
     }
   };
 
+  const handleProfileComplete = () => {
+    setProfileComplete(true);
+    setShowProfileHint(false);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Profile Completion Hint */}
+      {showProfileHint && (
+        <Alert className="border-atlas-purple bg-purple-50">
+          <Lightbulb className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Complete your signal profile</strong> to unlock personalized game discovery and matching. 
+            We've pre-populated what we can from your project details.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Workflow Progress */}
       <Card>
         <CardHeader>
@@ -147,12 +170,12 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
             <div className="mb-6">
               <h2 className="text-xl font-semibold mb-2">Build Your Signal Profile</h2>
               <p className="text-muted-foreground">
-                Define your game's characteristics to get personalized recommendations and insights.
+                Enhance your project details with themes, mechanics, and targeting criteria for better matching.
               </p>
             </div>
             <SignalProfileBuilder 
               projectId={projectId} 
-              onComplete={() => setProfileComplete(true)}
+              onComplete={handleProfileComplete}
             />
           </div>
         )}
