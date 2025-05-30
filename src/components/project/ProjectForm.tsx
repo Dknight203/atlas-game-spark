@@ -22,7 +22,8 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
     description: "",
     genre: prefillData.genre || "",
     secondary_genre: "",
-    platforms: prefillData.platform ? [prefillData.platform] : [] as string[]
+    platforms: prefillData.platform ? [prefillData.platform] : [] as string[],
+    status: "development"
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();

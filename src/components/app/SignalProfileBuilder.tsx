@@ -180,7 +180,7 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
           tone: signalData?.tone || "",
           targetAudience: signalData?.target_audience || "",
           uniqueFeatures: signalData?.unique_features || projectData?.description || "",
-          genre: signalData?.genre || projectData?.genre || ""
+          genre: projectData?.genre || "" // Get genre from project, not signal profile
         });
 
         // Auto-set platform filter based on project platforms
@@ -197,8 +197,12 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
             'android': 'mobile'
           };
           
-          const firstPlatform = projectData.platforms[0].toLowerCase();
-          platformFilter = platformMap[firstPlatform] || "all";
+          // Safely access the first platform with proper type checking
+          const platforms = projectData.platforms as string[];
+          if (platforms.length > 0) {
+            const firstPlatform = platforms[0].toLowerCase();
+            platformFilter = platformMap[firstPlatform] || "all";
+          }
         }
 
         // Load match criteria if exists
@@ -454,7 +458,7 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Platforms</Label>
                   <div className="flex flex-wrap gap-1">
-                    {projectData.platforms?.map((platform: string) => (
+                    {Array.isArray(projectData.platforms) && projectData.platforms.map((platform: string) => (
                       <Badge key={platform} variant="outline" className="text-xs">
                         {platform}
                       </Badge>
