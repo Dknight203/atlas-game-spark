@@ -145,13 +145,14 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
       }
 
       toast({
-        title: "Project Created",
-        description: `${formData.name} has been created successfully!`,
+        title: "Project Created Successfully!",
+        description: `${formData.name} is ready. Now build your signal profile to start discovering communities and creators.`,
       });
       
-      // Navigate to the project with a hint about the profile
+      // Navigate to the project with a clear next step
       navigate(`/project/${project.id}`, { 
         state: { 
+          justCreated: true,
           showProfileHint: !formData.description && !formData.genre 
         } 
       });
@@ -193,7 +194,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
       <CardHeader>
         <CardTitle>Project Details</CardTitle>
         <CardDescription>
-          Tell us about your game to help us find the right matches.
+          Tell us about your game to get personalized community and creator recommendations.
         </CardDescription>
       </CardHeader>
       <CardContent>

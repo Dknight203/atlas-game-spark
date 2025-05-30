@@ -22,15 +22,15 @@ const Dashboard = () => {
       color: "bg-atlas-purple hover:bg-atlas-purple/90"
     },
     {
-      title: "Discover Communities",
-      description: "Find gaming communities for your project",
+      title: "Project Discovery",
+      description: "Find communities & creators for your projects",
       icon: <Users className="w-5 h-5" />,
       href: "/discovery",
       color: "bg-atlas-teal hover:bg-atlas-teal/90"
     },
     {
-      title: "View Analytics",
-      description: "Track your marketing performance",
+      title: "Project Analytics",
+      description: "View performance metrics for your projects",
       icon: <TrendingUp className="w-5 h-5" />,
       href: "/analytics",
       color: "bg-purple-600 hover:bg-purple-700"
@@ -93,7 +93,7 @@ const Dashboard = () => {
                 Getting Started with GameAtlas
               </CardTitle>
               <CardDescription>
-                Complete these steps to maximize your marketing success
+                Follow these steps to maximize your marketing success
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -120,37 +120,42 @@ const Dashboard = () => {
                   <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center mb-3 text-sm font-bold">
                     2
                   </div>
-                  <h4 className="font-semibold mb-1">Discover Communities</h4>
-                  <p className="text-sm text-gray-600">Find your target audience</p>
+                  <h4 className="font-semibold mb-1">Build Profile</h4>
+                  <p className="text-sm text-gray-600">Set up your project's signal profile</p>
                 </div>
 
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center mb-3 text-sm font-bold">
                     3
                   </div>
-                  <h4 className="font-semibold mb-1">Launch Campaign</h4>
-                  <p className="text-sm text-gray-600">Start reaching your audience</p>
+                  <h4 className="font-semibold mb-1">Discover & Connect</h4>
+                  <p className="text-sm text-gray-600">Find communities and creators</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Empty State */}
+          {/* Project-Centric Empty State */}
           <Card>
             <CardContent className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Target className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
+              <h3 className="text-xl font-semibold mb-2">Start Your Marketing Journey</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Create your first project to start discovering communities and creators for your game.
+                Create your first project to unlock discovery features, find communities, connect with creators, and track your marketing success.
               </p>
-              <Link to="/project/new">
-                <Button className="bg-atlas-purple hover:bg-opacity-90">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Project
-                </Button>
-              </Link>
+              <div className="space-y-4">
+                <Link to="/project/new">
+                  <Button className="bg-atlas-purple hover:bg-opacity-90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Project
+                  </Button>
+                </Link>
+                <div className="text-sm text-gray-500">
+                  💡 <strong>Pro Tip:</strong> After creating a project, build your signal profile to get personalized recommendations for communities and creators.
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

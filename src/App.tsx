@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,8 @@ import Dashboard from "./pages/Dashboard";
 import TeamDashboard from "./pages/TeamDashboard";
 import ProjectNew from "./pages/ProjectNew";
 import ProjectDetail from "./pages/ProjectDetail";
+import Discovery from "./pages/Discovery";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +55,16 @@ const App = () => (
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/discovery" element={
+              <ProtectedRoute>
+                <Discovery />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <Analytics />
               </ProtectedRoute>
             } />
             <Route path="/team" element={
