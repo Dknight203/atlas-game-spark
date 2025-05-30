@@ -3,8 +3,9 @@ import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import YouTubeApiKeySetup from "./YouTubeApiKeySetup";
-import CreatorCard from "@/components/creator/CreatorCard";
+import EnhancedCreatorCard from "@/components/creator/EnhancedCreatorCard";
 import { useCreatorSearch } from "@/hooks/useCreatorSearch";
+import { useToast } from "@/hooks/use-toast";
 import type { Creator } from "@/types/creator";
 
 interface CreatorMatchResultsProps {
@@ -14,6 +15,7 @@ interface CreatorMatchResultsProps {
 
 const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResultsProps) => {
   const { creators, isLoading, error, needsApiKey } = useCreatorSearch(projectId);
+  const { toast } = useToast();
 
   // Update parent component with creators count
   useEffect(() => {
@@ -21,6 +23,24 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
       onCreatorsUpdate(creators.length);
     }
   }, [creators.length, onCreatorsUpdate]);
+
+  const handleStartCreatorCampaign = (creator: Creator) => {
+    toast({
+      title: "Creator Campaign",
+      description: `Starting outreach campaign for ${creator.name}. Check the Campaigns tab for details.`,
+    });
+  };
+
+  const handleViewCreatorProfile = (creator: Creator) => {
+    if (creator.channelUrl) {
+      window.open(creator.channelUrl, '_blank');
+    } else {
+      toast({
+        title: "Creator Profile",
+        description: `View ${creator.name}'s profile on ${creator.platform}`,
+      });
+    }
+  };
 
   const getPlatformIcon = (platform: string) => {
     const platformLower = platform.toLowerCase();
@@ -114,10 +134,15 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                 ))}
               </div>
 
-              {/* All creators in one list, sorted by match score */}
+              {/* All creators using enhanced cards */}
               <div className="space-y-4">
                 {creators.map((creator) => (
-                  <CreatorCard key={creator.id} creator={creator} />
+                  <EnhancedCreatorCard 
+                    key={creator.id} 
+                    creator={creator}
+                    onStartCampaign={handleStartCreatorCampaign}
+                    onViewProfile={handleViewCreatorProfile}
+                  />
                 ))}
               </div>
             </div>

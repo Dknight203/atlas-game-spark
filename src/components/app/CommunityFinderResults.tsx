@@ -1,9 +1,6 @@
-
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ExternalLink, MessageCircle, Users, TrendingUp, Info } from "lucide-react";
+import CommunityCard from "@/components/community/CommunityCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -231,25 +228,6 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
     }
   };
 
-  const getActivityColor = (activity: string) => {
-    if (activity === "Very High") return "text-green-600";
-    if (activity === "High") return "text-green-500";
-    if (activity === "Medium") return "text-yellow-600";
-    return "text-gray-600";
-  };
-
-  const getRelevanceColor = (relevance: number) => {
-    if (relevance >= 85) return "bg-green-100 text-green-800";
-    if (relevance >= 75) return "bg-yellow-100 text-yellow-800";
-    return "bg-gray-100 text-gray-800";
-  };
-
-  const getPlatformIcon = (platform: string) => {
-    if (platform === "Reddit") return "🟠";
-    if (platform === "Discord") return "🟣";
-    return "🌐";
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -276,69 +254,12 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
         <CardContent>
           <div className="space-y-4">
             {communities.map((community) => (
-              <div 
+              <CommunityCard 
                 key={community.id} 
-                className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{getPlatformIcon(community.platform)}</span>
-                    <div>
-                      <h3 className="text-lg font-semibold">{community.name}</h3>
-                      <p className="text-gray-600 text-sm mb-2">{community.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {community.members} members
-                        </span>
-                        <span className={`flex items-center gap-1 ${getActivityColor(community.activity)}`}>
-                          <TrendingUp className="w-4 h-4" />
-                          {community.activity} activity
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="w-4 h-4" />
-                          {community.lastPost}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRelevanceColor(community.relevance)}`}>
-                    {community.relevance}% relevant
-                  </span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {community.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    Platform: {community.platform}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleViewGuidelines(community)}
-                    >
-                      <Info className="w-4 h-4 mr-2" />
-                      View Guidelines
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      className="bg-atlas-purple hover:bg-opacity-90"
-                      onClick={() => handleVisitCommunity(community)}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Visit Community
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                community={community}
+                onViewGuidelines={handleViewGuidelines}
+                onVisitCommunity={handleVisitCommunity}
+              />
             ))}
           </div>
         </CardContent>
