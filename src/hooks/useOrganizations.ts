@@ -35,9 +35,26 @@ export const useOrganizations = () => {
     if (!user) return;
 
     try {
+      // Get user's organization memberships first
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id);
+
+      if (membershipsError) throw membershipsError;
+
+      if (!memberships || memberships.length === 0) {
+        setOrganizations([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get organizations where user is a member
+      const orgIds = memberships.map(m => m.organization_id);
       const { data, error } = await supabase
         .from('organizations')
         .select('*')
+        .in('id', orgIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -56,35 +73,26 @@ export const useOrganizations = () => {
 
   const fetchOrgMembers = async (orgId: string) => {
     try {
-      // First get organization members
+      // Get organization members with profile data
       const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            email,
+            full_name
+          )
+        `)
         .eq('organization_id', orgId);
 
       if (membersError) throw membersError;
 
-      // Then get user details for each member
-      const membersWithDetails: OrganizationMember[] = [];
-      
-      for (const member of membersData || []) {
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(member.user_id);
-        
-        if (!userError && userData.user) {
-          membersWithDetails.push({
-            ...member,
-            user_email: userData.user.email,
-            user_name: userData.user.user_metadata?.full_name || userData.user.email,
-          });
-        } else {
-          // Fallback if we can't get user details
-          membersWithDetails.push({
-            ...member,
-            user_email: 'Unknown',
-            user_name: 'Unknown User',
-          });
-        }
-      }
+      // Transform the data to include user details
+      const membersWithDetails: OrganizationMember[] = (membersData || []).map(member => ({
+        ...member,
+        user_email: member.profiles?.email || 'Unknown',
+        user_name: member.profiles?.full_name || member.profiles?.email || 'Unknown User',
+      }));
 
       setCurrentOrgMembers(membersWithDetails);
     } catch (error) {
