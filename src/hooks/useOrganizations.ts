@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -73,12 +72,12 @@ export const useOrganizations = () => {
 
   const fetchOrgMembers = async (orgId: string) => {
     try {
-      // Get organization members with profile data
+      // Get organization members with profile data using correct join syntax
       const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
         .select(`
           *,
-          profiles:user_id (
+          profiles!user_id (
             email,
             full_name
           )
