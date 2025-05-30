@@ -24,7 +24,8 @@ import {
   ArrowLeft,
   Target,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Building2
 } from "lucide-react";
 
 interface ProjectSidebarProps {
@@ -83,6 +84,13 @@ const ProjectSidebar = ({ projectName, activeSection, onSectionChange, stats }: 
             <Button variant="outline" size="sm" className="w-full justify-start">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
+            </Button>
+          </Link>
+          
+          <Link to="/team">
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Building2 className="w-4 h-4 mr-2" />
+              Team Collaboration
             </Button>
           </Link>
           

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +21,7 @@ import Terms from "./pages/Terms";
 import Cookies from "./pages/Cookies";
 import Careers from "./pages/Careers";
 import Dashboard from "./pages/Dashboard";
+import TeamDashboard from "./pages/TeamDashboard";
 import ProjectNew from "./pages/ProjectNew";
 import ProjectDetail from "./pages/ProjectDetail";
 
@@ -52,6 +52,11 @@ const App = () => (
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/team" element={
+              <ProtectedRoute>
+                <TeamDashboard />
               </ProtectedRoute>
             } />
             <Route path="/project/new" element={
