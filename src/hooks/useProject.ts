@@ -59,7 +59,14 @@ export const useProject = (providedId?: string) => {
         }
 
         console.log('Project data fetched successfully:', data);
-        setProject(data);
+        
+        // Convert the data to match our Project interface
+        const projectData: Project = {
+          ...data,
+          platforms: Array.isArray(data.platforms) ? data.platforms : []
+        };
+        
+        setProject(projectData);
       } catch (error) {
         console.error('Error fetching project:', error);
         toast({
