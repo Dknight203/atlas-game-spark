@@ -16,7 +16,7 @@ interface Project {
   updated_at: string;
 }
 
-export const useProjects = () => {
+export const useProjects = (includeArchived: boolean = false) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -32,11 +32,16 @@ export const useProjects = () => {
       console.log('Fetching projects for user:', user.id);
 
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('projects')
           .select('*')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false });
+          .eq('user_id', user.id);
+
+        if (!includeArchived) {
+          query = query.neq('status', 'archived');
+        }
+
+        const { data, error } = await query.order('updated_at', { ascending: false });
 
         if (error) {
           console.error('Error fetching projects:', error);
@@ -72,7 +77,7 @@ export const useProjects = () => {
     };
 
     fetchProjects();
-  }, [user, toast]);
+  }, [user, toast, includeArchived]);
 
   return { projects, isLoading };
 };
