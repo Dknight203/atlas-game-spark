@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,19 +8,39 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ProjectFormFields from "./ProjectFormFields";
 
-const ProjectForm = () => {
+interface ProjectFormProps {
+  prefillData?: {
+    name?: string;
+    genre?: string;
+    platform?: string;
+  };
+}
+
+const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
   const [formData, setFormData] = useState({
-    name: "",
+    name: prefillData.name || "",
     description: "",
-    genre: "",
+    genre: prefillData.genre || "",
     secondary_genre: "",
-    platform: "",
+    platform: prefillData.platform || "",
     status: "development"
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Update form data when prefillData changes
+  useEffect(() => {
+    if (prefillData) {
+      setFormData(prev => ({
+        ...prev,
+        name: prefillData.name || prev.name,
+        genre: prefillData.genre || prev.genre,
+        platform: prefillData.platform || prev.platform
+      }));
+    }
+  }, [prefillData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

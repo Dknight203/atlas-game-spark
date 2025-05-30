@@ -1,9 +1,13 @@
 
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ProjectForm from "@/components/project/ProjectForm";
 
 const ProjectNew = () => {
+  const location = useLocation();
+  const prefillData = location.state?.prefillData || {};
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -16,7 +20,7 @@ const ProjectNew = () => {
               <p className="text-gray-600">Set up your game project to start finding your audience.</p>
             </div>
 
-            <ProjectForm />
+            <ProjectForm prefillData={prefillData} />
           </div>
         </div>
       </div>
