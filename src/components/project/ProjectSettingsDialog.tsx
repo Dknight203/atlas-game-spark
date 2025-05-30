@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import PlatformSelectors from "./PlatformSelectors";
 
 interface Project {
   id: string;
@@ -16,6 +17,7 @@ interface Project {
   description: string;
   genre: string;
   platform: string;
+  platforms?: string[];
   status: string;
 }
 
@@ -31,16 +33,24 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
     name: project.name,
     description: project.description,
     genre: project.genre,
-    platform: project.platform,
+    platforms: project.platforms || (project.platform ? [project.platform] : []),
     status: project.status
   });
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  const platforms = ["PC", "Mobile", "Console", "Web", "VR", "Cross-platform"];
   const statuses = ["Planning", "Development", "Testing", "Released", "On Hold"];
 
   const handleSave = async () => {
+    if (formData.platforms.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one platform",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
     
     try {
@@ -50,7 +60,8 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
           name: formData.name,
           description: formData.description,
           genre: formData.genre,
-          platform: formData.platform,
+          platform: formData.platforms[0], // Keep the first platform for backwards compatibility
+          platforms: formData.platforms, // Store all platforms in the new column
           status: formData.status,
           updated_at: new Date().toISOString()
         })
@@ -63,7 +74,12 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
       // Update the parent component with new data
       onProjectUpdate({
         ...project,
-        ...formData
+        name: formData.name,
+        description: formData.description,
+        genre: formData.genre,
+        platform: formData.platforms[0],
+        platforms: formData.platforms,
+        status: formData.status
       });
 
       toast({
@@ -84,9 +100,13 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
     }
   };
 
+  const handlePlatformsChange = (platforms: string[]) => {
+    setFormData({ ...formData, platforms });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Project Settings</DialogTitle>
           <DialogDescription>
@@ -125,21 +145,10 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
             />
           </div>
 
-          <div>
-            <Label>Platform</Label>
-            <Select value={formData.platform} onValueChange={(value) => setFormData({ ...formData, platform: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select platform" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {platforms.map((platform) => (
-                  <SelectItem key={platform} value={platform.toLowerCase()}>
-                    {platform}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <PlatformSelectors
+            selectedPlatforms={formData.platforms}
+            onPlatformChange={handlePlatformsChange}
+          />
 
           <div>
             <Label>Status</Label>
@@ -162,10 +171,11 @@ const ProjectSettingsDialog = ({ project, open, onOpenChange, onProjectUpdate }:
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={handleSave} disabled={isSaving || !formData.name || formData.platforms.length === 0}>
             <Save className="w-4 h-4 mr-2" />
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
+        </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
