@@ -73,7 +73,9 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                 setError('Some platforms require API keys. You can still see creators from other platforms.');
                 const creatorsArray = Array.isArray(data?.creators) ? data.creators : [];
                 setCreators(creatorsArray);
-                onCreatorsUpdate?.(creatorsArray.length);
+                if (onCreatorsUpdate && Array.isArray(creatorsArray)) {
+                  onCreatorsUpdate(creatorsArray.length);
+                }
                 return;
               }
               throw new Error(data.error);
@@ -84,7 +86,9 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
             setCreators(creatorsArray);
             
             // Update parent component with creators count
-            onCreatorsUpdate?.(creatorsArray.length);
+            if (onCreatorsUpdate && Array.isArray(creatorsArray)) {
+              onCreatorsUpdate(creatorsArray.length);
+            }
             
           } catch (error) {
             console.error('Error searching creators:', error);
