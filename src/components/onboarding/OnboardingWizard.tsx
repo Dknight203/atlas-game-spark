@@ -56,7 +56,39 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
   };
 
   const progress = ((currentStep + 1) / steps.length) * 100;
-  const CurrentStepComponent = steps[currentStep].component;
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 0:
+        return <WelcomeStep onNext={handleNext} />;
+      case 1:
+        return (
+          <ProjectSetupStep
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            projectData={projectData}
+            onProjectDataChange={handleProjectDataChange}
+          />
+        );
+      case 2:
+        return (
+          <FeaturesOverviewStep
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 3:
+        return (
+          <CompletionStep
+            onCreateProject={handleCreateProject}
+            onPrevious={handlePrevious}
+            projectData={projectData}
+          />
+        );
+      default:
+        return <WelcomeStep onNext={handleNext} />;
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -86,16 +118,7 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
 
           {/* Content */}
           <div className="p-6">
-            <CurrentStepComponent
-              onNext={handleNext}
-              onPrevious={handlePrevious}
-              projectData={projectData}
-              onProjectDataChange={handleProjectDataChange}
-              onCreateProject={handleCreateProject}
-              user={user}
-              currentStep={currentStep}
-              totalSteps={steps.length}
-            />
+            {renderCurrentStep()}
           </div>
         </CardContent>
       </Card>
