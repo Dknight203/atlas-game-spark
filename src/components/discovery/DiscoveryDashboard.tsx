@@ -14,7 +14,7 @@ interface DiscoveryDashboardProps {
 }
 
 const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
-  const { discoveryLists, enhancedGameData, applyFilters } = useDiscovery(projectId);
+  const { discoveryLists, enhancedGameData, applyFilters, createDiscoveryList } = useDiscovery(projectId);
   const [showBuilder, setShowBuilder] = useState(false);
   const [selectedList, setSelectedList] = useState<string | null>(null);
   const [currentFilters, setCurrentFilters] = useState<DiscoveryFilters>({});
@@ -42,6 +42,16 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
     }
     
     handleFilterApply(newFilters);
+  };
+
+  const handleListSave = async (name: string, description: string, filters: DiscoveryFilters) => {
+    try {
+      const newList = await createDiscoveryList(name, description, filters);
+      setShowBuilder(false);
+      handleFilterApply(filters);
+    } catch (error) {
+      console.error('Error creating discovery list:', error);
+    }
   };
 
   return (
@@ -149,11 +159,8 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
       {showBuilder && (
         <DiscoveryListBuilder
           projectId={projectId}
-          onClose={() => setShowBuilder(false)}
-          onListCreated={(list) => {
-            setShowBuilder(false);
-            handleFilterApply(list.filters);
-          }}
+          onSave={handleListSave}
+          onCancel={() => setShowBuilder(false)}
         />
       )}
     </div>
