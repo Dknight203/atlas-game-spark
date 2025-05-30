@@ -22,7 +22,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
     description: "",
     genre: prefillData.genre || "",
     secondary_genre: "",
-    platform: prefillData.platform || "",
+    platforms: prefillData.platform ? [prefillData.platform] : [] as string[],
     status: "development"
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +37,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
         ...prev,
         name: prefillData.name || prev.name,
         genre: prefillData.genre || prev.genre,
-        platform: prefillData.platform || prev.platform
+        platforms: prefillData.platform ? [prefillData.platform] : prev.platforms
       }));
     }
   }, [prefillData]);
@@ -54,6 +54,15 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
       return;
     }
 
+    if (formData.platforms.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one platform",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -65,7 +74,8 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
             name: formData.name,
             description: formData.description,
             genre: formData.genre,
-            platform: formData.platform,
+            platform: formData.platforms[0], // Keep the first platform for backwards compatibility
+            platforms: formData.platforms, // Store all platforms in the new column
             status: formData.status
           }
         ])
@@ -73,6 +83,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
         .single();
 
       if (error) {
+        console.error('Project creation error:', error);
         toast({
           title: "Error",
           description: error.message,
@@ -86,6 +97,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
         navigate(`/project/${data.id}`);
       }
     } catch (error) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
@@ -110,6 +122,13 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
     });
   };
 
+  const handlePlatformsChange = (platforms: string[]) => {
+    setFormData({
+      ...formData,
+      platforms
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -124,6 +143,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
             formData={formData}
             onInputChange={handleInputChange}
             onSelectChange={handleSelectChange}
+            onPlatformsChange={handlePlatformsChange}
           />
           
           <div className="flex gap-4">
@@ -138,7 +158,7 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
             <Button
               type="submit"
               className="flex-1 bg-atlas-purple hover:bg-opacity-90"
-              disabled={isLoading || !formData.name}
+              disabled={isLoading || !formData.name || formData.platforms.length === 0}
             >
               {isLoading ? "Creating..." : "Create Project"}
             </Button>

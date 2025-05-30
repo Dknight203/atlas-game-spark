@@ -369,6 +369,7 @@ export type Database = {
           name: string
           organization_id: string | null
           platform: string | null
+          platforms: Json | null
           status: string | null
           updated_at: string | null
           user_id: string
@@ -381,6 +382,7 @@ export type Database = {
           name: string
           organization_id?: string | null
           platform?: string | null
+          platforms?: Json | null
           status?: string | null
           updated_at?: string | null
           user_id: string
@@ -393,6 +395,7 @@ export type Database = {
           name?: string
           organization_id?: string | null
           platform?: string | null
+          platforms?: Json | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -530,6 +533,10 @@ export type Database = {
       }
       generate_invitation_token: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_org_role: {
+        Args: { org_id: string; user_id: string }
         Returns: string
       }
       is_organization_member: {

@@ -23,7 +23,7 @@ const ProjectSetupStep = ({ onNext, onPrevious, projectData, onProjectDataChange
   ];
 
   const platforms = [
-    "PC (Steam)", "PC (Epic Games)", "PC (Itch.io)", "Nintendo Switch", 
+    "PC (Windows)", "PC (Mac)", "PC (Linux)", "Nintendo Switch", 
     "PlayStation", "Xbox", "Mobile (iOS)", "Mobile (Android)", "Web Browser"
   ];
 
@@ -55,7 +55,7 @@ const ProjectSetupStep = ({ onNext, onPrevious, projectData, onProjectDataChange
 
         <div>
           <Label htmlFor="genre">Primary Genre</Label>
-          <Select onValueChange={(value) => onProjectDataChange({ genre: value })}>
+          <Select value={projectData.genre} onValueChange={(value) => onProjectDataChange({ genre: value })}>
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select your game's genre" />
             </SelectTrigger>
@@ -71,7 +71,7 @@ const ProjectSetupStep = ({ onNext, onPrevious, projectData, onProjectDataChange
 
         <div>
           <Label htmlFor="platform">Primary Platform</Label>
-          <Select onValueChange={(value) => onProjectDataChange({ platform: value })}>
+          <Select value={projectData.platform} onValueChange={(value) => onProjectDataChange({ platform: value })}>
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select your target platform" />
             </SelectTrigger>

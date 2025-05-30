@@ -2,8 +2,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GenreSelectors from "./GenreSelectors";
+import PlatformSelectors from "./PlatformSelectors";
 
 interface ProjectFormFieldsProps {
   formData: {
@@ -11,32 +11,14 @@ interface ProjectFormFieldsProps {
     description: string;
     genre: string;
     secondary_genre: string;
-    platform: string;
-    status: string;
+    platforms: string[];
   };
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onSelectChange: (field: string, value: string) => void;
+  onPlatformsChange: (platforms: string[]) => void;
 }
 
-const platformOptions = [
-  "PC (Windows)",
-  "PC (Mac)",
-  "PC (Linux)",
-  "Mobile (iOS)",
-  "Mobile (Android)",
-  "Nintendo Switch",
-  "PlayStation 5",
-  "PlayStation 4",
-  "Xbox Series X/S",
-  "Xbox One",
-  "Web Browser",
-  "VR (Meta Quest)",
-  "VR (Steam VR)",
-  "Cross-Platform",
-  "Other"
-];
-
-const ProjectFormFields = ({ formData, onInputChange, onSelectChange }: ProjectFormFieldsProps) => {
+const ProjectFormFields = ({ formData, onInputChange, onSelectChange, onPlatformsChange }: ProjectFormFieldsProps) => {
   return (
     <>
       <div>
@@ -71,21 +53,10 @@ const ProjectFormFields = ({ formData, onInputChange, onSelectChange }: ProjectF
         onSelectChange={onSelectChange}
       />
 
-      <div>
-        <Label htmlFor="platform">Target Platform</Label>
-        <Select value={formData.platform} onValueChange={(value) => onSelectChange('platform', value)}>
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select platform" />
-          </SelectTrigger>
-          <SelectContent>
-            {platformOptions.map((platform) => (
-              <SelectItem key={platform} value={platform}>
-                {platform}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <PlatformSelectors
+        selectedPlatforms={formData.platforms}
+        onPlatformChange={onPlatformsChange}
+      />
     </>
   );
 };
