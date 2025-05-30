@@ -4,13 +4,6 @@ import Footer from "@/components/Footer";
 import { ArrowRight, Users, TrendingUp, Target, CheckCircle } from "lucide-react";
 
 const About = () => {
-  const stats = [
-    { number: "300%", label: "Average increase in marketing reach" },
-    { number: "40%", label: "Reduction in customer acquisition costs" },
-    { number: "10,000+", label: "Communities and creators in our database" },
-    { number: "500+", label: "Indie developers using GameAtlas" }
-  ];
-
   const teamValues = [
     {
       icon: <Target className="w-6 h-6 text-atlas-purple" />,
@@ -46,36 +39,7 @@ const About = () => {
             </p>
           </div>
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center p-6 bg-atlas-light rounded-xl">
-                <div className="text-3xl md:text-4xl font-bold text-atlas-purple mb-2">{stat.number}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-
           <div className="max-w-4xl mx-auto">
-            {/* Our Story */}
-            <div className="mb-16">
-              <h2 className="text-3xl font-bold mb-6 text-atlas-dark">Our Story</h2>
-              <div className="prose lg:prose-xl">
-                <p className="text-lg text-gray-700 mb-6">
-                  GameAtlas was born from frustration. As indie developers ourselves, we spent countless hours 
-                  manually searching for communities, reaching out to creators, and trying to measure the impact 
-                  of our marketing efforts. Most tools were built for big studios with massive budgets, not for 
-                  indie developers who needed efficient, data-driven solutions.
-                </p>
-                
-                <p className="text-lg text-gray-700 mb-6">
-                  We realized that great games were getting lost in the noise, not because they weren't good enough, 
-                  but because their creators didn't have access to the right marketing intelligence and tools. 
-                  That's when we decided to build the platform we wished we had.
-                </p>
-              </div>
-            </div>
-            
             {/* Our Mission */}
             <div className="mb-16">
               <h2 className="text-3xl font-bold mb-6 text-atlas-dark">Our Mission</h2>
@@ -87,6 +51,29 @@ const About = () => {
                   Our mission is to democratize game marketing by providing indie developers with the same level 
                   of marketing intelligence and tools that big studios use, but designed specifically for the 
                   unique challenges and constraints of independent game development.
+                </p>
+              </div>
+            </div>
+
+            {/* The Problem We're Solving */}
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold mb-6 text-atlas-dark">The Problem We're Solving</h2>
+              <div className="prose lg:prose-xl">
+                <p className="text-lg text-gray-700 mb-6">
+                  Indie game developers face a unique challenge: creating amazing games is only half the battle. 
+                  The other half is getting those games discovered by the right players. Traditional marketing 
+                  approaches are often too expensive, time-consuming, or designed for larger studios with dedicated marketing teams.
+                </p>
+                
+                <p className="text-lg text-gray-700 mb-6">
+                  Many indie developers spend countless hours manually searching for communities, reaching out to creators, 
+                  and trying to measure the impact of their marketing efforts. Most existing tools weren't built with 
+                  indie developers in mind - they're either too complex, too expensive, or missing the game-specific 
+                  intelligence needed to succeed.
+                </p>
+
+                <p className="text-lg text-gray-700 mb-6">
+                  That's why we built GameAtlas: to bridge the gap between great indie games and the players who will love them.
                 </p>
               </div>
             </div>
@@ -139,7 +126,7 @@ const About = () => {
             <div className="text-center bg-gradient-to-r from-atlas-purple to-purple-600 rounded-2xl p-12 text-white">
               <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Game Marketing?</h2>
               <p className="text-xl mb-6 opacity-90">
-                Join hundreds of indie developers who've discovered their perfect audience with GameAtlas
+                Join indie developers who are discovering their perfect audience with GameAtlas
               </p>
               <a 
                 href="/signup" 

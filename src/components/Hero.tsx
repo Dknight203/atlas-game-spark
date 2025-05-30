@@ -43,9 +43,9 @@ const Hero = () => {
                   Start 14-Day Free Trial
                 </Button>
               </Link>
-              <Link to="/demo">
+              <Link to="/features">
                 <Button size="lg" variant="ghost" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-atlas-purple w-full sm:w-auto">
-                  Watch Demo
+                  Explore Features
                 </Button>
               </Link>
             </div>
