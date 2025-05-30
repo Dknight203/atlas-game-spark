@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,9 +73,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                 setError('Some platforms require API keys. You can still see creators from other platforms.');
                 const creatorsArray = Array.isArray(data?.creators) ? data.creators : [];
                 setCreators(creatorsArray);
-                if (onCreatorsUpdate) {
-                  onCreatorsUpdate(creatorsArray.length);
-                }
+                onCreatorsUpdate?.(creatorsArray.length);
                 return;
               }
               throw new Error(data.error);
@@ -87,9 +84,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
             setCreators(creatorsArray);
             
             // Update parent component with creators count
-            if (onCreatorsUpdate) {
-              onCreatorsUpdate(creatorsArray.length);
-            }
+            onCreatorsUpdate?.(creatorsArray.length);
             
           } catch (error) {
             console.error('Error searching creators:', error);
@@ -105,7 +100,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
     };
 
     fetchProjectAndCreators();
-  }, [projectId, onCreatorsUpdate]);
+  }, [projectId]); // Removed onCreatorsUpdate from dependencies to prevent infinite loop
 
   const handleSearchCreator = (creator: any) => {
     if (creator.channelUrl) {
@@ -297,7 +292,7 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
                     <div className="mb-3">
                       <p className="text-sm text-gray-600 mb-2">Content focus:</p>
                       <div className="flex flex-wrap gap-2">
-                        {creator.recentGames && Array.isArray(creator.recentGames) ? creator.recentGames.map((game: string, index: number) => (
+                        {Array.isArray(creator.recentGames) ? creator.recentGames.map((game: string, index: number) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {game}
                           </Badge>
