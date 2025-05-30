@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, BarChart3, Target, Users, TrendingUp } from "lucide-react";
+import { Plus, BarChart3, Target, Users, TrendingUp, ArrowRight, Lightbulb } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -98,6 +98,20 @@ const Dashboard = () => {
     return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Draft';
   };
 
+  const getNextSteps = () => {
+    if (projects.length === 0) {
+      return [
+        { title: "Create your first project", description: "Start by setting up your game project", action: "Create Project", link: "/project/new" },
+        { title: "Explore the demo", description: "See how GameAtlas works", action: "View Demo", link: "/demo" }
+      ];
+    }
+    
+    return [
+      { title: "Build signal profile", description: "Define your game's characteristics", action: "Get Started", link: `/project/${projects[0].id}` },
+      { title: "Discover similar games", description: "Find games in your market", action: "Explore", link: `/project/${projects[0].id}` }
+    ];
+  };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -105,55 +119,62 @@ const Dashboard = () => {
         
         <div className="pt-20 pb-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Welcome Section */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-              <p className="text-gray-600">Manage your game projects and discover new opportunities.</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h1>
+              <p className="text-gray-600">Let's find your game's audience and grow your community.</p>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-yellow-500" />
+                    Quick Actions
+                  </CardTitle>
+                  <CardDescription>Get started with these recommended next steps</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{projects.length}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {projects.filter(p => p.status?.toLowerCase() === 'active').length}
+                  <div className="space-y-4">
+                    {getNextSteps().map((step, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div>
+                          <h3 className="font-medium">{step.title}</h3>
+                          <p className="text-sm text-gray-600">{step.description}</p>
+                        </div>
+                        <Link to={step.link}>
+                          <Button size="sm">
+                            {step.action}
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </Link>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">In Development</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                <CardHeader>
+                  <CardTitle>Quick Stats</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {projects.filter(p => p.status?.toLowerCase() === 'development').length}
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Total Projects</span>
+                    <span className="font-bold text-atlas-purple">{projects.length}</span>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Draft Projects</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {projects.filter(p => !p.status || p.status.toLowerCase() === 'draft').length}
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Active</span>
+                    <span className="font-bold text-green-600">
+                      {projects.filter(p => p.status?.toLowerCase() === 'active').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">In Development</span>
+                    <span className="font-bold text-blue-600">
+                      {projects.filter(p => p.status?.toLowerCase() === 'development').length}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -192,20 +213,22 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {projects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                  <Card key={project.id} className="hover:shadow-lg transition-shadow group">
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{project.name}</CardTitle>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg group-hover:text-atlas-purple transition-colors">
+                            {project.name}
+                          </CardTitle>
                           <CardDescription>
                             Updated {formatLastUpdated(project.updated_at)}
                           </CardDescription>
                           {project.description && (
                             <CardDescription className="mt-2 text-gray-600">
-                              {project.description.length > 100 
-                                ? `${project.description.substring(0, 100)}...` 
+                              {project.description.length > 80 
+                                ? `${project.description.substring(0, 80)}...` 
                                 : project.description}
                             </CardDescription>
                           )}
@@ -216,23 +239,22 @@ const Dashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="flex flex-wrap gap-2 mb-4">
                         {project.genre && (
-                          <div className="text-center">
-                            <div className="text-sm font-medium text-atlas-purple">{project.genre}</div>
-                            <div className="text-xs text-gray-500">Genre</div>
-                          </div>
+                          <span className="px-2 py-1 bg-atlas-purple/10 text-atlas-purple text-xs rounded-full">
+                            {project.genre}
+                          </span>
                         )}
                         {project.platform && (
-                          <div className="text-center">
-                            <div className="text-sm font-medium text-atlas-teal">{project.platform}</div>
-                            <div className="text-xs text-gray-500">Platform</div>
-                          </div>
+                          <span className="px-2 py-1 bg-atlas-teal/10 text-atlas-teal text-xs rounded-full">
+                            {project.platform}
+                          </span>
                         )}
                       </div>
                       <Link to={`/project/${project.id}`}>
-                        <Button variant="outline" className="w-full">
-                          View Project
+                        <Button variant="outline" className="w-full group-hover:bg-atlas-purple group-hover:text-white transition-colors">
+                          Open Project
+                          <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </Link>
                     </CardContent>
