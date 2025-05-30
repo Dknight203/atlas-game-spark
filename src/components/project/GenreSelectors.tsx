@@ -35,6 +35,12 @@ const GenreSelectors = ({ primaryGenre, secondaryGenre, onSelectChange }: GenreS
   // Filter out the selected primary genre from secondary genre options
   const secondaryGenreOptions = genreOptions.filter(genre => genre !== primaryGenre);
 
+  const handleSecondaryGenreChange = (value: string) => {
+    // Convert "none" back to empty string for the form data
+    const actualValue = value === "none" ? "" : value;
+    onSelectChange('secondary_genre', actualValue);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
@@ -55,12 +61,12 @@ const GenreSelectors = ({ primaryGenre, secondaryGenre, onSelectChange }: GenreS
 
       <div>
         <Label htmlFor="secondary_genre">Secondary Genre</Label>
-        <Select value={secondaryGenre} onValueChange={(value) => onSelectChange('secondary_genre', value)}>
+        <Select value={secondaryGenre || "none"} onValueChange={handleSecondaryGenreChange}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select secondary genre" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None</SelectItem>
+            <SelectItem value="none">None</SelectItem>
             {secondaryGenreOptions.map((genre) => (
               <SelectItem key={genre} value={genre}>
                 {genre}
