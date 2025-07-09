@@ -27,6 +27,7 @@ import ProjectNew from "./pages/ProjectNew";
 import ProjectDetail from "./pages/ProjectDetail";
 import Discovery from "./pages/Discovery";
 import Analytics from "./pages/Analytics";
+import UserSettings from "./pages/UserSettings";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,11 @@ const App = () => (
             <Route path="/project/:id" element={
               <ProtectedRoute>
                 <ProjectDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <UserSettings />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

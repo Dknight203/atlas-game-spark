@@ -45,10 +45,7 @@ const Navbar = () => {
   };
 
   const handleProfileClick = () => {
-    toast({
-      title: "Profile",
-      description: "Profile management coming soon!",
-    });
+    navigate('/settings');
   };
 
   return (
@@ -74,7 +71,7 @@ const Navbar = () => {
                   New Project
                 </Link>
                 <Button variant="outline" className="ml-4" onClick={handleProfileClick}>
-                  Profile
+                  Settings
                 </Button>
                 <Button variant="outline" onClick={handleLogout}>
                   Log out
@@ -128,7 +125,7 @@ const Navbar = () => {
                   New Project
                 </Link>
                 <Button variant="outline" className="w-full my-2" onClick={handleProfileClick}>
-                  Profile
+                  Settings
                 </Button>
                 <Button variant="outline" className="w-full my-2" onClick={handleLogout}>
                   Log out
