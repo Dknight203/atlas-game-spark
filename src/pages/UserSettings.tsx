@@ -5,6 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountProfile } from "@/components/settings/AccountProfile";
 import { Security } from "@/components/settings/Security";
 import { APIManagement } from "@/components/settings/APIManagement";
+import OrganizationSettings from "@/components/settings/OrganizationSettings";
+import NotificationSettings from "@/components/settings/NotificationSettings";
+import DataExport from "@/components/settings/DataExport";
 
 const UserSettings = () => {
   const [activeTab, setActiveTab] = useState("account");
@@ -22,10 +25,13 @@ const UserSettings = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="account">Account & Profile</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="account">Account</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="api">API Management</TabsTrigger>
+              <TabsTrigger value="api">API Keys</TabsTrigger>
+              <TabsTrigger value="organizations">Teams</TabsTrigger>
+              <TabsTrigger value="notifications">Alerts</TabsTrigger>
+              <TabsTrigger value="data">Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="account">
@@ -66,6 +72,48 @@ const UserSettings = () => {
                 </CardHeader>
                 <CardContent>
                   <APIManagement />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="organizations">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Organizations</CardTitle>
+                  <CardDescription>
+                    Manage your organizations and team members.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <OrganizationSettings />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="notifications">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notifications</CardTitle>
+                  <CardDescription>
+                    Configure your notification preferences and alerts.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <NotificationSettings />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="data">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Data & Export</CardTitle>
+                  <CardDescription>
+                    Export your data, manage backups, and data retention settings.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DataExport />
                 </CardContent>
               </Card>
             </TabsContent>
