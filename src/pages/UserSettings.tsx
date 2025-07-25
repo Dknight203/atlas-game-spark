@@ -12,8 +12,6 @@ import DataExport from "@/components/settings/DataExport";
 const UserSettings = () => {
   const [activeTab, setActiveTab] = useState("account");
 
-  console.log("UserSettings component rendered");
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
