@@ -1,15 +1,18 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ArrowRight, Plus } from "lucide-react";
+import { BarChart3, ArrowRight, Plus, Target, Calendar, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProjects } from "@/hooks/useProjects";
 
 const Analytics = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { projects, isLoading } = useProjects();
 
   useEffect(() => {
     if (!user) {
@@ -25,65 +28,161 @@ const Analytics = () => {
     navigate("/dashboard");
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'development':
+        return 'bg-blue-100 text-blue-800';
+      case 'published':
+        return 'bg-green-100 text-green-800';
+      case 'archived':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="pt-20 pb-12">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-atlas-purple mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading your projects...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
       <div className="pt-20 pb-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Analytics Dashboard</h1>
             <p className="text-lg text-gray-600">
-              Analytics are project-specific. Create or select a project to view detailed performance metrics.
+              {projects.length > 0 
+                ? "Select a project to view detailed analytics and performance metrics, or create a new project to get started."
+                : "Analytics are project-specific. Create or select a project to view detailed performance metrics."
+              }
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-atlas-purple" />
-                  Create Your First Project
-                </CardTitle>
-                <CardDescription>
-                  Set up a new game project to start tracking analytics and performance metrics.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={handleCreateProject}
-                  className="w-full bg-atlas-purple hover:bg-opacity-90"
-                >
-                  Create New Project
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
+          {projects.length > 0 ? (
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
+                <Link to="/project/new">
+                  <Button className="bg-atlas-purple hover:bg-atlas-purple/90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Project
+                  </Button>
+                </Link>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <Link key={project.id} to={`/project/${project.id}?tab=analytics`}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                      <CardHeader>
+                        <div className="flex justify-between items-start mb-2">
+                          <CardTitle className="text-lg line-clamp-1">{project.name}</CardTitle>
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(project.status)}`}>
+                            {project.status}
+                          </span>
+                        </div>
+                        {project.description && (
+                          <CardDescription className="line-clamp-2">
+                            {project.description}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          {project.genre && (
+                            <div className="flex items-center gap-2">
+                              <Target className="w-4 h-4" />
+                              <span>{project.genre}</span>
+                            </div>
+                          )}
+                          {project.platform && (
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Platform:</span>
+                              <span>{project.platform}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 mt-3">
+                            <Calendar className="w-4 h-4" />
+                            <span className="text-xs">
+                              Updated {new Date(project.updated_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-4 pt-3 border-t">
+                          <div className="flex items-center gap-2 text-sm text-atlas-purple">
+                            <TrendingUp className="w-4 h-4" />
+                            <span>View Analytics</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-atlas-purple" />
+                    Create Your First Project
+                  </CardTitle>
+                  <CardDescription>
+                    Set up a new game project to start tracking analytics and performance metrics.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={handleCreateProject}
+                    className="w-full bg-atlas-purple hover:bg-opacity-90"
+                  >
+                    Create New Project
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" />
-                  Select Existing Project
-                </CardTitle>
-                <CardDescription>
-                  Go to your dashboard to select an existing project and view its analytics.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={handleViewProjects}
-                  variant="outline"
-                  className="w-full"
-                >
-                  View My Projects
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-purple-600" />
+                    Select Existing Project
+                  </CardTitle>
+                  <CardDescription>
+                    Go to your dashboard to select an existing project and view its analytics.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={handleViewProjects}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    View My Projects
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-          <div className="mt-12 bg-green-50 border border-green-200 rounded-lg p-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <h3 className="font-semibold text-green-900 mb-2">Analytics Features</h3>
             <div className="text-green-800 space-y-2">
               <p>• Track marketing performance and reach for each project</p>

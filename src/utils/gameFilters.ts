@@ -1,41 +1,71 @@
 
 import type { EnhancedGameData, DiscoveryFilters } from "@/types/discovery";
 
-// Improved filtering logic with fuzzy matching
+// Platform synonyms and aliases for fuzzy matching
+const platformAliases: Record<string, string[]> = {
+  'pc': ['steam', 'windows', 'mac', 'linux', 'epic games'],
+  'mobile': ['ios', 'android', 'iphone', 'ipad'],
+  'console': ['xbox', 'playstation', 'nintendo switch', 'ps4', 'ps5', 'xbox one', 'xbox series'],
+  'steam': ['pc', 'windows'],
+  'nintendo switch': ['switch', 'nintendo'],
+  'xbox': ['microsoft', 'xbox one', 'xbox series'],
+  'playstation': ['ps4', 'ps5', 'sony'],
+};
+
+// Genre synonyms for better matching
+const genreAliases: Record<string, string[]> = {
+  'action': ['shooter', 'fps', 'fighting', 'beat em up'],
+  'rpg': ['role playing', 'jrpg', 'crpg', 'mmorpg'],
+  'strategy': ['rts', 'turn based', 'tactical', 'tower defense'],
+  'puzzle': ['match 3', 'brain training', 'logic'],
+  'simulation': ['life sim', 'city builder', 'farming'],
+  'racing': ['driving', 'car', 'motorsport'],
+};
+
+// Enhanced filtering logic with fuzzy matching and synonyms
 export const applyGameFilters = (
   games: EnhancedGameData[], 
   filters: DiscoveryFilters
 ): EnhancedGameData[] => {
-  console.log('Applying filters:', filters);
-  
   return games.filter(game => {
-    // Platform filter - fuzzy matching
+    // Platform filter - fuzzy matching with synonyms
     if (filters.platforms?.length) {
       const hasMatchingPlatform = filters.platforms.some(filterPlatform => {
         const gamePlatform = game.platform.toLowerCase();
         const filterPlatformLower = filterPlatform.toLowerCase();
         
         // Direct match
-        if (gamePlatform.includes(filterPlatformLower)) return true;
+        if (gamePlatform.includes(filterPlatformLower) || filterPlatformLower.includes(gamePlatform)) return true;
         
-        // Handle platform aliases
-        if (filterPlatformLower === 'mobile' && (gamePlatform.includes('ios') || gamePlatform.includes('android'))) return true;
-        if (filterPlatformLower === 'console' && (gamePlatform.includes('xbox') || gamePlatform.includes('playstation') || gamePlatform.includes('switch'))) return true;
-        if (filterPlatformLower === 'pc' && gamePlatform.includes('steam')) return true;
-        
-        return false;
+        // Check platform aliases
+        const aliases = platformAliases[filterPlatformLower] || [];
+        return aliases.some(alias => 
+          gamePlatform.includes(alias) || 
+          alias.includes(gamePlatform)
+        );
       });
       if (!hasMatchingPlatform) return false;
     }
 
-    // Genre filter - fuzzy matching
+    // Genre filter - fuzzy matching with synonyms
     if (filters.genres?.length) {
-      const hasMatchingGenre = filters.genres.some(filterGenre => 
-        game.genre.some(gameGenre => 
-          gameGenre.toLowerCase().includes(filterGenre.toLowerCase()) ||
-          filterGenre.toLowerCase().includes(gameGenre.toLowerCase())
-        )
-      );
+      const hasMatchingGenre = filters.genres.some(filterGenre => {
+        const filterGenreLower = filterGenre.toLowerCase();
+        
+        return game.genre.some(gameGenre => {
+          const gameGenreLower = gameGenre.toLowerCase();
+          
+          // Direct match
+          if (gameGenreLower.includes(filterGenreLower) || filterGenreLower.includes(gameGenreLower)) return true;
+          
+          // Check genre aliases
+          const aliases = genreAliases[filterGenreLower] || [];
+          return aliases.some(alias => 
+            gameGenreLower.includes(alias) || 
+            alias.includes(gameGenreLower)
+          );
+        });
+      });
       if (!hasMatchingGenre) return false;
     }
 

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ProjectHeader from "@/components/project/ProjectHeader";
 import ProjectSidebar from "@/components/project/ProjectSidebar";
@@ -20,6 +20,7 @@ import { Lightbulb, ArrowRight } from "lucide-react";
 const ProjectDetail = () => {
   const { id } = useParams();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { project, isLoading } = useProject(id);
   const [activeSection, setActiveSection] = useState("game-intelligence");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -30,6 +31,14 @@ const ProjectDetail = () => {
     communities: 0,
     creators: 0
   });
+
+  // Check URL params for initial tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'analytics') {
+      setActiveSection('analytics');
+    }
+  }, [searchParams]);
 
   // Show welcome message for newly created projects
   useEffect(() => {

@@ -15,7 +15,7 @@ const Navbar = () => {
   const { toast } = useToast();
   
   // Check if we're on a dashboard/app page to show different navigation
-  const isAppPage = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/project');
+  const isAppPage = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/project') || location.pathname.startsWith('/discovery') || location.pathname.startsWith('/analytics') || location.pathname.startsWith('/team') || location.pathname.startsWith('/settings');
 
   const handleLogout = async () => {
     try {
@@ -67,8 +67,11 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-600 hover:text-atlas-purple px-3 py-2 rounded-md text-sm font-medium">
                   Dashboard
                 </Link>
-                <Link to="/project/new" className="text-gray-600 hover:text-atlas-purple px-3 py-2 rounded-md text-sm font-medium">
-                  New Project
+                <Link to="/discovery" className="text-gray-600 hover:text-atlas-purple px-3 py-2 rounded-md text-sm font-medium">
+                  Discovery
+                </Link>
+                <Link to="/analytics" className="text-gray-600 hover:text-atlas-purple px-3 py-2 rounded-md text-sm font-medium">
+                  Analytics
                 </Link>
                 <Button variant="outline" className="ml-4" onClick={handleProfileClick}>
                   Settings
@@ -121,8 +124,11 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-600 hover:text-atlas-purple block px-3 py-2 rounded-md text-base font-medium">
                   Dashboard
                 </Link>
-                <Link to="/project/new" className="text-gray-600 hover:text-atlas-purple block px-3 py-2 rounded-md text-base font-medium">
-                  New Project
+                <Link to="/discovery" className="text-gray-600 hover:text-atlas-purple block px-3 py-2 rounded-md text-base font-medium">
+                  Discovery
+                </Link>
+                <Link to="/analytics" className="text-gray-600 hover:text-atlas-purple block px-3 py-2 rounded-md text-base font-medium">
+                  Analytics
                 </Link>
                 <Button variant="outline" className="w-full my-2" onClick={handleProfileClick}>
                   Settings
