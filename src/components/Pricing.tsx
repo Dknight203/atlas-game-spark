@@ -106,7 +106,7 @@ const Pricing = () => {
       name: "Starter",
       price: "29",
       period: "mo",
-      description: "Perfect for solo developers launching their first game",
+      description: "Perfect for developers launching their first game",
       bestFor: "Solo Developers",
       projectLimit: "1 Game",
       teamMembers: "1 User",
@@ -128,8 +128,8 @@ const Pricing = () => {
       name: "Professional",
       price: "99",
       period: "mo",
-      description: "Complete marketing intelligence for indie teams",
-      bestFor: "Indie Teams and Studios",
+      description: "Complete marketing intelligence for development teams",
+      bestFor: "Development Teams and Studios",
       projectLimit: "3 Games",
       teamMembers: "5 Users",
       keyValue: "Full Marketing Suite",
@@ -219,7 +219,7 @@ const Pricing = () => {
         <div className="bg-gradient-to-r from-atlas-purple/10 to-purple-100 rounded-xl p-6 mb-12 text-center">
           <h3 className="text-xl font-semibold mb-2">🎯 Why GameAtlas Works</h3>
           <p className="text-gray-700 max-w-2xl mx-auto">
-            Our AI-powered platform has helped indie developers increase their marketing reach by 300% and reduce customer acquisition costs by 40% through data-driven community and creator matching.
+            Our AI-powered platform has helped developers increase their marketing reach by 300% and reduce customer acquisition costs by 40% through data-driven community and creator matching.
           </p>
         </div>
         

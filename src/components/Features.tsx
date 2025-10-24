@@ -68,7 +68,7 @@ const Features = () => {
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything You Need to Grow Your Game</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            From AI-powered discovery to campaign management and ROI tracking, GameAtlas provides the complete toolkit for indie game marketing success.
+            From AI-powered discovery to campaign management and ROI tracking, GameAtlas provides the complete toolkit for game marketing success.
           </p>
         </div>
         

@@ -21,7 +21,7 @@ const Index = () => {
               Complete Marketing Intelligence Platform
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              From discovery to campaign management, GameAtlas provides everything indie developers need to build sustainable marketing success.
+              From discovery to campaign management, GameAtlas provides everything developers need to build sustainable marketing success.
             </p>
           </div>
           

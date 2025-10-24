@@ -18,7 +18,7 @@ const Hero = () => {
               <span className="text-atlas-teal">Predictable Growth</span>
             </h1>
             <p className="text-lg md:text-xl mb-8 max-w-lg opacity-90">
-              Stop guessing at marketing. GameAtlas uses AI-powered intelligence to connect your indie game with the right communities and creators, then helps you manage campaigns that actually convert.
+              Stop guessing at marketing. GameAtlas uses AI-powered intelligence to connect your game with the right communities and creators, then helps you manage campaigns that actually convert.
             </p>
             
             {/* Key Benefits */}

@@ -1,6 +1,16 @@
-# Welcome to your Lovable project
+# GameAtlas
 
-## Project info
+GameAtlas is a comprehensive marketing intelligence platform for game developers. It helps you discover the perfect communities and creators for your game through AI-powered cross-game signal matching.
+
+## Features
+
+- **AI-Powered Discovery**: Find communities and creators using advanced matching algorithms
+- **Campaign Management**: Plan, execute, and track marketing campaigns across platforms
+- **Creator CRM**: Manage relationships with content creators and community managers
+- **ROI Analytics**: Measure real marketing performance with detailed tracking
+- **Competitor Intelligence**: Track what's working for similar games in your genre
+
+## Tech Stack
 
 **URL**: https://lovable.dev/projects/ed2422ec-f270-4332-9b70-fc63be2a3c44
 

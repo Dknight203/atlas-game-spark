@@ -31,10 +31,10 @@ const About = () => {
           {/* Hero Section */}
           <div className="max-w-4xl mx-auto text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-atlas-purple">
-              The Marketing Intelligence Platform Built for Indie Games
+              The Marketing Intelligence Platform Built for Game Developers
             </h1>
             <p className="text-xl text-gray-700 mb-8">
-              We're on a mission to help indie developers build sustainable marketing success through 
+              We're on a mission to help game developers build sustainable marketing success through 
               AI-powered intelligence, campaign management, and relationship building tools.
             </p>
           </div>
@@ -45,12 +45,12 @@ const About = () => {
               <h2 className="text-3xl font-bold mb-6 text-atlas-dark">Our Mission</h2>
               <div className="bg-gradient-to-r from-atlas-purple/5 to-purple-50 p-8 rounded-xl mb-8">
                 <p className="text-lg text-gray-700 mb-4">
-                  <strong className="text-atlas-purple">We believe every great indie game deserves to find its audience.</strong>
+                  <strong className="text-atlas-purple">We believe every great game deserves to find its audience.</strong>
                 </p>
                 <p className="text-lg text-gray-700">
-                  Our mission is to democratize game marketing by providing indie developers with the same level 
+                  Our mission is to democratize game marketing by providing developers with the same level 
                   of marketing intelligence and tools that big studios use, but designed specifically for the 
-                  unique challenges and constraints of independent game development.
+                  unique challenges and constraints of game development teams of all sizes.
                 </p>
               </div>
             </div>
@@ -60,20 +60,20 @@ const About = () => {
               <h2 className="text-3xl font-bold mb-6 text-atlas-dark">The Problem We're Solving</h2>
               <div className="prose lg:prose-xl">
                 <p className="text-lg text-gray-700 mb-6">
-                  Indie game developers face a unique challenge: creating amazing games is only half the battle. 
+                  Game developers face a unique challenge: creating amazing games is only half the battle. 
                   The other half is getting those games discovered by the right players. Traditional marketing 
                   approaches are often too expensive, time-consuming, or designed for larger studios with dedicated marketing teams.
                 </p>
                 
                 <p className="text-lg text-gray-700 mb-6">
-                  Many indie developers spend countless hours manually searching for communities, reaching out to creators, 
+                  Many developers spend countless hours manually searching for communities, reaching out to creators, 
                   and trying to measure the impact of their marketing efforts. Most existing tools weren't built with 
-                  indie developers in mind - they're either too complex, too expensive, or missing the game-specific 
+                  developers in mind - they're either too complex, too expensive, or missing the game-specific 
                   intelligence needed to succeed.
                 </p>
 
                 <p className="text-lg text-gray-700 mb-6">
-                  That's why we built GameAtlas: to bridge the gap between great indie games and the players who will love them.
+                  That's why we built GameAtlas: to bridge the gap between great games and the players who will love them.
                 </p>
               </div>
             </div>
@@ -126,7 +126,7 @@ const About = () => {
             <div className="text-center bg-gradient-to-r from-atlas-purple to-purple-600 rounded-2xl p-12 text-white">
               <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Game Marketing?</h2>
               <p className="text-xl mb-6 opacity-90">
-                Join indie developers who are discovering their perfect audience with GameAtlas
+                Join developers who are discovering their perfect audience with GameAtlas
               </p>
               <a 
                 href="/signup" 

@@ -1,7 +1,6 @@
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Features from "@/components/Features";
 import Testimonial from "@/components/Testimonial";
 import { Star, Zap, TrendingUp, Users, Target } from "lucide-react";
 
@@ -112,8 +111,8 @@ const FeaturesPage = () => {
               </div>
               <div className="text-center p-6 bg-white rounded-lg">
                 <div className="text-2xl mb-3">⚡</div>
-                <h4 className="font-bold mb-2">Built for Indie Scale</h4>
-                <p className="text-sm text-gray-600">Designed for small teams with limited time and budget constraints</p>
+                <h4 className="font-bold mb-2">Built for Development Teams</h4>
+                <p className="text-sm text-gray-600">Designed for teams of all sizes with time and budget efficiency in mind</p>
               </div>
               <div className="text-center p-6 bg-white rounded-lg">
                 <div className="text-2xl mb-3">📈</div>
@@ -124,7 +123,6 @@ const FeaturesPage = () => {
           </div>
         </div>
         
-        <Features />
         <Testimonial />
       </div>
       

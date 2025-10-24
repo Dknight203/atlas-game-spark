@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AdminBadge } from "@/components/admin/AdminBadge";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -73,6 +74,7 @@ const Navbar = () => {
                 <Link to="/analytics" className="text-gray-600 hover:text-atlas-purple px-3 py-2 rounded-md text-sm font-medium">
                   Analytics
                 </Link>
+                <AdminBadge />
                 <Button variant="outline" className="ml-4" onClick={handleProfileClick}>
                   Settings
                 </Button>
