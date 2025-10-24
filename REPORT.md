@@ -8,13 +8,18 @@ This report documents the audit and upgrade of the GameAtlas repository to produ
 An admin account with enterprise plan access has been created for testing:
 
 - **Email**: admin@gameatlas.dev  
-- **Password**: GameAtlas2024!Admin
+- **Password**: Admin123!@#
 - **Plan**: Enterprise (unlimited features)
 - **Role**: super_admin
 - **Badge**: Admin badge appears in navbar when logged in
 - **Access**: Created via seed script with full app-level permissions
 
-This account can be used to test all features without hitting any plan limits.
+**To create the admin account:**
+```bash
+npm run seed
+```
+
+Then login at `/login` with the credentials above. This account can be used to test all features without hitting any plan limits.
 
 ## Content Positioning Updates
 

@@ -14,6 +14,60 @@ async function seed() {
   console.log('Starting seed...');
 
   try {
+    // Create admin user first
+    console.log('\n🔐 Creating admin user...');
+    const adminEmail = 'admin@gameatlas.dev';
+    const adminPassword = 'Admin123!@#';
+    
+    const { data: adminUser, error: adminUserError } = await supabase.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
+      email_confirm: true,
+      user_metadata: {
+        full_name: 'GameAtlas Admin'
+      }
+    });
+
+    if (adminUserError) {
+      console.error('Error creating admin user:', adminUserError);
+    } else {
+      console.log('✅ Admin user created:', adminUser.user?.id);
+      console.log('📧 Email:', adminEmail);
+      console.log('🔑 Password:', adminPassword);
+
+      // Create enterprise organization for admin
+      const { data: adminOrg, error: adminOrgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: 'GameAtlas Admin',
+          description: 'Admin organization with full access',
+          plan: 'enterprise',
+          created_by: adminUser.user?.id,
+        })
+        .select()
+        .single();
+
+      if (adminOrgError) {
+        console.error('Error creating admin organization:', adminOrgError);
+      } else {
+        console.log('✅ Admin organization created:', adminOrg.id);
+
+        // Grant super_admin role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: adminUser.user?.id,
+            role: 'super_admin'
+          });
+
+        if (roleError) {
+          console.error('Error granting super_admin role:', roleError);
+        } else {
+          console.log('✅ super_admin role granted\n');
+        }
+      }
+    }
+
     // Create test organizations for each plan
     const plans = ['starter', 'professional', 'studio', 'enterprise'];
     const orgs: any[] = [];
