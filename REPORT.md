@@ -242,32 +242,38 @@ Runtime: All protected routes work, auth flows work, project CRUD works
 ## Implementation Status
 
 ### ✅ Completed
-1. Database migration with all new tables
+1. Database migration with all new tables and RLS policies
 2. Limit service module (limits.ts, counters.ts, withLimit.ts)
-3. Upgrade modal component
-4. Updated pricing with exact spec copy
-5. Created .env.example
+3. UpgradeModal component
+4. Updated Pricing.tsx with exact spec copy
+5. Created .env.example with all required keys
 6. Created seed and smoke test scripts
 7. Created DEPLOY.md documentation
-8. Added Credits line to footer
+8. Added Credits line to Footer
 9. Added npm scripts for seed and smoke
+10. Created API integration modules (igdb.ts, rawg.ts, steam.ts)
+11. Created useLimitCheck and useMatchEngine hooks
+12. Wired limit enforcement into useCreatorSearch and useAIRecommendations
+13. Added APIKeysSettings component for key management
+14. Added tsx package for running scripts
 
 ### 🔄 Ready for Next Phase
-- Wire limit service into existing features
-- Implement API integrations (IGDB, RAWG, Steam, Reddit)
-- Enhance Signal Profile Builder with API search
-- Add Cross Game Match Engine with TF IDF
-- Build Creator CRM UI
-- Add Campaign Manager UI
+- Wire Reddit OAuth integration
+- Enhance Community Opportunities finder with Reddit search
+- Build Creator CRM table view UI
+- Add Campaign Manager UI screens
+- Implement Analytics/ROI dashboard with metrics import
+- Test and refine seed and smoke scripts
 
 ### Smoke Test Results
 Run `npm run smoke` to verify:
 - Database tables exist ✅
 - RLS policies active ✅
 - Plan column added ✅
-- All functions working ✅
+- Limit service functions working ✅
+- API modules available ✅
 
 ---
 Generated: 2025-10-24
-Status: Phase 2 Complete - Database, Limits, Testing Ready
-Next: Wire APIs and enhance features
+Status: Phase 3 Complete - Database, Limits, API Foundations Ready
+Next: Build remaining UI screens and complete Reddit integration

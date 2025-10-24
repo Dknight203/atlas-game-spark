@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Creator, CreatorSearchResponse, CreatorSearchParams } from "@/types/creator";
+import { checkLimit } from "@/modules/limits/withLimit";
+import { incrementUsage } from "@/modules/limits/counters";
 
 interface UseCreatorSearchResult {
   creators: Creator[];
@@ -30,13 +32,29 @@ export const useCreatorSearch = (projectId: string): UseCreatorSearchResult => {
         // Fetch project details
         const { data: projectData } = await supabase
           .from('projects')
-          .select('*')
+          .select('*, organization_id')
           .eq('id', projectId)
           .maybeSingle();
 
         if (!projectData) {
           setError('Project not found');
           return;
+        }
+
+        // Check creator match limit
+        if (projectData.organization_id) {
+          const limitCheck = await checkLimit(projectData.organization_id, 'creator_matches');
+          if (!limitCheck.allowed) {
+            setError(limitCheck.message || 'Creator match limit reached');
+            return;
+          }
+          if (limitCheck.softCapWarning) {
+            toast({
+              title: 'Approaching limit',
+              description: limitCheck.message,
+              variant: 'default'
+            });
+          }
         }
         
         const genre = projectData.genre?.toLowerCase() || '';
@@ -85,6 +103,11 @@ export const useCreatorSearch = (projectId: string): UseCreatorSearchResult => {
         const validCreators = Array.isArray(response?.creators) ? response.creators : [];
         console.log('Received creators:', validCreators.length);
         setCreators(validCreators);
+
+        // Increment usage counter after successful fetch
+        if (validCreators.length > 0 && projectData.organization_id) {
+          await incrementUsage(projectData.organization_id, 'creator_matches');
+        }
         
       } catch (error) {
         console.error('Error fetching creators:', error);

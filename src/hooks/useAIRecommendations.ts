@@ -2,6 +2,8 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { checkLimit } from "@/modules/limits/withLimit";
+import { incrementUsage } from "@/modules/limits/counters";
 
 interface GameProfileSuggestions {
   themes: string[];

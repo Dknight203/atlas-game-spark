@@ -63,7 +63,10 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="mt-12 border-t border-gray-800 pt-8">
+        <div className="mt-12 border-t border-gray-800 pt-8 space-y-3">
+          <p className="text-xs text-gray-500 text-center">
+            Data: IGDB, RAWG, Steam, YouTube, Reddit
+          </p>
           <p className="text-gray-400 text-sm text-center">
             &copy; {new Date().getFullYear()} GameAtlas. All rights reserved.
           </p>
