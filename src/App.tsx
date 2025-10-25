@@ -29,6 +29,7 @@ import Discovery from "./pages/Discovery";
 import Analytics from "./pages/Analytics";
 import UserSettings from "./pages/UserSettings";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import QA from "./pages/QA";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,11 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
+            <Route path="/qa" element={
+              <ProtectedRoute>
+                <QA />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
