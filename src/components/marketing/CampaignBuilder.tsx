@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { LimitGate } from "@/components/app/LimitGate";
+import { incrementUsage } from "@/modules/limits/counters";
 
 interface CampaignBuilderProps {
   open: boolean;
@@ -45,6 +47,9 @@ export function CampaignBuilder({ open, onOpenChange, organizationId, onCampaign
         .single();
 
       if (error) throw error;
+
+      // Increment usage counter
+      await incrementUsage(organizationId, 'ai_variations');
 
       // Log activity
       await supabase.from('activity_log').insert({
@@ -120,9 +125,20 @@ export function CampaignBuilder({ open, onOpenChange, organizationId, onCampaign
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={isCreating}>
-              {isCreating ? "Creating..." : "Create Campaign"}
-            </Button>
+            <LimitGate feature="ai_variations">
+              {({ canProceed }) => (
+                <Button 
+                  onClick={async () => {
+                    if (await canProceed()) {
+                      handleCreate();
+                    }
+                  }} 
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create Campaign"}
+                </Button>
+              )}
+            </LimitGate>
           </div>
         </div>
       </DialogContent>

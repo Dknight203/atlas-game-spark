@@ -93,16 +93,30 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
   ];
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+    const nextStep = currentStep + 1;
+    if (nextStep < steps.length) {
+      setCurrentStep(nextStep);
+      // Save progress to localStorage
+      if (user) {
+        localStorage.setItem(`onboarding_step_${user.id}`, nextStep.toString());
+      }
     } else {
+      // Clear progress on completion
+      if (user) {
+        localStorage.removeItem(`onboarding_step_${user.id}`);
+      }
       onComplete();
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      // Save progress to localStorage
+      if (user) {
+        localStorage.setItem(`onboarding_step_${user.id}`, prevStep.toString());
+      }
     }
   };
 
@@ -173,14 +187,16 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
           <div className="p-6 border-b bg-gradient-to-r from-atlas-purple to-purple-600 text-white">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Welcome to GameAtlas</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onSkip}
-                className="text-white hover:bg-white/20"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              {onSkip && hasOrganization && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onSkip}
+                  className="text-white hover:bg-white/20"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm opacity-90">
