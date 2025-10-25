@@ -28,6 +28,8 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Discovery from "./pages/Discovery";
 import Analytics from "./pages/Analytics";
 import UserSettings from "./pages/UserSettings";
+import AcceptInvitation from "./pages/AcceptInvitation";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +40,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
+          <ErrorBoundary>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/demo" element={<Demo />} />
@@ -88,9 +91,11 @@ const App = () => (
                 <UserSettings />
               </ProtectedRoute>
             } />
+            <Route path="/accept-invitation" element={<AcceptInvitation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

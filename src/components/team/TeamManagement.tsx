@@ -1,206 +1,153 @@
-
-import { useState, useEffect } from "react";
-import { useOrganizations } from "@/hooks/useOrganizations";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { UserPlus, MoreHorizontal, Mail, Crown, Shield, User, Eye, Trash2 } from "lucide-react";
+import { Users, Crown, Shield, User } from "lucide-react";
+import { InvitationFlow } from "@/components/team/InvitationFlow";
 
 interface TeamManagementProps {
   organizationId: string;
 }
 
 const TeamManagement = ({ organizationId }: TeamManagementProps) => {
-  const { currentOrgMembers, fetchOrgMembers, inviteMember, updateMemberRole, removeMember } = useOrganizations();
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member');
-  const [isInviting, setIsInviting] = useState(false);
+  const { data: organization } = useQuery({
+    queryKey: ["organization", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", organizationId)
+        .single();
 
-  useEffect(() => {
-    if (organizationId) {
-      fetchOrgMembers(organizationId);
-    }
-  }, [organizationId]);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!organizationId,
+  });
 
-  const handleInviteMember = async () => {
-    if (!inviteEmail.trim()) return;
+  const { data: members, isLoading } = useQuery({
+    queryKey: ["organization-members", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organization_members")
+        .select(`
+          id,
+          role,
+          joined_at,
+          user_id
+        `)
+        .eq("organization_id", organizationId);
 
-    setIsInviting(true);
-    const success = await inviteMember(organizationId, inviteEmail, inviteRole);
-    
-    if (success) {
-      setShowInviteDialog(false);
-      setInviteEmail("");
-      setInviteRole('member');
-    }
-    setIsInviting(false);
-  };
+      if (error) throw error;
 
-  const handleRoleChange = async (memberId: string, newRole: 'admin' | 'member' | 'viewer') => {
-    const success = await updateMemberRole(memberId, newRole);
-    if (success) {
-      fetchOrgMembers(organizationId);
-    }
-  };
+      // Fetch user profiles
+      const membersWithProfiles = await Promise.all(
+        (data || []).map(async (member) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", member.user_id)
+            .single();
 
-  const handleRemoveMember = async (memberId: string) => {
-    const success = await removeMember(memberId);
-    if (success) {
-      fetchOrgMembers(organizationId);
-    }
-  };
+          return {
+            ...member,
+            user_email: profile?.email,
+            user_name: profile?.full_name,
+          };
+        })
+      );
+
+      return membersWithProfiles;
+    },
+    enabled: !!organizationId,
+  });
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'owner': return <Crown className="w-4 h-4" />;
-      case 'admin': return <Shield className="w-4 h-4" />;
-      case 'member': return <User className="w-4 h-4" />;
-      case 'viewer': return <Eye className="w-4 h-4" />;
-      default: return <User className="w-4 h-4" />;
+      case "owner":
+        return <Crown className="w-4 h-4" />;
+      case "admin":
+        return <Shield className="w-4 h-4" />;
+      default:
+        return <User className="w-4 h-4" />;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'owner': return 'bg-yellow-100 text-yellow-800';
-      case 'admin': return 'bg-blue-100 text-blue-800';
-      case 'member': return 'bg-green-100 text-green-800';
-      case 'viewer': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "owner":
+        return "bg-yellow-100 text-yellow-800";
+      case "admin":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-green-100 text-green-800";
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Team Members</CardTitle>
-          <Button onClick={() => setShowInviteDialog(true)} size="sm">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Invite Member
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {currentOrgMembers.map((member) => (
-            <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarFallback>
-                    {member.user_name?.charAt(0) || member.user_email?.charAt(0) || '?'}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">
-                    {member.user_name || 'Unknown User'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {member.user_email}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Badge className={getRoleColor(member.role)}>
-                  {getRoleIcon(member.role)}
-                  <span className="ml-1 capitalize">{member.role}</span>
-                </Badge>
-                
-                {member.role !== 'owner' && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleRoleChange(member.id, 'admin')}>
-                        <Shield className="w-4 h-4 mr-2" />
-                        Make Admin
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleRoleChange(member.id, 'member')}>
-                        <User className="w-4 h-4 mr-2" />
-                        Make Member
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleRoleChange(member.id, 'viewer')}>
-                        <Eye className="w-4 h-4 mr-2" />
-                        Make Viewer
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remove Member
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-            </div>
-          ))}
+    <div className="space-y-6">
+      <InvitationFlow
+        organizationId={organizationId}
+        organizationName={organization?.name || "Your Organization"}
+      />
 
-          {currentOrgMembers.length === 0 && (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Team Members
+          </CardTitle>
+          <CardDescription>
+            {members?.length || 0} members in this organization
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              <Mail className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              Loading team members...
+            </div>
+          ) : members && members.length > 0 ? (
+            <div className="space-y-3">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarFallback>
+                        {member.user_name?.charAt(0) ||
+                          member.user_email?.charAt(0) ||
+                          "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">
+                        {member.user_name || "Unknown User"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {member.user_email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge className={getRoleColor(member.role)}>
+                    {getRoleIcon(member.role)}
+                    <span className="ml-1 capitalize">{member.role}</span>
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>No team members yet</p>
             </div>
           )}
-        </div>
-      </CardContent>
-
-      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invite Team Member</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="invite-email">Email Address</Label>
-              <Input
-                id="invite-email"
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="Enter email address"
-              />
-            </div>
-            <div>
-              <Label htmlFor="invite-role">Role</Label>
-              <Select value={inviteRole} onValueChange={(value: 'admin' | 'member' | 'viewer') => setInviteRole(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin - Full access except billing</SelectItem>
-                  <SelectItem value="member">Member - Can edit projects</SelectItem>
-                  <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleInviteMember}
-                disabled={!inviteEmail.trim() || isInviting}
-              >
-                {isInviting ? "Sending..." : "Send Invitation"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
