@@ -23,7 +23,8 @@ export const useAnalytics = (projectId: string) => {
           .from('analytics_data')
           .select('*')
           .eq('project_id', projectId)
-          .order('metric_date', { ascending: false });
+          .order('metric_date', { ascending: false })
+          .limit(100);
 
         if (analyticsError) throw analyticsError;
 
@@ -32,7 +33,8 @@ export const useAnalytics = (projectId: string) => {
           .from('competitor_tracking')
           .select('*')
           .eq('project_id', projectId)
-          .order('last_updated', { ascending: false });
+          .order('last_updated', { ascending: false })
+          .limit(20);
 
         if (competitorsError) throw competitorsError;
 
@@ -41,7 +43,8 @@ export const useAnalytics = (projectId: string) => {
           .from('user_analytics')
           .select('*')
           .eq('project_id', projectId)
-          .order('date_recorded', { ascending: false });
+          .order('date_recorded', { ascending: false })
+          .limit(50);
 
         if (userStatsError) throw userStatsError;
 
@@ -58,11 +61,6 @@ export const useAnalytics = (projectId: string) => {
           metadata: item.metadata as Record<string, any>
         })) as UserAnalytics[]);
 
-        // If no data exists, populate with sample data
-        if (!analytics?.length && !competitors?.length && !userStats?.length) {
-          await populateSampleData(projectId);
-        }
-
       } catch (error) {
         console.error('Error fetching analytics:', error);
         toast({
@@ -77,52 +75,6 @@ export const useAnalytics = (projectId: string) => {
 
     fetchAnalytics();
   }, [projectId, toast]);
-
-  const populateSampleData = async (projectId: string) => {
-    try {
-      // Sample analytics data
-      const sampleAnalytics = [
-        { project_id: projectId, metric_type: 'revenue', metric_value: 15000, metric_date: '2024-01-01', source: 'steam' },
-        { project_id: projectId, metric_type: 'downloads', metric_value: 5000, metric_date: '2024-01-01', source: 'steam' },
-        { project_id: projectId, metric_type: 'ratings', metric_value: 4.2, metric_date: '2024-01-01', source: 'steam' },
-      ];
-
-      // Sample competitor data
-      const sampleCompetitors = [
-        {
-          project_id: projectId,
-          competitor_name: 'Similar Indie Game',
-          platform: 'Steam',
-          current_rank: 15,
-          previous_rank: 18,
-          downloads_estimate: 25000,
-          revenue_estimate: 75000,
-          rating_average: 4.5,
-          review_count: 1250
-        }
-      ];
-
-      // Sample user analytics
-      const sampleUserAnalytics = [
-        { project_id: projectId, metric_name: 'retention_d1', metric_value: 0.65, user_segment: 'all', date_recorded: '2024-01-01' },
-        { project_id: projectId, metric_name: 'retention_d7', metric_value: 0.35, user_segment: 'all', date_recorded: '2024-01-01' },
-        { project_id: projectId, metric_name: 'retention_d30', metric_value: 0.15, user_segment: 'all', date_recorded: '2024-01-01' },
-        { project_id: projectId, metric_name: 'session_length', metric_value: 25.5, user_segment: 'all', date_recorded: '2024-01-01' },
-        { project_id: projectId, metric_name: 'ltv', metric_value: 12.50, user_segment: 'paying_users', date_recorded: '2024-01-01' },
-      ];
-
-      await Promise.all([
-        supabase.from('analytics_data').insert(sampleAnalytics),
-        supabase.from('competitor_tracking').insert(sampleCompetitors),
-        supabase.from('user_analytics').insert(sampleUserAnalytics)
-      ]);
-
-      // Refetch data
-      window.location.reload();
-    } catch (error) {
-      console.error('Error populating sample data:', error);
-    }
-  };
 
   return {
     analyticsData,

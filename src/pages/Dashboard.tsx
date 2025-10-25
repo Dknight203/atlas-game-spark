@@ -12,9 +12,12 @@ import { useEnsureOrganization } from "@/hooks/useEnsureOrganization";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { showOnboarding, completeOnboarding, skipOnboarding, resetOnboarding } = useOnboarding();
+  const { showOnboarding, completeOnboarding, skipOnboarding, resetOnboarding, hasCompletedOnboarding } = useOnboarding();
   const { projects, isLoading } = useProjects();
   const { organizationId, isChecking } = useEnsureOrganization();
+
+  // Force onboarding for new users with no projects
+  const shouldForceOnboarding = !isLoading && projects.length === 0 && !hasCompletedOnboarding;
 
   const quickActions = [
     {
@@ -57,10 +60,10 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {showOnboarding && (
+      {(showOnboarding || shouldForceOnboarding) && (
         <OnboardingWizard
           onComplete={completeOnboarding}
-          onSkip={skipOnboarding}
+          onSkip={shouldForceOnboarding ? undefined : skipOnboarding}
         />
       )}
       

@@ -32,6 +32,22 @@ const MarketPerformance = ({ data }: MarketPerformanceProps) => {
     }))
     .slice(0, 10);
 
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <TrendingUp className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No Analytics Data Yet</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Connect your game to tracking platforms or start collecting metrics to see performance insights here.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Key Metrics */}

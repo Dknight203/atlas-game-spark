@@ -24,6 +24,22 @@ const PlayerBehaviorAnalytics = ({ data }: PlayerBehaviorAnalyticsProps) => {
     { segment: 'Paying Users', sessions: 400, avgLength: 42.1 },
   ];
 
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No Player Data Yet</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Start tracking player behavior to see retention curves, session lengths, and engagement metrics here.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Key Player Metrics */}

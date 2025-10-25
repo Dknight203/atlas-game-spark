@@ -15,7 +15,7 @@ import CompletionStep from "./CompletionStep";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
-  onSkip: () => void;
+  onSkip?: () => void;
 }
 
 const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
@@ -34,6 +34,14 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
   // Verify organization exists on mount
   useEffect(() => {
     verifyOrganization();
+    
+    // Restore onboarding progress
+    if (user) {
+      const savedStep = localStorage.getItem(`onboarding_step_${user.id}`);
+      if (savedStep) {
+        setCurrentStep(parseInt(savedStep, 10));
+      }
+    }
   }, [user]);
 
   const verifyOrganization = async () => {
