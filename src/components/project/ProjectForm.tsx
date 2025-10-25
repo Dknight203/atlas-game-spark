@@ -66,16 +66,35 @@ const ProjectForm = ({ prefillData = {} }: ProjectFormProps) => {
     setIsLoading(true);
     
     try {
+      // Get user's organization
+      const { data: membership } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!membership?.organization_id) {
+        toast({
+          title: "Error",
+          description: "No organization found. Please refresh the page.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert([
           {
             user_id: user.id,
+            organization_id: membership.organization_id,
             name: formData.name,
             description: formData.description,
             genre: formData.genre,
-            platform: formData.platforms[0], // Keep the first platform for backwards compatibility
-            platforms: formData.platforms, // Store all platforms in the new column
+            platform: formData.platforms[0],
+            platforms: formData.platforms,
             status: formData.status || 'development'
           }
         ])

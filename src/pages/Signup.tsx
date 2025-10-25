@@ -52,13 +52,14 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.name,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
 
@@ -69,6 +70,17 @@ const Signup = () => {
           variant: "destructive",
         });
       } else {
+        // Wait a moment for profile and organization to be created
+        if (authData.user) {
+          toast({
+            title: "Setting up your workspace...",
+            description: "Please wait while we prepare your account.",
+          });
+          
+          // Give triggers time to complete
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
         toast({
           title: "Account Created",
           description: "Welcome to GameAtlas! You can now sign in.",

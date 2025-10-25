@@ -45,6 +45,18 @@ const Login = () => {
           variant: "destructive",
         });
       } else {
+        // Ensure user has organization (repair function for existing users)
+        try {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            await supabase.rpc('ensure_user_has_organization', {
+              _user_id: currentUser.id
+            });
+          }
+        } catch (repairError) {
+          console.error('Error ensuring organization:', repairError);
+        }
+        
         toast({
           title: "Login Successful",
           description: "Welcome back to GameAtlas!",

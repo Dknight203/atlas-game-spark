@@ -21,8 +21,8 @@ export function LimitGate({ feature, children }: LimitGateProps) {
   const canProceed = async () => {
     if (!org?.id) {
       toast({
-        title: 'Organization Required',
-        description: 'Please join or create an organization first',
+        title: 'Workspace Not Ready',
+        description: 'Please refresh the page to set up your workspace',
         variant: 'destructive'
       });
       return false;

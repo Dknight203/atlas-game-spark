@@ -941,6 +941,10 @@ export type Database = {
         Args: { org_id: string; user_id: string }
         Returns: boolean
       }
+      ensure_user_has_organization: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       generate_invitation_token: { Args: never; Returns: string }
       get_user_org_role: {
         Args: { org_id: string; user_id: string }

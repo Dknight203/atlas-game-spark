@@ -1,19 +1,20 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, BookOpen, Users, TrendingUp, Target, Calendar, Settings } from "lucide-react";
+import { Plus, BookOpen, Users, TrendingUp, Target, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProjects } from "@/hooks/useProjects";
+import { useEnsureOrganization } from "@/hooks/useEnsureOrganization";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { showOnboarding, completeOnboarding, skipOnboarding, resetOnboarding } = useOnboarding();
   const { projects, isLoading } = useProjects();
+  const { organizationId, isChecking } = useEnsureOrganization();
 
   const quickActions = [
     {
@@ -101,7 +102,7 @@ const Dashboard = () => {
           </div>
 
           {/* Projects Section */}
-          {isLoading ? (
+          {isChecking || isLoading ? (
             <Card>
               <CardContent className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
