@@ -43,6 +43,11 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
           const realCommunities = await searchRedditCommunities(projectData);
           setCommunities(realCommunities);
           
+          // Save to database
+          if (realCommunities.length > 0) {
+            await saveCommunitiesToDatabase(projectData, realCommunities);
+          }
+          
           // Update parent component with communities count
           if (onCommunitiesUpdate) {
             onCommunitiesUpdate(realCommunities.length);
@@ -193,6 +198,31 @@ const CommunityFinderResults = ({ projectId, onCommunitiesUpdate }: CommunityFin
     if (text.includes('music')) tags.push('Music');
     
     return tags.slice(0, 3);
+  };
+
+  const saveCommunitiesToDatabase = async (projectData: any, communities: any[]) => {
+    try {
+      // Save communities one by one to handle conflicts better
+      for (const community of communities) {
+        await supabase
+          .from('community_opportunities')
+          .upsert({
+            game_id: projectData.id,
+            platform: community.platform,
+            title: community.name,
+            url: community.url,
+            metrics: {
+              members: community.members,
+              activity: community.activity,
+              relevance: community.relevance
+            }
+          }, {
+            onConflict: 'url'
+          });
+      }
+    } catch (error) {
+      console.error('Error saving communities:', error);
+    }
   };
 
   const generateGuidelines = (subredditName: string) => {

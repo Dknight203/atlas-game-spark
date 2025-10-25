@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import YouTubeApiKeySetup from "./YouTubeApiKeySetup";
 import EnhancedCreatorCard from "@/components/creator/EnhancedCreatorCard";
 import { useCreatorSearch } from "@/hooks/useCreatorSearch";
@@ -17,12 +18,49 @@ const CreatorMatchResults = ({ projectId, onCreatorsUpdate }: CreatorMatchResult
   const { creators, isLoading, error, needsApiKey } = useCreatorSearch(projectId);
   const { toast } = useToast();
 
-  // Update parent component with creators count
+  // Update parent component with creators count and save to database
   useEffect(() => {
+    if (creators.length > 0) {
+      saveCreatorsToDatabase(creators);
+    }
     if (onCreatorsUpdate) {
       onCreatorsUpdate(creators.length);
     }
   }, [creators.length, onCreatorsUpdate]);
+
+  const saveCreatorsToDatabase = async (creatorsToSave: Creator[]) => {
+    try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('organization_id')
+        .eq('id', projectId)
+        .single();
+
+      if (!project?.organization_id) return;
+
+      // Save creators one by one to handle conflicts better
+      for (const creator of creatorsToSave) {
+        await supabase
+          .from('creators')
+          .upsert({
+            org_id: project.organization_id,
+            platform: creator.platform,
+            external_id: creator.id,
+            handle: creator.name,
+            url: creator.channelUrl,
+            stats: {
+              subscribers: creator.subscribers,
+              avgViews: creator.avgViews,
+              engagement: creator.engagement
+            }
+          }, {
+            onConflict: 'external_id'
+          });
+      }
+    } catch (error) {
+      console.error('Error saving creators:', error);
+    }
+  };
 
   const handleStartCreatorCampaign = (creator: Creator) => {
     toast({

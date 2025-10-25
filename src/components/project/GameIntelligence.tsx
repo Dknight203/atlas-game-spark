@@ -13,8 +13,10 @@ import {
   ArrowRight,
   Lightbulb
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import SignalProfileBuilder from "@/components/app/SignalProfileBuilder";
 import DiscoveryDashboard from "@/components/discovery/DiscoveryDashboard";
+import MarketAnalysisDashboard from "./MarketAnalysisDashboard";
 
 interface GameIntelligenceProps {
   projectId: string;
@@ -24,7 +26,27 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
   const location = useLocation();
   const [activeStep, setActiveStep] = useState("profile");
   const [profileComplete, setProfileComplete] = useState(false);
+  const [discoveryComplete, setDiscoveryComplete] = useState(false);
   const [showProfileHint, setShowProfileHint] = useState(false);
+
+  // Load workflow progress from database
+  useEffect(() => {
+    loadWorkflowProgress();
+  }, [projectId]);
+
+  const loadWorkflowProgress = async () => {
+    const { data: project } = await supabase
+      .from('projects')
+      .select('workflow_progress')
+      .eq('id', projectId)
+      .single();
+
+    if (project?.workflow_progress) {
+      const progress = project.workflow_progress as any;
+      setProfileComplete(progress.profileComplete || false);
+      setDiscoveryComplete(progress.discoveryComplete || false);
+    }
+  };
 
   // Check if we should show the profile completion hint
   useEffect(() => {
@@ -53,7 +75,7 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
       title: "Market Analysis",
       description: "Analyze trends and competition",
       icon: TrendingUp,
-      status: "pending",
+      status: discoveryComplete ? "active" : "pending",
     }
   ];
 
@@ -78,9 +100,37 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
     }
   };
 
-  const handleProfileComplete = () => {
+  const handleProfileComplete = async () => {
     setProfileComplete(true);
     setShowProfileHint(false);
+    
+    // Update database
+    await supabase
+      .from('projects')
+      .update({
+        workflow_progress: {
+          profileComplete: true,
+          discoveryComplete,
+          analysisViewed: false
+        }
+      })
+      .eq('id', projectId);
+  };
+
+  const handleDiscoveryComplete = async () => {
+    setDiscoveryComplete(true);
+    
+    // Update database
+    await supabase
+      .from('projects')
+      .update({
+        workflow_progress: {
+          profileComplete,
+          discoveryComplete: true,
+          analysisViewed: false
+        }
+      })
+      .eq('id', projectId);
   };
 
   return (
@@ -188,22 +238,23 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
                 Discover similar games, analyze market opportunities, and build targeted lists.
               </p>
             </div>
-            <DiscoveryDashboard projectId={projectId} />
+            <DiscoveryDashboard 
+              projectId={projectId}
+              onComplete={handleDiscoveryComplete}
+            />
           </div>
         )}
 
         {activeStep === "analysis" && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-8">
-                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Market Analysis coming soon</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Complete the previous steps to unlock advanced market analysis
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-2">Market Analysis</h2>
+              <p className="text-muted-foreground">
+                Comprehensive market insights, competitor analysis, and strategic recommendations.
+              </p>
+            </div>
+            <MarketAnalysisDashboard projectId={projectId} />
+          </div>
         )}
       </div>
     </div>

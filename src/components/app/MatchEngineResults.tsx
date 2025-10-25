@@ -215,6 +215,34 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
     });
   };
 
+  // Save matches to database
+  const saveMatchesToDatabase = async (matchesToSave: GameMatch[]) => {
+    try {
+      // Delete existing matches for this project
+      await supabase
+        .from('matches')
+        .delete()
+        .eq('game_id', projectId);
+
+      // Insert new matches
+      const matchRecords = matchesToSave.map(match => ({
+        game_id: projectId,
+        matched_game: match as any, // Type assertion for JSONB storage
+        score: match.similarity
+      }));
+
+      const { error } = await supabase
+        .from('matches')
+        .insert(matchRecords);
+
+      if (error) {
+        console.error('Error saving matches:', error);
+      }
+    } catch (error) {
+      console.error('Error saving matches to database:', error);
+    }
+  };
+
   // Apply all filters step by step
   const applyAllFilters = (gameMatches: GameMatch[]): GameMatch[] => {
     console.log(`Starting with ${gameMatches.length} matches`);
@@ -452,6 +480,11 @@ const MatchEngineResults = ({ projectId, onMatchesUpdate }: MatchEngineResultsPr
       // Apply filters and update filtered matches
       const filtered = applyAllFilters(generatedMatches);
       setFilteredMatches(filtered);
+      
+      // Save matches to database for later retrieval
+      if (filtered.length > 0) {
+        await saveMatchesToDatabase(filtered);
+      }
       
       // Update parent component with filtered match count
       if (onMatchesUpdate) {

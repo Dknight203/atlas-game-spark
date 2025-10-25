@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import MarketingCampaignManager from "@/components/marketing/MarketingCampaignMa
 import SmartSuggestions from "@/components/ai/SmartSuggestions";
 import { Target, Users, TrendingUp, Plus, Calendar, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Import existing hooks
 import { useCreatorSearch } from "@/hooks/useCreatorSearch";
@@ -26,8 +27,25 @@ const MarketingOpportunities = ({
   onCreatorsUpdate 
 }: MarketingOpportunitiesProps) => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [organizationId, setOrganizationId] = useState<string>("");
   const { toast } = useToast();
   const { creators } = useCreatorSearch(projectId);
+
+  useEffect(() => {
+    loadOrganization();
+  }, [projectId]);
+
+  const loadOrganization = async () => {
+    const { data } = await supabase
+      .from('projects')
+      .select('organization_id')
+      .eq('id', projectId)
+      .single();
+    
+    if (data?.organization_id) {
+      setOrganizationId(data.organization_id);
+    }
+  };
 
   // Mock communities data - would come from existing hook
   const communities = [
@@ -188,7 +206,11 @@ const MarketingOpportunities = ({
                 </TabsContent>
 
                 <TabsContent value="campaigns">
-                  <MarketingCampaignManager onCreateCampaign={handleCreateCampaign} />
+                  {organizationId ? (
+                    <MarketingCampaignManager organizationId={organizationId} />
+                  ) : (
+                    <div className="text-center py-8">Loading campaigns...</div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="communities" className="space-y-4">

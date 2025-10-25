@@ -50,17 +50,17 @@ const ProjectHeader = ({ project, onProjectUpdate }: ProjectHeaderProps) => {
           <p className="text-gray-600 max-w-2xl">{currentProject.description}</p>
           <div className="flex gap-4 mt-4">
             {currentProject.genre && currentProject.genre.trim() && (
-              <Badge variant="secondary" className="bg-atlas-purple bg-opacity-10 text-atlas-purple border-atlas-purple/20">
+              <Badge variant="secondary" className="bg-atlas-purple/10 text-atlas-purple border-atlas-purple/20">
                 {currentProject.genre}
               </Badge>
             )}
             {currentProject.platform && currentProject.platform.trim() && (
-              <Badge variant="secondary" className="bg-atlas-teal bg-opacity-10 text-atlas-teal border-atlas-teal/20">
+              <Badge variant="secondary" className="bg-atlas-teal/10 text-atlas-teal border-atlas-teal/20">
                 {currentProject.platform}
               </Badge>
             )}
             {currentProject.status && currentProject.status.trim() && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+              <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
                 {currentProject.status}
               </Badge>
             )}

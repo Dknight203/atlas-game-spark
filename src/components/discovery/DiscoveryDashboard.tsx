@@ -12,9 +12,10 @@ import type { DiscoveryFilters as DiscoveryFiltersType } from "@/types/discovery
 
 interface DiscoveryDashboardProps {
   projectId: string;
+  onComplete?: () => void;
 }
 
-const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
+const DiscoveryDashboard = ({ projectId, onComplete }: DiscoveryDashboardProps) => {
   const { discoveryLists, enhancedGameData, applyFilters, createDiscoveryList } = useDiscovery(projectId);
   const [showBuilder, setShowBuilder] = useState(false);
   const [currentFilters, setCurrentFilters] = useState<DiscoveryFiltersType>({});
@@ -57,6 +58,9 @@ const DiscoveryDashboard = ({ projectId }: DiscoveryDashboardProps) => {
       const newList = await createDiscoveryList(name, description, filters);
       setShowBuilder(false);
       setCurrentFilters(filters);
+      
+      // Trigger completion callback
+      onComplete?.();
     } catch (error) {
       console.error('Error creating discovery list:', error);
     }

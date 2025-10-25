@@ -1,11 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import WelcomeStep from "./WelcomeStep";
 import ProjectSetupStep from "./ProjectSetupStep";
 import FeaturesOverviewStep from "./FeaturesOverviewStep";
@@ -23,8 +25,57 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
     genre: "",
     platform: ""
   });
+  const [isVerifyingOrg, setIsVerifyingOrg] = useState(true);
+  const [hasOrganization, setHasOrganization] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Verify organization exists on mount
+  useEffect(() => {
+    verifyOrganization();
+  }, [user]);
+
+  const verifyOrganization = async () => {
+    if (!user) {
+      setIsVerifyingOrg(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!data) {
+        // No organization, create one
+        const { data: newOrg } = await supabase.rpc('ensure_user_has_organization', {
+          _user_id: user.id
+        });
+        
+        if (newOrg) {
+          setHasOrganization(true);
+          toast({
+            title: "Workspace Ready",
+            description: "Your organization has been set up successfully"
+          });
+        }
+      } else {
+        setHasOrganization(true);
+      }
+    } catch (error) {
+      console.error('Error verifying organization:', error);
+      toast({
+        title: "Setup Warning",
+        description: "There was an issue setting up your workspace. Please contact support if this persists.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsVerifyingOrg(false);
+    }
+  };
 
   const steps = [
     { title: "Welcome", component: WelcomeStep },
@@ -89,6 +140,22 @@ const OnboardingWizard = ({ onComplete, onSkip }: OnboardingWizardProps) => {
         return <WelcomeStep onNext={handleNext} />;
     }
   };
+
+  if (isVerifyingOrg) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Setting up your workspace...</h3>
+            <p className="text-sm text-muted-foreground text-center">
+              This will only take a moment
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
