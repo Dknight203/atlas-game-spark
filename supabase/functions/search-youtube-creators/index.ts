@@ -13,10 +13,21 @@ serve(async (req) => {
   }
 
   try {
-    const { searchQueries, genre, platform } = await req.json()
-    const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY')
+    console.log('[search-youtube-creators] Request received');
+    const { searchQueries, genre, platform } = await req.json();
+    console.log('[search-youtube-creators] Params:', { searchQueries, genre, platform });
+    
+    const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY');
 
-    console.log('Searching for creators across platforms with queries:', searchQueries)
+    if (!youtubeApiKey) {
+      console.error('[search-youtube-creators] Missing YouTube API key');
+      return new Response(
+        JSON.stringify({ error: 'YouTube API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[search-youtube-creators] Searching for creators with queries:', searchQueries);
 
     const allCreators = []
     

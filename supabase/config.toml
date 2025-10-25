@@ -1,1 +1,16 @@
 project_id = "jgcfmzrwzkeotgtndeat"
+
+[functions.fetch-game-data]
+verify_jwt = false
+
+[functions.search-youtube-creators]
+verify_jwt = false
+
+[functions.ai-discovery-suggestions]
+verify_jwt = true
+
+[functions.ai-marketing-recommendations]
+verify_jwt = true
+
+[functions.ai-profile-suggestions]
+verify_jwt = true
