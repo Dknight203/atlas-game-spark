@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SmartSuggestions from "@/components/ai/SmartSuggestions";
 import TagAutoComplete from "@/components/ai/TagAutoComplete";
 import AutoComplete from "@/components/ai/AutoComplete";
+import GameDataImporter from "@/components/project/GameDataImporter";
 
 interface SignalProfileBuilderProps {
   projectId: string;
@@ -144,8 +145,7 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
   ];
 
   // Load existing signal profile and project data
-  useEffect(() => {
-    const loadData = async () => {
+  const loadData = async () => {
       setIsLoading(true);
       try {
         // Load project data first
@@ -232,6 +232,7 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
       }
     };
 
+  useEffect(() => {
     loadData();
   }, [projectId]);
 
@@ -411,6 +412,9 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
     <div className="grid lg:grid-cols-3 gap-6">
       {/* Main Profile Builder */}
       <div className="lg:col-span-2 space-y-6">
+        {/* Game Data Importer */}
+        <GameDataImporter projectId={projectId} onImportComplete={loadData} />
+
         {/* Project Summary Card */}
         {projectData && (
           <Card className="border-l-4 border-l-atlas-purple">

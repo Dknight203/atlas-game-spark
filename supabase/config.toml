@@ -1,5 +1,8 @@
 project_id = "jgcfmzrwzkeotgtndeat"
 
+[functions.extract-game-data]
+verify_jwt = false
+
 [functions.fetch-game-data]
 verify_jwt = false
 
