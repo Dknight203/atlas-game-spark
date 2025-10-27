@@ -28,11 +28,80 @@ serve(async (req) => {
 
     console.log('Fetched page content, length:', textContent.length);
 
-    // Use Gemini to extract structured data
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY not configured');
     }
+
+    // Step 1: Extract game name first
+    console.log('Step 1: Extracting game name...');
+    const nameResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Extract ONLY the game title from this store page. Return just the title text, nothing else.\n\n${textContent.substring(0, 5000)}`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 100,
+          }
+        })
+      }
+    );
+
+    if (!nameResponse.ok) {
+      throw new Error('Failed to extract game name');
+    }
+
+    const nameData = await nameResponse.json();
+    const gameName = nameData.candidates[0].content.parts[0].text.trim();
+    console.log('Extracted game name:', gameName);
+
+    // Step 2: Perform web search for additional context
+    console.log('Step 2: Performing web search...');
+    const searchQuery = `"${gameName}" video game platforms release date genres gameplay mechanics target audience themes`;
+    const searchResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Search the web and provide comprehensive information about the video game "${gameName}". Include: all platforms it's available on (PC, consoles, mobile), genres, gameplay mechanics, themes, target audience, and unique features. Be thorough.`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1500,
+          }
+        })
+      }
+    );
+
+    let webContext = '';
+    if (searchResponse.ok) {
+      const searchData = await searchResponse.json();
+      webContext = searchData.candidates[0].content.parts[0].text;
+      console.log('Web search context obtained, length:', webContext.length);
+    } else {
+      console.log('Web search failed, continuing with store page only');
+    }
+
+    // Step 3: Combine data sources and extract complete information
+    console.log('Step 3: Final extraction with combined context...');
+    const combinedContext = `
+STORE PAGE DATA:
+${textContent}
+
+ADDITIONAL WEB INFORMATION:
+${webContext}
+`;
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
@@ -42,24 +111,31 @@ serve(async (req) => {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Extract game information from this store page and return ONLY a valid JSON object (no markdown, no explanations). Include these fields:
+              text: `Extract complete game information from the provided sources and return ONLY a valid JSON object (no markdown, no explanations).
 
+CRITICAL PLATFORM REQUIREMENTS:
+- Use ONLY these standardized platform names: "PC (Windows)", "PC (Mac)", "PC (Linux)", "Mobile (iOS)", "Mobile (Android)", "Nintendo Switch", "PlayStation 5", "PlayStation 4", "Xbox Series X/S", "Xbox One", "Web Browser", "VR (Meta Quest)", "VR (Steam VR)", "Cross-Platform"
+- Include ALL platforms mentioned in either source
+- If a game is on Steam but also released on consoles, include ALL platforms
+- Be thorough - don't miss any platforms
+
+Return this exact JSON structure:
 {
   "name": "game title",
-  "description": "brief description (2-3 sentences)",
-  "genre": "primary genre",
-  "platforms": ["platform1", "platform2"],
-  "genres": ["genre1", "genre2"],
-  "tags": ["tag1", "tag2", "tag3"],
-  "themes": ["theme1", "theme2"],
-  "mechanics": ["mechanic1", "mechanic2"],
-  "tone": "overall tone/mood",
-  "targetAudience": "target audience description",
-  "uniqueFeatures": "what makes this game unique"
+  "description": "2-3 sentence description covering what the game is about",
+  "genre": "primary genre (Action, RPG, Strategy, Simulation, Puzzle, Adventure, Sports, Racing, Fighting, etc.)",
+  "platforms": ["array of ALL platforms using standardized names above"],
+  "genres": ["all applicable genre tags"],
+  "tags": ["gameplay-related tags like 'multiplayer', 'story-rich', 'open-world', etc."],
+  "themes": ["narrative/aesthetic themes like 'sci-fi', 'fantasy', 'horror', 'historical', etc."],
+  "mechanics": ["core gameplay mechanics like 'turn-based', 'real-time', 'crafting', 'building', etc."],
+  "tone": "overall mood/atmosphere (e.g., 'dark and atmospheric', 'lighthearted and humorous', 'epic and cinematic')",
+  "targetAudience": "who this game is designed for (e.g., 'hardcore strategy fans', 'casual mobile gamers', 'competitive FPS players')",
+  "uniqueFeatures": "what makes this game stand out from others in its genre"
 }
 
-Store page content:
-${textContent}`
+Sources:
+${combinedContext}`
             }]
           }],
           generationConfig: {
@@ -77,7 +153,7 @@ ${textContent}`
     }
 
     const geminiData = await geminiResponse.json();
-    console.log('Gemini response:', JSON.stringify(geminiData));
+    console.log('Gemini response received');
 
     const extractedText = geminiData.candidates[0].content.parts[0].text;
     

@@ -413,7 +413,17 @@ const SignalProfileBuilder = ({ projectId, onComplete }: SignalProfileBuilderPro
       {/* Main Profile Builder */}
       <div className="lg:col-span-2 space-y-6">
         {/* Game Data Importer */}
-        <GameDataImporter projectId={projectId} onImportComplete={loadData} />
+        <GameDataImporter 
+          projectId={projectId}
+          onImportComplete={async () => {
+            await loadData();
+            await handleSaveProfile();
+            toast({
+              title: "Profile Auto-Populated",
+              description: "Game data imported successfully. Skipping to Match Engine...",
+            });
+          }}
+        />
 
         {/* Project Summary Card */}
         {projectData && (

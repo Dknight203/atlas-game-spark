@@ -116,21 +116,43 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
   };
 
   const handleProfileComplete = async () => {
-    setProfileComplete(true);
-    setShowProfileHint(false);
-    
-    // Update database
-    await supabase
-      .from('projects')
-      .update({
-        workflow_progress: {
-          profileComplete: true,
-          discoveryComplete,
-          matchesComplete,
-          analysisViewed: false
-        }
-      })
-      .eq('id', projectId);
+    try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('workflow_progress')
+        .eq('id', projectId)
+        .single();
+
+      const currentProgress = project?.workflow_progress as any || {};
+
+      // Check if this is an auto-import (both profile and discovery marked complete)
+      if (currentProgress.profileComplete && currentProgress.discoveryComplete) {
+        // Skip to matches step
+        setProfileComplete(true);
+        setDiscoveryComplete(true);
+        setActiveStep('matches');
+        setShowProfileHint(false);
+        return;
+      }
+
+      setProfileComplete(true);
+      setShowProfileHint(false);
+
+      // Update database
+      await supabase
+        .from('projects')
+        .update({
+          workflow_progress: {
+            profileComplete: true,
+            discoveryComplete,
+            matchesComplete,
+            analysisViewed: false
+          }
+        })
+        .eq('id', projectId);
+    } catch (error) {
+      console.error('Error updating workflow progress:', error);
+    }
   };
 
   const handleDiscoveryComplete = async () => {

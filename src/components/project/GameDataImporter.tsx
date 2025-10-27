@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Loader2, CheckCircle2, Edit2, X } from "lucide-react";
+import PlatformSelectors from "@/components/project/PlatformSelectors";
 
 interface ExtractedGameData {
   name: string;
@@ -81,7 +82,7 @@ const GameDataImporter = ({ projectId, onImportComplete }: GameDataImporterProps
 
     setIsApplying(true);
     try {
-      // Update project basic info
+      // Update project with basic information
       const { error: projectError } = await supabase
         .from('projects')
         .update({
@@ -94,52 +95,52 @@ const GameDataImporter = ({ projectId, onImportComplete }: GameDataImporterProps
 
       if (projectError) throw projectError;
 
-      // Check if signal profile exists
-      const { data: existingProfile } = await supabase
+      // Upsert signal profile with detailed information
+      const { error: profileError } = await supabase
         .from('signal_profiles')
-        .select('id')
-        .eq('project_id', projectId)
-        .maybeSingle();
+        .upsert({
+          project_id: projectId,
+          themes: editedData.themes || [],
+          mechanics: editedData.mechanics || [],
+          tone: editedData.tone || '',
+          target_audience: editedData.targetAudience || '',
+          unique_features: editedData.uniqueFeatures || '',
+        }, {
+          onConflict: 'project_id'
+        });
 
-      const signalData = {
-        themes: editedData.themes,
-        mechanics: editedData.mechanics,
-        tone: editedData.tone,
-        target_audience: editedData.targetAudience,
-        unique_features: editedData.uniqueFeatures,
-      };
+      if (profileError) throw profileError;
 
-      if (existingProfile) {
-        // Update existing profile
-        const { error: profileError } = await supabase
-          .from('signal_profiles')
-          .update(signalData)
-          .eq('project_id', projectId);
+      // Mark workflow as complete for profile and discovery steps
+      const { error: workflowError } = await supabase
+        .from('projects')
+        .update({
+          workflow_progress: {
+            profileComplete: true,
+            discoveryComplete: true,
+            analysisViewed: false
+          }
+        })
+        .eq('id', projectId);
 
-        if (profileError) throw profileError;
-      } else {
-        // Create new profile
-        const { error: profileError } = await supabase
-          .from('signal_profiles')
-          .insert({
-            project_id: projectId,
-            ...signalData,
-          });
-
-        if (profileError) throw profileError;
-      }
+      if (workflowError) throw workflowError;
 
       toast({
-        title: "Success!",
-        description: "Game data imported successfully.",
+        title: "Success",
+        description: `${editedData.name} profile imported successfully! Generating matches...`,
       });
 
+      // Reset state
+      setUrl('');
+      setExtractedData(null);
+      setEditedData(null);
+      
       onImportComplete();
     } catch (error) {
-      console.error('Apply error:', error);
+      console.error('Error applying game data:', error);
       toast({
-        title: "Failed to Apply",
-        description: error.message || "Failed to save imported data.",
+        title: "Error",
+        description: "Failed to apply game data",
         variant: "destructive",
       });
     } finally {
@@ -209,37 +210,12 @@ const GameDataImporter = ({ projectId, onImportComplete }: GameDataImporterProps
           </div>
 
           <div className="space-y-2">
-            <Label>Platforms</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {editedData.platforms.map((platform, i) => (
-                <Badge key={i} variant="secondary">
-                  {platform}
-                  <button
-                    onClick={() => setEditedData({
-                      ...editedData,
-                      platforms: editedData.platforms.filter((_, idx) => idx !== i)
-                    })}
-                    className="ml-2"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <Input
-              placeholder="Add platform (press Enter)"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const value = e.currentTarget.value.trim();
-                  if (value) {
-                    setEditedData({
-                      ...editedData,
-                      platforms: [...editedData.platforms, value]
-                    });
-                    e.currentTarget.value = '';
-                  }
-                }
-              }}
+            <PlatformSelectors
+              selectedPlatforms={editedData.platforms}
+              onPlatformChange={(platforms) => setEditedData({
+                ...editedData,
+                platforms
+              })}
             />
           </div>
 
