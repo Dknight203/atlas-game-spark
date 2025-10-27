@@ -11,12 +11,14 @@ import {
   TrendingUp, 
   CheckCircle2,
   ArrowRight,
-  Lightbulb
+  Lightbulb,
+  Zap
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SignalProfileBuilder from "@/components/app/SignalProfileBuilder";
 import DiscoveryDashboard from "@/components/discovery/DiscoveryDashboard";
 import MarketAnalysisDashboard from "./MarketAnalysisDashboard";
+import MatchEngineResults from "@/components/app/MatchEngineResults";
 
 interface GameIntelligenceProps {
   projectId: string;
@@ -27,6 +29,7 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
   const [activeStep, setActiveStep] = useState("profile");
   const [profileComplete, setProfileComplete] = useState(false);
   const [discoveryComplete, setDiscoveryComplete] = useState(false);
+  const [matchesComplete, setMatchesComplete] = useState(false);
   const [showProfileHint, setShowProfileHint] = useState(false);
 
   // Load workflow progress from database
@@ -45,6 +48,7 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
       const progress = project.workflow_progress as any;
       setProfileComplete(progress.profileComplete || false);
       setDiscoveryComplete(progress.discoveryComplete || false);
+      setMatchesComplete(progress.matchesComplete || false);
     }
   };
 
@@ -66,16 +70,27 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
     {
       id: "discovery",
       title: "Game Discovery", 
-      description: "Find similar games and opportunities",
+      description: "Find similar games",
       icon: Search,
-      status: profileComplete ? "active" : "pending",
+      status: profileComplete 
+        ? (discoveryComplete ? "complete" : "active")
+        : "pending",
+    },
+    {
+      id: "matches",
+      title: "Match Engine",
+      description: "Generate cross-platform matches",
+      icon: Zap,
+      status: discoveryComplete 
+        ? (matchesComplete ? "complete" : "active")
+        : "pending",
     },
     {
       id: "analysis",
       title: "Market Analysis",
       description: "Analyze trends and competition",
       icon: TrendingUp,
-      status: discoveryComplete ? "active" : "pending",
+      status: matchesComplete ? "active" : "pending",
     }
   ];
 
@@ -111,6 +126,7 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
         workflow_progress: {
           profileComplete: true,
           discoveryComplete,
+          matchesComplete,
           analysisViewed: false
         }
       })
@@ -127,6 +143,24 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
         workflow_progress: {
           profileComplete,
           discoveryComplete: true,
+          matchesComplete,
+          analysisViewed: false
+        }
+      })
+      .eq('id', projectId);
+  };
+
+  const handleMatchesComplete = async () => {
+    setMatchesComplete(true);
+    
+    // Update database
+    await supabase
+      .from('projects')
+      .update({
+        workflow_progress: {
+          profileComplete,
+          discoveryComplete,
+          matchesComplete: true,
           analysisViewed: false
         }
       })
@@ -233,14 +267,33 @@ const GameIntelligence = ({ projectId }: GameIntelligenceProps) => {
         {activeStep === "discovery" && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Game Discovery & Analysis</h2>
+              <h2 className="text-xl font-semibold mb-2">Game Discovery</h2>
               <p className="text-muted-foreground">
-                Discover similar games, analyze market opportunities, and build targeted lists.
+                Discover games similar to yours using advanced filtering and AI recommendations.
               </p>
             </div>
             <DiscoveryDashboard 
               projectId={projectId}
               onComplete={handleDiscoveryComplete}
+            />
+          </div>
+        )}
+
+        {activeStep === "matches" && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-2">Match Engine</h2>
+              <p className="text-muted-foreground">
+                Find cross-platform games similar to yours based on your signal profile.
+              </p>
+            </div>
+            <MatchEngineResults 
+              projectId={projectId}
+              onMatchesUpdate={(count) => {
+                if (count > 0) {
+                  handleMatchesComplete();
+                }
+              }}
             />
           </div>
         )}

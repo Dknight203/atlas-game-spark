@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, Search, Filter, X } from "lucide-react";
 import { useDiscovery } from "@/hooks/useDiscovery";
 import DiscoveryListBuilder from "./DiscoveryListBuilder";
@@ -20,12 +21,39 @@ const DiscoveryDashboard = ({ projectId, onComplete }: DiscoveryDashboardProps) 
   const [showBuilder, setShowBuilder] = useState(false);
   const [currentFilters, setCurrentFilters] = useState<DiscoveryFiltersType>({});
   const [filteredGames, setFilteredGames] = useState(enhancedGameData);
+  const [hasViewedGames, setHasViewedGames] = useState(false);
+  const [filterApplicationCount, setFilterApplicationCount] = useState(0);
 
   // Update filtered games when data or filters change
   useEffect(() => {
     const filtered = applyFilters(currentFilters);
     setFilteredGames(filtered);
   }, [enhancedGameData, currentFilters, applyFilters]);
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (currentFilters.platforms?.length) count++;
+    if (currentFilters.genres?.length) count++;
+    if (currentFilters.tags?.length) count++;
+    if (currentFilters.priceRange) count++;
+    if (currentFilters.ratingRange) count++;
+    if (currentFilters.releaseYearRange) count++;
+    return count;
+  };
+
+  // Track user engagement and auto-complete discovery
+  useEffect(() => {
+    const activeFilters = getActiveFilterCount();
+    if (filteredGames.length > 0 && activeFilters > 0) {
+      setHasViewedGames(true);
+      setFilterApplicationCount(prev => prev + 1);
+      
+      // Auto-complete after user has applied filters and viewed results twice
+      if (filterApplicationCount >= 1 && onComplete) {
+        onComplete();
+      }
+    }
+  }, [filteredGames, currentFilters]);
 
   const handleFilterChange = (filters: DiscoveryFiltersType) => {
     setCurrentFilters(filters);
@@ -70,17 +98,6 @@ const DiscoveryDashboard = ({ projectId, onComplete }: DiscoveryDashboardProps) 
     setCurrentFilters(filters);
   };
 
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (currentFilters.platforms?.length) count++;
-    if (currentFilters.genres?.length) count++;
-    if (currentFilters.tags?.length) count++;
-    if (currentFilters.priceRange) count++;
-    if (currentFilters.ratingRange) count++;
-    if (currentFilters.releaseYearRange) count++;
-    return count;
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -94,6 +111,17 @@ const DiscoveryDashboard = ({ projectId, onComplete }: DiscoveryDashboardProps) 
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {getActiveFilterCount() > 0 && (
+            <Alert className="mb-6">
+              <AlertDescription>
+                {hasViewedGames 
+                  ? `Great! You've explored ${filteredGames.length} games. ${filterApplicationCount < 2 ? 'Try different filters or create a list to continue.' : 'Step complete! ✓'}`
+                  : 'Apply filters above to discover games similar to yours.'
+                }
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex gap-4 mb-6">
             <Button 
               onClick={() => setShowBuilder(true)}
