@@ -3,18 +3,41 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, BookOpen, Users, TrendingUp, Target, Calendar } from "lucide-react";
+import { Plus, BookOpen, Users, TrendingUp, Target, Calendar, MoreVertical, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProjects } from "@/hooks/useProjects";
 import { useEnsureOrganization } from "@/hooks/useEnsureOrganization";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { showOnboarding, completeOnboarding, skipOnboarding, resetOnboarding, hasCompletedOnboarding } = useOnboarding();
   const { projects, isLoading } = useProjects();
   const { organizationId, isChecking } = useEnsureOrganization();
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Force onboarding for new users with no projects
   const shouldForceOnboarding = !isLoading && projects.length === 0 && !hasCompletedOnboarding;
@@ -42,6 +65,46 @@ const Dashboard = () => {
       color: "bg-purple-600 hover:bg-purple-700"
     }
   ];
+
+  const handleDeleteClick = (projectId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setProjectToDelete(projectId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!projectToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Project deleted successfully",
+      });
+
+      // Refresh the page to reload projects
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,14 +191,16 @@ const Dashboard = () => {
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
-                  <Link key={project.id} to={`/project/${project.id}`}>
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <Card key={project.id} className="hover:shadow-lg transition-shadow h-full group relative">
+                    <Link to={`/project/${project.id}`} className="block">
                       <CardHeader>
                         <div className="flex justify-between items-start mb-2">
-                          <CardTitle className="text-lg line-clamp-1">{project.name}</CardTitle>
-                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(project.status)}`}>
-                            {project.status}
-                          </span>
+                          <CardTitle className="text-lg line-clamp-1 pr-8">{project.name}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(project.status)}`}>
+                              {project.status}
+                            </span>
+                          </div>
                         </div>
                         {project.description && (
                           <CardDescription className="line-clamp-2">
@@ -165,8 +230,30 @@ const Dashboard = () => {
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
-                  </Link>
+                    </Link>
+                    <div className="absolute top-4 right-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={(e) => handleDeleteClick(project.id, e)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Project
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -249,6 +336,27 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this project? This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
