@@ -25,11 +25,13 @@ interface ExtractedGameData {
 }
 
 interface GameDataImporterProps {
-  projectId: string;
+  projectId?: string;
   onImportComplete: () => void;
+  isCreationMode?: boolean;
+  onProjectCreated?: (projectId: string) => void;
 }
 
-const GameDataImporter = ({ projectId, onImportComplete }: GameDataImporterProps) => {
+const GameDataImporter = ({ projectId, onImportComplete, isCreationMode = false, onProjectCreated }: GameDataImporterProps) => {
   const { toast } = useToast();
   const [url, setUrl] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
@@ -82,60 +84,126 @@ const GameDataImporter = ({ projectId, onImportComplete }: GameDataImporterProps
 
     setIsApplying(true);
     try {
-      // Update project with basic information
-      const { error: projectError } = await supabase
-        .from('projects')
-        .update({
-          name: editedData.name,
-          description: editedData.description,
-          genre: editedData.genre,
-          platforms: editedData.platforms,
-        })
-        .eq('id', projectId);
+      if (isCreationMode) {
+        // CREATION MODE: Create new project with imported data
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Not authenticated");
 
-      if (projectError) throw projectError;
+        // Get user's organization
+        const { data: membership } = await supabase
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
 
-      // Upsert signal profile with detailed information
-      const { error: profileError } = await supabase
-        .from('signal_profiles')
-        .upsert({
-          project_id: projectId,
-          themes: editedData.themes || [],
-          mechanics: editedData.mechanics || [],
-          tone: editedData.tone || '',
-          target_audience: editedData.targetAudience || '',
-          unique_features: editedData.uniqueFeatures || '',
-        }, {
-          onConflict: 'project_id'
+        if (!membership?.organization_id) {
+          throw new Error("No organization found. Please refresh the page.");
+        }
+
+        // Create project
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .insert([{
+            user_id: user.id,
+            organization_id: membership.organization_id,
+            name: editedData.name,
+            description: editedData.description,
+            genre: editedData.genre,
+            platform: editedData.platforms[0] || 'PC',
+            platforms: editedData.platforms,
+            status: 'development',
+            workflow_progress: {
+              profileComplete: true,
+              discoveryComplete: true,
+              analysisViewed: false
+            }
+          }])
+          .select()
+          .single();
+
+        if (projectError) throw projectError;
+
+        // Create signal profile
+        const { error: profileError } = await supabase
+          .from('signal_profiles')
+          .insert([{
+            project_id: project.id,
+            themes: editedData.themes || [],
+            mechanics: editedData.mechanics || [],
+            tone: editedData.tone || '',
+            target_audience: editedData.targetAudience || '',
+            unique_features: editedData.uniqueFeatures || '',
+          }]);
+
+        if (profileError) throw profileError;
+
+        toast({
+          title: "Project Created!",
+          description: `${editedData.name} imported successfully. Proceeding to Match Engine.`,
         });
 
-      if (profileError) throw profileError;
+        // Navigate to the new project's match engine
+        window.location.href = `/project/${project.id}`;
+      } else {
+        // UPDATE MODE: Update existing project
+        if (!projectId) throw new Error("Project ID required for update mode");
 
-      // Mark workflow as complete for profile and discovery steps
-      const { error: workflowError } = await supabase
-        .from('projects')
-        .update({
-          workflow_progress: {
-            profileComplete: true,
-            discoveryComplete: true,
-            analysisViewed: false
-          }
-        })
-        .eq('id', projectId);
+        // Update project with basic information
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({
+            name: editedData.name,
+            description: editedData.description,
+            genre: editedData.genre,
+            platforms: editedData.platforms,
+          })
+          .eq('id', projectId);
 
-      if (workflowError) throw workflowError;
+        if (projectError) throw projectError;
 
-      toast({
-        title: "Success",
-        description: `${editedData.name} profile imported successfully! Generating matches...`,
-      });
+        // Upsert signal profile with detailed information
+        const { error: profileError } = await supabase
+          .from('signal_profiles')
+          .upsert({
+            project_id: projectId,
+            themes: editedData.themes || [],
+            mechanics: editedData.mechanics || [],
+            tone: editedData.tone || '',
+            target_audience: editedData.targetAudience || '',
+            unique_features: editedData.uniqueFeatures || '',
+          }, {
+            onConflict: 'project_id'
+          });
 
-      // Reset state
-      setUrl('');
-      setExtractedData(null);
-      setEditedData(null);
-      
-      onImportComplete();
+        if (profileError) throw profileError;
+
+        // Mark workflow as complete for profile and discovery steps
+        const { error: workflowError } = await supabase
+          .from('projects')
+          .update({
+            workflow_progress: {
+              profileComplete: true,
+              discoveryComplete: true,
+              analysisViewed: false
+            }
+          })
+          .eq('id', projectId);
+
+        if (workflowError) throw workflowError;
+
+        toast({
+          title: "Success",
+          description: `${editedData.name} profile imported successfully! Generating matches...`,
+        });
+
+        // Reset state
+        setUrl('');
+        setExtractedData(null);
+        setEditedData(null);
+        
+        onImportComplete();
+      }
     } catch (error) {
       console.error('Error applying game data:', error);
       toast({

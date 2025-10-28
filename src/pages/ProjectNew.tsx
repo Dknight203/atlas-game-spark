@@ -2,7 +2,7 @@
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import ProjectForm from "@/components/project/ProjectForm";
+import ProjectCreationChoice from "@/components/project/ProjectCreationChoice";
 import { Badge } from "@/components/ui/badge";
 
 const ProjectNew = () => {
@@ -28,7 +28,7 @@ const ProjectNew = () => {
               <p className="text-gray-600">Set up your game project to start finding your audience.</p>
             </div>
 
-            <ProjectForm prefillData={prefillData} />
+            <ProjectCreationChoice prefillData={prefillData} />
           </div>
         </div>
       </div>
