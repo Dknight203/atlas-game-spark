@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameAtlas - Landing Page Sample</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --atlas-purple: #6E59A5;
+      --atlas-teal: #33C3F0;
+      --atlas-orange: #F97316;
+      --atlas-dark: #221F26;
+      --atlas-light: #F6F6F7;
+      --white: #FFFFFF;
+      --gray-50: #F9FAFB;
+      --gray-100: #F3F4F6;
+      --gray-200: #E5E7EB;
+      --gray-600: #4B5563;
+      --gray-800: #1F2937;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--gray-800);
+    }
+
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      height: 64px;
+    }
+
+    .navbar-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--atlas-dark);
+    }
+
+    .logo-accent {
+      color: var(--atlas-teal);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--gray-600);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--atlas-purple);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--atlas-purple);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--atlas-purple);
+      border: 2px solid var(--atlas-purple);
+    }
+
+    .btn-outline:hover {
+      background: var(--atlas-purple);
+      color: var(--white);
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--atlas-purple);
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--atlas-purple) 0%, var(--atlas-teal) 100%);
+      min-height: 600px;
+      padding: 8rem 1.5rem 4rem;
+      color: var(--white);
+      margin-top: 64px;
+    }
+
+    .hero-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero-content h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-content p {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .hero-image {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Features Section */
+    .features {
+      background: var(--atlas-light);
+      padding: 5rem 1.5rem;
+    }
+
+    .features-container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(110, 89, 165, 0.1);
+      color: var(--atlas-purple);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--atlas-dark);
+    }
+
+    .section-header p {
+      font-size: 1.125rem;
+      color: var(--gray-600);
+      max-width: 768px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .feature-icon {
+      width: 3rem;
+      height: 3rem;
+      background: var(--atlas-purple);
+      color: var(--white);
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      color: var(--atlas-dark);
+    }
+
+    .feature-card p {
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+
+    /* Pricing Section */
+    .pricing {
+      padding: 5rem 1.5rem;
+      background: var(--white);
+    }
+
+    .pricing-container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .pricing-card {
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      border-radius: 1rem;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .pricing-card.popular {
+      border-color: var(--atlas-purple);
+      box-shadow: 0 10px 30px rgba(110, 89, 165, 0.2);
+      transform: scale(1.05);
+    }
+
+    .popular-badge {
+      background: var(--atlas-purple);
+      color: var(--white);
+      padding: 0.5rem 1rem;
+      position: absolute;
+      top: -1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .pricing-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-card .price {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--atlas-purple);
+      margin: 1rem 0;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 2rem 0;
+    }
+
+    .pricing-features li {
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: start;
+      gap: 0.5rem;
+    }
+
+    .pricing-features li::before {
+      content: "✓";
+      color: #10B981;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--atlas-dark);
+      color: var(--white);
+      padding: 3rem 1.5rem 2rem;
+    }
+
+    .footer-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer h3 {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .footer ul {
+      list-style: none;
+    }
+
+    .footer ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer a {
+      color: #9CA3AF;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer a:hover {
+      color: var(--white);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #9CA3AF;
+      font-size: 0.875rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-container,
+      .features-grid,
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero-content h1 {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="logo">
+        Game<span class="logo-accent">Atlas</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="/login" class="btn btn-outline">Login</a>
+        <a href="/signup" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Turn Game Marketing Into Predictable Growth</h1>
+        <p>Stop guessing where your players are. GameAtlas uses AI to find the exact communities, creators, and platforms where your target audience is already active.</p>
+        <div class="hero-cta">
+          <a href="/signup" class="btn btn-primary">Start 14-Day Free Trial</a>
+          <a href="/features" class="btn btn-secondary">Explore Features</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div style="height: 300px; background: rgba(255,255,255,0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+          📊
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="features-container">
+      <div class="section-header">
+        <span class="section-badge">⭐ Complete Marketing Solution</span>
+        <h2>Everything You Need to Grow Your Game</h2>
+        <p>From AI-powered discovery to campaign management and ROI tracking, GameAtlas provides the complete toolkit for game marketing success.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>AI-Powered Discovery Engine</h3>
+          <p>Find communities and creators that actually convert using our advanced matching algorithms and real engagement data.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h3>Marketing Campaign Manager</h3>
+          <p>Plan, execute, and track marketing campaigns across multiple platforms with built-in templates and automation.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h3>Creator Relationship CRM</h3>
+          <p>Manage outreach, track responses, and build lasting relationships with content creators and community managers.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>ROI Analytics Dashboard</h3>
+          <p>Measure real marketing performance with detailed attribution, conversion tracking, and campaign optimization insights.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>Community Engagement Tools</h3>
+          <p>Smart posting templates, timing recommendations, and engagement tracking for Reddit, Discord, and other platforms.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📈</div>
+          <h3>Competitor Intelligence</h3>
+          <p>Track what's working for similar games and identify untapped marketing opportunities in your genre.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <div class="pricing-container">
+      <div class="section-header">
+        <span class="section-badge">💰 Pricing Plans</span>
+        <h2>Choose Your Marketing Intelligence Plan</h2>
+        <p>From solo developers to enterprise publishers, we have the right plan to accelerate your game's marketing success.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Starter</h3>
+          <div class="price">$29<span style="font-size: 1rem; color: #6B7280;">/mo</span></div>
+          <p style="color: #6B7280; margin-bottom: 1rem;">Solo Developers</p>
+          <ul class="pricing-features">
+            <li>1 Game Project</li>
+            <li>5 Game Matches/month</li>
+            <li>10 Communities</li>
+            <li>15 Creator Matches</li>
+            <li>Basic AI Copy (3/post)</li>
+          </ul>
+          <a href="/signup" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+        </div>
+
+        <div class="pricing-card popular">
+          <span class="popular-badge">⭐ Most Popular</span>
+          <h3>Professional</h3>
+          <div class="price">$99<span style="font-size: 1rem; color: #6B7280;">/mo</span></div>
+          <p style="color: #6B7280; margin-bottom: 1rem;">Development Teams</p>
+          <ul class="pricing-features">
+            <li>3 Game Projects</li>
+            <li>Unlimited Matches</li>
+            <li>50+ Communities</li>
+            <li>100+ Creators</li>
+            <li>Campaign Manager</li>
+            <li>ROI Tracking</li>
+          </ul>
+          <a href="/signup" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+        </div>
+
+        <div class="pricing-card">
+          <h3>Studio</h3>
+          <div class="price">$299<span style="font-size: 1rem; color: #6B7280;">/mo</span></div>
+          <p style="color: #6B7280; margin-bottom: 1rem;">Game Studios</p>
+          <ul class="pricing-features">
+            <li>10 Game Projects</li>
+            <li>15 Team Members</li>
+            <li>Portfolio Dashboard</li>
+            <li>API Access</li>
+            <li>White-label Reports</li>
+          </ul>
+          <a href="/signup" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+        </div>
+
+        <div class="pricing-card">
+          <h3>Enterprise</h3>
+          <div class="price" style="font-size: 2rem;">Custom</div>
+          <p style="color: #6B7280; margin-bottom: 1rem;">Publishers & Agencies</p>
+          <ul class="pricing-features">
+            <li>Unlimited Projects</li>
+            <li>Unlimited Team</li>
+            <li>Custom Features</li>
+            <li>24/7 Support</li>
+            <li>SLA Guarantees</li>
+          </ul>
+          <a href="/contact" class="btn btn-primary" style="width: 100%; background: #1F2937;">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <div class="logo">Game<span class="logo-accent">Atlas</span></div>
+        <p style="margin-top: 1rem; color: #9CA3AF; font-size: 0.875rem;">
+          Unlock organic discoverability for your games across the web.
+        </p>
+      </div>
+      <div>
+        <h3>Product</h3>
+        <ul>
+          <li><a href="/features">Features</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Company</h3>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/careers">Careers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Legal</h3>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/cookies">Cookies</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p style="margin-bottom: 0.5rem; font-size: 0.75rem;">Data: IGDB, RAWG, Steam, YouTube, Reddit</p>
+      <p>&copy; 2025 GameAtlas. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

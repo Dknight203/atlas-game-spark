@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - GameAtlas Sample</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --atlas-purple: #6E59A5;
+      --atlas-teal: #33C3F0;
+      --atlas-dark: #221F26;
+      --white: #FFFFFF;
+      --gray-50: #F9FAFB;
+      --gray-100: #F3F4F6;
+      --gray-600: #4B5563;
+      --gray-800: #1F2937;
+      --blue-100: #DBEAFE;
+      --blue-800: #1E40AF;
+      --green-100: #D1FAE5;
+      --green-800: #065F46;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      line-height: 1.6;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      height: 64px;
+    }
+
+    .navbar-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--atlas-dark);
+    }
+
+    .logo-accent {
+      color: var(--atlas-teal);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--gray-600);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--atlas-purple);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 6rem 1.5rem 3rem;
+    }
+
+    /* Header */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+      font-size: 2rem;
+      color: var(--gray-800);
+      margin-bottom: 0.5rem;
+    }
+
+    .dashboard-header p {
+      color: var(--gray-600);
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 2px solid var(--gray-600);
+      background: transparent;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      border-color: var(--atlas-purple);
+      color: var(--atlas-purple);
+    }
+
+    .btn-primary {
+      background: var(--atlas-purple);
+      color: var(--white);
+      border-color: var(--atlas-purple);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    /* Quick Actions Grid */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .action-card {
+      background: var(--white);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .action-card:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .action-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .icon-purple {
+      background: var(--atlas-purple);
+    }
+
+    .icon-teal {
+      background: var(--atlas-teal);
+    }
+
+    .action-card h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+      color: var(--gray-800);
+    }
+
+    .action-card p {
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+
+    /* Projects Section */
+    .projects-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .projects-header h2 {
+      font-size: 1.5rem;
+      color: var(--gray-800);
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .project-card {
+      background: var(--white);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+      position: relative;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .project-card:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 0.75rem;
+    }
+
+    .project-card h3 {
+      font-size: 1.125rem;
+      color: var(--gray-800);
+      margin-bottom: 0.5rem;
+      padding-right: 3rem;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-development {
+      background: var(--blue-100);
+      color: var(--blue-800);
+    }
+
+    .badge-published {
+      background: var(--green-100);
+      color: var(--green-800);
+    }
+
+    .project-description {
+      color: var(--gray-600);
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .project-details {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+
+    .project-detail-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-detail-row strong {
+      color: var(--gray-800);
+    }
+
+    .project-date {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--gray-600);
+      font-size: 0.75rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    /* Empty State */
+    .empty-state {
+      background: var(--white);
+      border-radius: 0.75rem;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-icon {
+      width: 4rem;
+      height: 4rem;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 2rem;
+      color: var(--gray-600);
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--gray-800);
+    }
+
+    .empty-state p {
+      color: var(--gray-600);
+      max-width: 32rem;
+      margin: 0 auto 1.5rem;
+    }
+
+    /* Getting Started */
+    .getting-started {
+      background: var(--white);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-top: 2rem;
+    }
+
+    .getting-started h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--gray-800);
+    }
+
+    .getting-started p {
+      color: var(--gray-600);
+      margin-bottom: 1.5rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .step-card {
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      border: 2px solid;
+    }
+
+    .step-completed {
+      background: #ECFDF5;
+      border-color: #10B981;
+    }
+
+    .step-active {
+      background: #EFF6FF;
+      border-color: #3B82F6;
+    }
+
+    .step-upcoming {
+      background: var(--gray-50);
+      border-color: var(--gray-100);
+    }
+
+    .step-number {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--white);
+    }
+
+    .step-completed .step-number {
+      background: #10B981;
+    }
+
+    .step-active .step-number {
+      background: #3B82F6;
+    }
+
+    .step-upcoming .step-number {
+      background: #9CA3AF;
+    }
+
+    .step-card h4 {
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+      color: var(--gray-800);
+    }
+
+    .step-card p {
+      font-size: 0.75rem;
+      color: var(--gray-600);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .quick-actions,
+      .projects-grid,
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="logo">
+        Game<span class="logo-accent">Atlas</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="/dashboard" class="active">Dashboard</a></li>
+        <li><a href="/discovery">Discovery</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/settings">Settings</a></li>
+      </ul>
+      <div>
+        <button class="btn">Log Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1>Welcome back, John!</h1>
+        <p>Ready to grow your game's audience?</p>
+      </div>
+      <button class="btn">
+        📖 Take Tour
+      </button>
+    </div>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+      <a href="/project/new" class="action-card">
+        <div class="action-icon icon-purple">➕</div>
+        <h3>Create New Project</h3>
+        <p>Start a new game marketing project</p>
+      </a>
+      <a href="/discovery" class="action-card">
+        <div class="action-icon icon-teal">👥</div>
+        <h3>Project Discovery</h3>
+        <p>Find communities & creators for your projects</p>
+      </a>
+      <a href="/analytics" class="action-card">
+        <div class="action-icon icon-purple" style="background: #9333EA;">📈</div>
+        <h3>Project Analytics</h3>
+        <p>View performance metrics for your projects</p>
+      </a>
+    </section>
+
+    <!-- Projects Section -->
+    <section>
+      <div class="projects-header">
+        <h2>Your Projects</h2>
+        <a href="/project/new" class="btn btn-primary">
+          ➕ New Project
+        </a>
+      </div>
+
+      <div class="projects-grid">
+        <!-- Project Card 1 -->
+        <a href="/project/1" class="project-card">
+          <div class="project-header">
+            <h3>Stellar Odyssey</h3>
+            <span class="badge badge-development">development</span>
+          </div>
+          <p class="project-description">
+            A space exploration roguelike with procedural generation and deep crafting systems
+          </p>
+          <div class="project-details">
+            <div class="project-detail-row">
+              <strong>Genre:</strong>
+              <span>Roguelike</span>
+            </div>
+            <div class="project-detail-row">
+              <strong>Platform:</strong>
+              <span>PC, Nintendo Switch</span>
+            </div>
+          </div>
+          <div class="project-date">
+            📅 Updated Nov 1, 2025
+          </div>
+        </a>
+
+        <!-- Project Card 2 -->
+        <a href="/project/2" class="project-card">
+          <div class="project-header">
+            <h3>Pixel Dungeon Reborn</h3>
+            <span class="badge badge-published">published</span>
+          </div>
+          <p class="project-description">
+            Classic dungeon crawler with modern twists and mobile-first design
+          </p>
+          <div class="project-details">
+            <div class="project-detail-row">
+              <strong>Genre:</strong>
+              <span>RPG</span>
+            </div>
+            <div class="project-detail-row">
+              <strong>Platform:</strong>
+              <span>Mobile</span>
+            </div>
+          </div>
+          <div class="project-date">
+            📅 Updated Oct 28, 2025
+          </div>
+        </a>
+
+        <!-- Project Card 3 -->
+        <a href="/project/3" class="project-card">
+          <div class="project-header">
+            <h3>Cozy Café Manager</h3>
+            <span class="badge badge-development">development</span>
+          </div>
+          <p class="project-description">
+            Relaxing simulation game about running your dream café
+          </p>
+          <div class="project-details">
+            <div class="project-detail-row">
+              <strong>Genre:</strong>
+              <span>Simulation</span>
+            </div>
+            <div class="project-detail-row">
+              <strong>Platform:</strong>
+              <span>PC, Nintendo Switch</span>
+            </div>
+          </div>
+          <div class="project-date">
+            📅 Updated Oct 25, 2025
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Empty State Example (commented out) -->
+    <!--
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <h3>Start Your Marketing Journey</h3>
+      <p>Create your first project to unlock discovery features, find communities, connect with creators, and track your marketing success.</p>
+      <a href="/project/new" class="btn btn-primary">➕ Create Your First Project</a>
+    </div>
+    -->
+
+    <!-- Getting Started (for new users) -->
+    <!--
+    <div class="getting-started">
+      <h3>🎯 Getting Started with GameAtlas</h3>
+      <p>Follow these steps to maximize your marketing success</p>
+      <div class="steps-grid">
+        <div class="step-card step-completed">
+          <div class="step-number">✓</div>
+          <h4>Account Created</h4>
+          <p>Welcome to GameAtlas!</p>
+        </div>
+        <div class="step-card step-active">
+          <div class="step-number">1</div>
+          <h4>Create Project</h4>
+          <p>Set up your first game project</p>
+        </div>
+        <div class="step-card step-upcoming">
+          <div class="step-number">2</div>
+          <h4>Build Profile</h4>
+          <p>Set up your project's signal profile</p>
+        </div>
+        <div class="step-card step-upcoming">
+          <div class="step-number">3</div>
+          <h4>Discover & Connect</h4>
+          <p>Find communities and creators</p>
+        </div>
+      </div>
+    </div>
+    -->
+  </main>
+</body>
+</html>
